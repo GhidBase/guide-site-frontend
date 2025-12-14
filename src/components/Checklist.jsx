@@ -52,8 +52,13 @@ function Checklist({ checklistId }) {
     }
 
     return (
-        <div id={"checklist-" + checklistId} className="flex flex-col">
-            <div className="sticky top-0 bg-[#242424] flex justify-between px-4 py-2 items-center">
+        //Checklist
+        <div
+            id={"checklist-" + checklistId}
+            className="flex flex-col bg-slate-800 h-full"
+        >
+            {/* Checklist Header */}
+            <div className="sticky top-0 bg-slate-900 flex justify-between px-4 py-2 items-center shadow-lg">
                 <p className="">
                     Checklist -{" "}
                     {
@@ -64,12 +69,14 @@ function Checklist({ checklistId }) {
                 </p>
                 <button
                     onClick={() => toggleShowAll()}
-                    className="self-center text-amber-50 bg-neutral-600 rounded px-2 py-0.5"
+                    className="self-center text-amber-50 bg-slate-600 rounded px-2 py-0.5"
                 >
                     {showAll ? "Show Remaining" : "Show All"}
                 </button>
             </div>
-            <ul className="w-full px-4 flex flex-col gap-4">
+
+            {/* Checklist UL */}
+            <ul className="w-full p-4 pt-2 flex flex-col gap-4 overflow-x-auto">
                 {filterAndSortChecklist().map((item) => {
                     return (
                         <ChecklistItem
