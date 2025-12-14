@@ -37,18 +37,18 @@ function Checklist({ checklistId }) {
     }
 
     function filterAndSortChecklist() {
-        const sorted = checklistItems.sort((a, b) =>
-            a.title.localeCompare(b.title)
-        );
+        let list = checklistItems;
+        list = list.sort((a, b) => a.title.localeCompare(b.title));
 
         const checkedItemsIds = Object.keys(checkedItems)
             .map((item) => +item)
             .filter((itemId) => checkedItems[itemId]);
 
-        const filtered = sorted.filter(
-            (item) => !checkedItemsIds.includes(+item.id)
-        );
-        return showAll ? sorted : filtered;
+        if (!showAll) {
+            list = list.filter((item) => !checkedItemsIds.includes(+item.id));
+        }
+
+        return list;
     }
 
     return (
