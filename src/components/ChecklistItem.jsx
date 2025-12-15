@@ -20,7 +20,12 @@ function ChecklistItem({
             }`}
         >
             <div
-                className={`text-black bg-stone-500 shadow-black transition-all duration-400 ${
+                style={{
+                    backgroundImage: !picsVisible
+                        ? `url(${inGameUrl})`
+                        : undefined,
+                }}
+                className={`bg-cover bg-center text-white bg-neutral-900 shadow-black transition-all duration-400 ${
                     hide && "delay-100"
                 } box-border w-full rounded-md px-2 min-h-0 overflow-hidden flex flex-col gap-2 ${
                     (hide && "h-0 py-0 shadow-none") ||

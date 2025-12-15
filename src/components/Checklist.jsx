@@ -54,10 +54,10 @@ function Checklist({ checklistId }) {
         //Checklist
         <div
             id={"checklist-" + checklistId}
-            className="flex flex-col bg-slate-800 h-full"
+            className="flex flex-col bg-neutral-800 h-full"
         >
             {/* Checklist Header */}
-            <div className="sticky top-0 bg-slate-900 flex justify-between px-4 py-2 items-center shadow-lg">
+            <div className="sticky top-0 bg-neutral-900 flex justify-between px-4 py-2 items-center shadow-lg">
                 <p className="">
                     Checklist -{" "}
                     {
