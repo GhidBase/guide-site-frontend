@@ -1,1 +1,11 @@
 @import "tailwindcss";
+
+.fancy-transition {
+    transition:
+        /* transform 1000ms ease, */
+        height 1000ms ease,
+        padding 1000ms ease,
+        margin-bottom 1000ms ease,
+        box-shadow 1000ms ease,
+        color 1000ms ease;
+}
