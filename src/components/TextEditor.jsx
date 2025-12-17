@@ -1,6 +1,6 @@
 import BundledEditor from "../BundledEditor.jsx";
 
-export default function MCEComponent({ editorRef }) {
+export default function TextEditor({ editorRef, content }) {
     /* const log = () => {
         if (editorRef.current) {
             console.log(editorRef.current.getContent());
@@ -11,9 +11,9 @@ export default function MCEComponent({ editorRef }) {
         <>
             <BundledEditor
                 onInit={(_evt, editor) => (editorRef.current = editor)}
-                initialValue="<p>This is the initial content of the editor.</p>"
+                initialValue={content}
                 init={{
-                    height: 500,
+                    // height: 2000,
                     menubar: false,
                     plugins: [
                         "advlist",

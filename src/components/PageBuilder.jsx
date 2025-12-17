@@ -43,6 +43,27 @@ export default function PageBuilder() {
         setBlocks(newBlocks);
     }
 
+    async function updateBlock(block, editorRef) {
+        const content = editorRef.current.getContent();
+
+        const response = await fetch(
+            "http://localhost:3000/blocks/" + block.id,
+            {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ content }),
+            }
+        );
+
+        const result = await response.json();
+        const newBlocks = [...blocks];
+        const adjustIndex = newBlocks.findIndex(
+            (block) => block.id == result.id
+        );
+        newBlocks[adjustIndex] = result;
+        setBlocks(newBlocks);
+    }
+
     return (
         <div className="overflow-x-auto w-full flex justify-center">
             <div className="flex flex-col items-center gap-4 w-full p-4 max-w-230">
@@ -53,6 +74,7 @@ export default function PageBuilder() {
                             key={block.id}
                             deleteBlock={() => deleteBlock(block)}
                             block={block}
+                            updateBlock={updateBlock}
                         />
                     );
                 })}

@@ -4,7 +4,7 @@ import Page from "./components/Page";
 import Main from "./components/Main";
 import PageManager from "./components/PageManager";
 import PageBuilder from "./components/PageBuilder";
-import EditorExample from "./components/MCEComponent";
+import EditorExample from "./components/TextEditor";
 
 const routes = [
     {
