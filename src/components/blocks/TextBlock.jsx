@@ -14,13 +14,6 @@ export default function TextBlock({
         content = block.content.content;
     }
 
-    function log() {
-        if (editorRef.current) {
-            console.log(editorRef.current.getContent());
-        }
-        console.log("Block: " + block.id);
-    }
-
     function toggleEditorMode() {
         setEditMode(!editMode);
     }
@@ -48,12 +41,6 @@ export default function TextBlock({
                     id="lower-buttons"
                     className="flex gap-2 m-2 justify-center"
                 >
-                    <button
-                        onClick={() => log()}
-                        className="text-amber-50 bg-(--primary) w-25 rounded px-2 py-0.5"
-                    >
-                        Log
-                    </button>
                     {editMode && (
                         <button
                             onClick={async () => {
