@@ -1,6 +1,7 @@
 import { useState, useEffect, Fragment } from "react";
 import TextBlock from "./blocks/TextBlock";
 import { useParams, Link } from "react-router";
+import { usePage } from "../contexts/PageProvider";
 
 export default function PageBuilder() {
     const { pageId } = useParams();
@@ -10,6 +11,11 @@ export default function PageBuilder() {
     // const highestOrder = Math.max(...blocks.order);
     const orders = blocks.map((block) => (block.order ? block.order : 0));
     const highestOrder = Math.max(...orders);
+
+    const { title, setTitle } = usePage();
+    if (title != pageData.title) {
+        setTitle(pageData.title);
+    }
 
     useEffect(() => {
         fetch("http://localhost:3000/pages/" + pageId)
@@ -106,7 +112,7 @@ export default function PageBuilder() {
     return (
         <div
             id="page-builder"
-            className="bg-(--surface-background) gap-4 grow p-4 flex flex-col flex-1 items-center "
+            className="bg-(--surface-background) gap-4 grow p-4 flex flex-col flex-1 items-center pr-60"
         >
             <div
                 id="page-builder-content-positioner"

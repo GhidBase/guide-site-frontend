@@ -14,7 +14,7 @@ export default function Main() {
                 <Title></Title>
                 <div
                     id="side-bar-and-content"
-                    className="w-full box-border border-t-4 border-(--outline) flex"
+                    className="w-full box-border border-t-4 border-(--outline) flex flex-1"
                 >
                     <Navbar></Navbar>
                     <Outlet />
