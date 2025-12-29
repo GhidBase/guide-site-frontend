@@ -28,6 +28,20 @@ export default function SingleImageBlock({
         e.target.reset();
     }
 
+    async function deleteFile(number) {
+        console.log(number);
+        const fileName = block.files[number].filename;
+        console.log(block.files[number].filename);
+        console.log(currentAPI + "/files/" + fileName);
+        const response = await fetch(currentAPI + "/files/" + fileName, {
+            method: "Delete",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(block.files[number]),
+        });
+        const result = await response.json();
+        console.log(result);
+    }
+
     const { currentAPI } = usePage();
     const [editMode, setEditMode] = useState(false);
     const [stagedFiles, setStagedFiles] = useState(["No File Chosen"]);
@@ -46,6 +60,8 @@ export default function SingleImageBlock({
     // else, don't show any message
     let showFileText =
         imgUrls[0] == undefined || stagedFiles[0] != "No File Chosen";
+
+    // console.log(block.files[0].filename);
 
     return (
         <div className="text-(--text-color)">
@@ -125,7 +141,7 @@ export default function SingleImageBlock({
                             {editMode && "Cancel"}
                         </button>
                         <button
-                            onClick={deleteBlock}
+                            onClick={() => deleteFile(0)}
                             className="text-amber-50 bg-(--primary) w-25 rounded px-2 py-0.5"
                         >
                             Delete
