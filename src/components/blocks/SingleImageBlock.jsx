@@ -8,6 +8,19 @@ export default function SingleImageBlock({
     adminMode,
     addBlock,
 }) {
+    async function deleteAllFiles() {
+        console.log(currentAPI + "/blocks/" + block.id + "/files");
+        const response = await fetch(
+            currentAPI + "/blocks/" + block.id + "/files",
+            {
+                method: "Delete",
+            },
+        );
+        const result = await response.json();
+        refreshBlock(block.id);
+        deleteBlock(block);
+    }
+
     async function uploadFile(e) {
         e.preventDefault();
 
@@ -65,7 +78,10 @@ export default function SingleImageBlock({
         imgUrls[0] == undefined || stagedFiles[0] != "No File Chosen";
 
     return (
-        <div className="text-(--text-color)">
+        <div
+            className={`text-(--text-color) ${adminMode && "bg-black/10 border-b border-(--primary) mb-0"}`}
+            id={"image-block-" + block.id}
+        >
             <div className="flex">
                 {block.files &&
                     block.files.map((file) => {
@@ -81,12 +97,14 @@ export default function SingleImageBlock({
                                     alt=""
                                     className="max-h-80 mx-auto"
                                 />
-                                <button
-                                    className="text-amber-50 bg-(--primary) w-25 rounded px-2 py-0.5 h-7"
-                                    onClick={() => deleteFileById(file.id)}
-                                >
-                                    Delete
-                                </button>
+                                {adminMode && (
+                                    <button
+                                        className="text-amber-50 bg-(--primary) w-25 rounded px-2 py-0.5 h-7"
+                                        onClick={() => deleteFileById(file.id)}
+                                    >
+                                        Delete
+                                    </button>
+                                )}
                             </div>
                         );
                     })}
@@ -97,10 +115,9 @@ export default function SingleImageBlock({
                         onSubmit={uploadFile}
                         method="post"
                         encType="multipart/form-data"
-                        className="flex flex-col"
+                        className={`flex flex-col`}
                     >
-                        {showFileText && <p>{stagedFiles[0]}</p>}
-                        <div className="flex justify-center gap-2">
+                        <div className="flex justify-center items-center gap-2">
                             <label
                                 className="text-amber-50 bg-(--primary) rounded px-2 py-0.5 h-7"
                                 htmlFor={"upload-file" + block.id}
@@ -126,33 +143,32 @@ export default function SingleImageBlock({
                                     setStagedFiles(newFiles);
                                 }}
                             />
-                            <button
-                                className="text-amber-50 bg-(--primary) w-25 rounded px-2 py-0.5 h-7"
-                                type="submit"
-                            >
-                                Upload
-                            </button>
+                            {showFileText && (
+                                <p
+                                    className={`${stagedFiles[0] != "No File Chosen" && "px-3"}`}
+                                >
+                                    {stagedFiles[0]}
+                                </p>
+                            )}
+                            {stagedFiles[0] != "No File Chosen" && (
+                                <button
+                                    className="text-amber-50 bg-(--primary) w-25 rounded px-2 py-0.5 h-7"
+                                    type="submit"
+                                >
+                                    Upload
+                                </button>
+                            )}
                         </div>
                     </form>
                     <div
                         id="lower-buttons"
                         className="flex gap-2 m-2 justify-center"
                     >
-                        
-                        
                         <button
-                            onClick={() => deleteFile(0)}
+                            onClick={() => deleteAllFiles()}
                             className="text-amber-50 bg-(--primary) w-25 rounded px-2 py-0.5"
                         >
                             Delete
-                        </button>
-                        <button
-                            onClick={async () => {
-                                await addBlock({ nextOrder: block.order + 1 });
-                            }}
-                            className="text-amber-50 bg-(--primary) w-25 rounded px-2 py-0.5"
-                        >
-                            Add Block
                         </button>
                     </div>
                 </Fragment>

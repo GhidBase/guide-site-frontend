@@ -120,62 +120,106 @@ export default function PageBuilder() {
     return (
         <div
             id="page-builder"
-            className="bg-(--surface-background) gap-4 grow p-4 flex flex-col flex-1 items-center pr-60"
+            className="bg-(--surface-background) gap-4 p-4 flex flex-col flex-1 items-center pr-60"
         >
             <div
                 id="page-builder-content-positioner"
-                className="max-w-230 w-full mt-5 flex flex-col grow"
+                className={`max-w-230 w-full mt-5 flex flex-col grow ${adminMode && "gap-2"}`}
             >
+                {adminMode && (
+                    <div className="flex justify-center gap-2">
+                        <button
+                            onClick={async () => {
+                                await addBlock({
+                                    nextOrder: 0,
+                                });
+                            }}
+                            className="text-amber-50 bg-(--primary) w-37 rounded px-2 py-0.5"
+                        >
+                            + Text Block
+                        </button>
+                        <button
+                            onClick={async () => {
+                                await addBlock({
+                                    nextOrder: 0,
+                                    type: "single-image",
+                                });
+                            }}
+                            className="text-amber-50 bg-(--primary) w-37 rounded px-2 py-0.5"
+                        >
+                            + Image Block
+                        </button>
+                    </div>
+                )}
                 {blocks
                     .sort((a, b) => a.order - b.order)
                     .map((block) => {
                         // block values: id, pageId, content
                         let blockType;
+                        const buttons = adminMode ? (
+                            <div className="flex justify-center gap-2">
+                                <button
+                                    onClick={async () => {
+                                        await addBlock({
+                                            nextOrder: block.order + 1,
+                                        });
+                                    }}
+                                    className="text-amber-50 bg-(--primary) w-37 rounded px-2 py-0.5"
+                                >
+                                    + Text Block
+                                </button>
+                                <button
+                                    onClick={async () => {
+                                        await addBlock({
+                                            nextOrder: block.order + 1,
+                                            type: "single-image",
+                                        });
+                                    }}
+                                    className="text-amber-50 bg-(--primary) w-37 rounded px-2 py-0.5"
+                                >
+                                    + Image Block
+                                </button>
+                            </div>
+                        ) : null;
+
                         switch (block.type) {
                             case null:
                                 blockType = (
-                                    <TextBlock
-                                        key={block.id}
-                                        deleteBlock={() => deleteBlock(block)}
-                                        block={block}
-                                        updateBlockWithEditorData={
-                                            updateBlockWithEditorData
-                                        }
-                                        adminMode={adminMode}
-                                        addBlock={addBlock}
-                                    />
+                                    <Fragment key={block.id}>
+                                        <TextBlock
+                                            deleteBlock={() =>
+                                                deleteBlock(block)
+                                            }
+                                            block={block}
+                                            updateBlockWithEditorData={
+                                                updateBlockWithEditorData
+                                            }
+                                            adminMode={adminMode}
+                                            addBlock={addBlock}
+                                        />
+                                        {buttons}
+                                    </Fragment>
                                 );
                                 break;
                             default:
                                 blockType = (
-                                    <SingleImageBlock
-                                        key={block.id}
-                                        deleteBlock={() => deleteBlock(block)}
-                                        block={block}
-                                        refreshBlock={refreshBlock}
-                                        adminMode={adminMode}
-                                        addBlock={addBlock}
-                                    />
+                                    <Fragment key={block.id}>
+                                        <SingleImageBlock
+                                            deleteBlock={() =>
+                                                deleteBlock(block)
+                                            }
+                                            block={block}
+                                            refreshBlock={refreshBlock}
+                                            adminMode={adminMode}
+                                            addBlock={addBlock}
+                                        />
+                                        {buttons}
+                                    </Fragment>
                                 );
                         }
                         return blockType;
                     })}
-                {adminMode && (
-                    <div className="flex flex-col items-center gap-2 mt-2">
-                        <button
-                            className="text-amber-50 bg-(--primary) w-50 rounded px-2 py-0.5"
-                            onClick={() => addBlock()}
-                        >
-                            + Text Block
-                        </button>
-                        <button
-                            className="text-amber-50 bg-(--primary) w-50 rounded px-2 py-0.5"
-                            onClick={() => addBlock({ type: "single-image" })}
-                        >
-                            + Single Img
-                        </button>
-                    </div>
-                )}
+
                 <div className="flex flex-col items-center mt-2 gap-2">
                     <Link
                         className="text-amber-50 bg-(--primary) w-50 rounded px-2 py-0.5"

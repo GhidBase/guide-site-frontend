@@ -1,3 +1,4 @@
+import { type } from "@testing-library/user-event/dist/cjs/utility/type.js";
 import TextEditor from "../TextEditor.jsx";
 import { useRef, useState } from "react";
 
@@ -22,7 +23,7 @@ export default function TextBlock({
     return (
         <div
             className={`content-block bg-(--surface-background) w-full text-(--text-color) ${
-                adminMode && "border-b border-(--primary) mb-4"
+                adminMode && "border-b border-(--primary) mb-0 pt-4 bg-black/10"
             }`}
         >
             {editMode && (
@@ -68,14 +69,6 @@ export default function TextBlock({
                         className="text-amber-50 bg-(--primary) w-25 rounded px-2 py-0.5"
                     >
                         Delete
-                    </button>
-                    <button
-                        onClick={async () => {
-                            await addBlock({ nextOrder: block.order + 1 });
-                        }}
-                        className="text-amber-50 bg-(--primary) w-25 rounded px-2 py-0.5"
-                    >
-                        Add Block
                     </button>
                 </div>
             )}
