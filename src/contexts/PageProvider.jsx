@@ -6,7 +6,7 @@ export function PageProvider({ children }) {
     const [title, setTitle] = useState("test");
     const serverAPI = "https://guide-site-backend.onrender.com";
     const localAPI = "http://localhost:3000";
-    const currentAPI = serverAPI;
+    const currentAPI = localAPI;
 
     return (
         <PageContext.Provider value={{ title, setTitle, currentAPI }}>
