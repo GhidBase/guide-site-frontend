@@ -14,13 +14,20 @@ export default function Main() {
         console.log("hi");
     }
 
+    function getScrollbarWidth() {
+        return window.innerWidth - document.documentElement.clientWidth;
+    }
+
     useEffect(() => {
         if (navOpen) {
             const scrollY = window.scrollY;
+            const scrollbarWidth =
+                window.innerWidth - document.documentElement.clientWidth;
 
             document.body.style.position = "fixed";
             document.body.style.top = `-${scrollY}px`;
             document.body.style.width = "100%";
+            document.body.style.paddingRight = `${scrollbarWidth}px`;
         } else {
             const scrollY = Math.abs(
                 parseInt(document.body.style.top || "0", 10),
@@ -29,10 +36,12 @@ export default function Main() {
             document.body.style.position = "";
             document.body.style.top = "";
             document.body.style.width = "";
+            document.body.style.paddingRight = "";
 
             window.scrollTo(0, scrollY);
         }
     }, [navOpen]);
+
     return (
         <div
             id="main-page-sections"
@@ -50,7 +59,7 @@ export default function Main() {
                         border-4 border-(--outline) lg:border-t-0 lg:border-b-0 lg:border-l-0 lg:border-r-4
                         bg-(--primary)   
                         lg:flex lg:flex-col
-                        overflow-x-auto`}
+                        overflow-y-auto`}
                     obstructorClassName={`z-1 ${navOpen ? "fixed" : "hidden"} top-0 w-full h-full bg-black/30`}
                     toggleNav={toggleNav}
                 ></Navbar>
