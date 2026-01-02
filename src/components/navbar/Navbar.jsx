@@ -109,11 +109,11 @@ const navbar = [
     },
 ];
 
-export default function Navbar() {
+export default function Navbar({className}) {
     return (
         <div
             id="nav-bar"
-            className="h-full bg-(--primary) border-r-4 border-(--outline) flex flex-col w-60"
+            className={className}
         >
             {navbar.map((item) => {
                 return (

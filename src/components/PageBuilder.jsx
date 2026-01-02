@@ -4,7 +4,7 @@ import { useParams, Link } from "react-router";
 import { usePage } from "../contexts/PageProvider";
 import SingleImageBlock from "./blocks/SingleImageBlock";
 
-export default function PageBuilder() {
+export default function PageBuilder({ className }) {
     const { pageId } = useParams();
     const [blocks, setBlocks] = useState([]);
     const [adminMode, setAdminMode] = useState(true);
@@ -120,7 +120,7 @@ export default function PageBuilder() {
     return (
         <Fragment>
             {adminMode && (
-                <div className="flex justify-center gap-2">
+                <div className="flex justify-center gap-2 mt-4">
                     <button
                         onClick={async () => {
                             await addBlock({
