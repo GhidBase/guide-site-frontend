@@ -7,11 +7,9 @@ import { useEffect, useState } from "react";
 
 export default function Main() {
     const [navOpen, setNavOpen] = useState(false);
-    console.log(navOpen);
 
     function toggleNav() {
         setNavOpen(!navOpen);
-        console.log("hi");
     }
 
     function getScrollbarWidth() {

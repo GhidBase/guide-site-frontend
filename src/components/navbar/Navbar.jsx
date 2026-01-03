@@ -4,12 +4,6 @@ import NavbarSection from "./NavbarSection";
 
 const navbar = [
     {
-        id: 0,
-        slug: null,
-        navbarTitle: "General",
-        type: "section",
-    },
-    {
         id: 1,
         slug: "/page-manager",
         navbarTitle: "Page Manager",
@@ -176,14 +170,18 @@ export default function Navbar({
     return (
         <Fragment>
             <div id="nav-bar" className={className}>
-                {navbar.map((item) => {
+                {navbar.map((item, index, arr) => {
                     if (item.type == "page") {
                         return (
                             <NavbarButton
                                 slug={item.slug}
                                 navbarTitle={item.navbarTitle}
                                 key={item.id}
-                                className={`w-full h-20 flex items-center justify-center`}
+                                className={`
+                                    w-full h-20
+                                    flex items-center justify-center
+                                    lg:h-15
+                                    ${index < arr.length - 1 && "border-b-4 border-(--outline)"}`}
                             />
                         );
                     }
@@ -194,10 +192,11 @@ export default function Navbar({
                                 navbarTitle={item.navbarTitle}
                                 key={item.id}
                                 className={`
-                                    w-full h-16
-                                    text-3xl font-bold underline
+                                    w-full h-15
+                                    text-2xl font-bold underline
                                     flex items-center justify-center
-                                    bg-(--surface-background) text-(--text-color)`}
+                                    bg-(--surface-background) text-(--text-color)
+                                    ${index < arr.length - 1 && "border-b-4 border-(--outline)"}`}
                             />
                         );
                     }
