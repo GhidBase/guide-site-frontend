@@ -63,7 +63,10 @@ export default function Main() {
                     obstructorClassName={`z-1 ${navOpen ? "fixed" : "hidden"} top-0 w-full h-full bg-black/30`}
                     toggleNav={toggleNav}
                     navOpen={navOpen}
-                    closeClassName={`fixed w-full bottom-0 h-16 bg-black z-2`}
+                    closeClassName={`
+                        ${navOpen ? "fixed" : "hidden"}
+                        w-70 max-w-100 bottom-4 h-16 z-2 right-[50%] translate-x-1/2
+                        bg-(--primary) border-4 border-t-0 border-(--outline)`}
                 ></Navbar>
                 <div
                     id="page-outer-bounds"
