@@ -110,7 +110,13 @@ const navbar = [
     },
 ];
 
-export default function Navbar({ className, obstructorClassName, toggleNav }) {
+export default function Navbar({
+    className,
+    obstructorClassName,
+    toggleNav,
+    navOpen,
+    closeClassName
+}) {
     return (
         <Fragment>
             <div id="nav-bar" className={className}>
@@ -124,6 +130,7 @@ export default function Navbar({ className, obstructorClassName, toggleNav }) {
                     );
                 })}
             </div>
+            <button className={closeClassName}>Close</button>
             <div
                 id="navbar-obstructor"
                 onClick={toggleNav}

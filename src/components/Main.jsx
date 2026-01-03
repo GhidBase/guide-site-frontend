@@ -54,14 +54,16 @@ export default function Main() {
             >
                 <Navbar
                     className={`
-                        h-[80%] w-[80%] max-w-100 z-2 lg:h-full lg:w-fit lg:min-w-60
-                        ${navOpen ? "fixed" : "hidden"} bottom-[50%] right-[50%] translate-1/2 lg:static lg:translate-0
+                        w-70 max-w-100 z-2 lg:h-full lg:w-fit lg:min-w-60
+                        ${navOpen ? "fixed" : "hidden"} right-[50%] top-4 bottom-20 translate-x-1/2 lg:static lg:translate-0
                         border-4 border-(--outline) lg:border-t-0 lg:border-b-0 lg:border-l-0 lg:border-r-4
                         bg-(--primary)   
                         lg:flex lg:flex-col
                         overflow-y-auto`}
                     obstructorClassName={`z-1 ${navOpen ? "fixed" : "hidden"} top-0 w-full h-full bg-black/30`}
                     toggleNav={toggleNav}
+                    navOpen={navOpen}
+                    closeClassName={`fixed w-full bottom-0 h-16 bg-black z-2`}
                 ></Navbar>
                 <div
                     id="page-outer-bounds"
