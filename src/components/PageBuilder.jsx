@@ -15,9 +15,9 @@ export default function PageBuilder({ className }) {
     const highestOrder = Math.max(...orders);
 
     const { title, setTitle, currentAPI } = usePage();
-    // if (title != pageData.title && pageData.title) {
-    //     setTitle(pageData.title);
-    // }
+    if (title != pageData.title && pageData.title) {
+        setTitle(pageData.title);
+    }
 
     useEffect(() => {
         const type = pageId ? "id" : "title";
