@@ -10,33 +10,82 @@ export default function PageBuilder({ className }) {
     const [blocks, setBlocks] = useState([]);
     const [adminMode, setAdminMode] = useState(false);
     const [pageData, setPageData] = useState({});
-    // const highestOrder = Math.max(...blocks.order);
     const orders = blocks.map((block) => (block.order ? block.order : 0));
     const highestOrder = Math.max(...orders);
 
-    const { title, setTitle, currentAPI } = usePage();
-    if (title && pageData && title != pageData.title && pageData.title) {
+    const { title, setTitle, currentAPI, gameId: contextGameId } = usePage();
+    if (pageData && title != pageData.title && pageData.title) {
         setTitle(pageData.title);
     }
+
+    // I need to make it so that if no page is found from the initial page
+    // search, then the page will redirect
 
     useEffect(() => {
         const type = pageId ? "id" : "title";
         const pageInput = pageId ? pageId : pageTitle;
-        console.log(pageInput);
-        fetch(
-            currentAPI +
+        const gameId = 1;
+        const homepage = "lucky-defense";
+
+        async function findPageDataByName(name) {
+            const apiUrl =
+                currentAPI +
                 "/pages/" +
-                pageInput +
+                name +
                 "?type=" +
                 type +
                 "&gameId=" +
-                1,
-        )
-            .then((response) => response.json())
-            .then((result) => {
-                setBlocks(result.blocks);
-                setPageData(result.page);
-            });
+                1;
+
+            const response = await fetch(apiUrl);
+            const result = await response.json();
+            const { page, blocks } = result;
+            if (page == null) {
+                console.log("Page is null");
+            } else {
+                setBlocks(blocks);
+                setPageData(page);
+            }
+        }
+        async function loadHomepage() {
+            const responseGameData = await fetch(
+                currentAPI + "/games/" + contextGameId,
+            );
+            const resultGameData = await responseGameData.json();
+            const { slug, title } = resultGameData;
+
+            const apiUrl =
+                currentAPI +
+                "/pages/" +
+                slug +
+                "?type=" +
+                type +
+                "&gameId=" +
+                1;
+
+            const responsePageData = await fetch(apiUrl);
+            const resultPageData = await responsePageData.json();
+
+            const { page, blocks } = resultPageData;
+            if (page == null) {
+                console.log("Page is null");
+            } else {
+                setBlocks(blocks);
+                setPageData(page);
+            }
+        }
+
+        // I need to add an error check here
+        // Add an error page when there is no
+        // result
+
+        if (type == "title" && pageInput) {
+            // If the type is title and the title isn't empty
+            findPageDataByName(pageInput);
+        } else if (type == "title" && !pageInput) {
+            // If the type is title and the title is empty
+            loadHomepage();
+        }
     }, [pageId, pageTitle]);
 
     function isOrderTaken(order) {
