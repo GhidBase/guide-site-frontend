@@ -27,7 +27,7 @@ export default function PageBuilder({ className }) {
         const gameId = 1;
         const homepage = "lucky-defense";
 
-        async function findPageDataByName(name) {
+        async function loadPageByName(name) {
             const apiUrl =
                 currentAPI +
                 "/pages/" +
@@ -81,7 +81,7 @@ export default function PageBuilder({ className }) {
 
         if (type == "title" && pageInput) {
             // If the type is title and the title isn't empty
-            findPageDataByName(pageInput);
+            loadPageByName(pageInput);
         } else if (type == "title" && !pageInput) {
             // If the type is title and the title is empty
             loadHomepage();
