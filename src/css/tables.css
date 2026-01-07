@@ -1,0 +1,106 @@
+/* Table Styles */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    background-color: var(--surface-background);
+    font-family: "Fredoka", sans-serif;
+    color: var(--text-color);
+    box-shadow: 2px 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+table th,
+table td {
+    border: 1px solid var(--outline-brown);
+    padding: 12px;
+    text-align: left;
+    vertical-align: top;
+}
+
+table th {
+    background-color: var(--red-brown);
+    color: white;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+table tr {
+    background-color: var(--surface-background);
+}
+
+table td {
+    line-height: 1.5;
+}
+
+.img-cell {
+    text-align: center;
+}
+
+.img-cell > img {
+    width: 70%;
+    height: auto;
+}
+
+table ul {
+    padding-left: 20px;
+}
+
+table {
+    margin: auto;
+    max-width: 900px;
+    padding: 0 20px;
+}
+
+.indy-rare {
+    color: blue;
+    font-weight: bold;
+}
+
+.indy-epic {
+    color: purple;
+    font-weight: bold;
+}
+
+.indy-legendary {
+    color: yellow;
+    font-weight: bold;
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 1000px) {
+    table {
+        margin: 10px 0;
+    }
+
+    table th,
+    table td {
+        padding: 8px;
+        font-size: 14px;
+    }
+
+    .img-cell > img {
+        width: 70%;
+        height: auto;
+        margin: 0 auto;
+    }
+
+    table ul {
+        padding-left: 0px;
+        list-style-type: none;
+    }
+
+    table ul li {
+        margin-bottom: 8px; /* Adjust spacing as needed */
+    }
+
+    /* Ensure the last item doesn't add extra space at the bottom */
+    table ul li:last-child {
+        margin-bottom: 0;
+    }
+
+    .main-body {
+        padding: 0px;
+        padding-bottom: 100px;
+    }
+}

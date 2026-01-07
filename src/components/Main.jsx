@@ -1,4 +1,5 @@
 import "../tailwind.css";
+import "../css/tables.css";
 import { Outlet } from "react-router";
 import Navbar from "./navbar/Navbar.jsx";
 import Title from "./Title.jsx";

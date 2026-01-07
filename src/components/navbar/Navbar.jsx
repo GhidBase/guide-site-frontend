@@ -179,6 +179,7 @@ export default function Navbar({
                                     flex items-center justify-center
                                     lg:h-15 lg:border-b-4 border-(--outline)
                                     ${index < arr.length - 1 && "border-b-4"}`}
+                                toggleNav={toggleNav}
                             />
                         );
                     }
