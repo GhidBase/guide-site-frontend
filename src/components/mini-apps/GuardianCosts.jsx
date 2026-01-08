@@ -1,9 +1,13 @@
 import { Fragment, useState } from "react";
+import { usePage } from "../../contexts/PageProvider";
 
 export default function GuardianCosts() {
     const [fromLevel, setFromLevel] = useState(1);
     const [toLevel, setToLevel] = useState(2);
     const [rarity, setRarity] = useState("mythic");
+
+    const { setTitle } = usePage();
+    setTitle("Upgrade Costs");
 
     const upgradeCosts = {
         immortal: {
@@ -428,7 +432,7 @@ export default function GuardianCosts() {
                 <p>Choose a rarity to see costs:</p>
 
                 <form action="">
-                    <label for="rarity-selector">Rarity:</label>
+                    <label for="rarity-selector">Rarity: </label>
                     <select
                         name="rarity-selector"
                         id="rarity-selector"
@@ -442,7 +446,7 @@ export default function GuardianCosts() {
                         <option value="rare">Rare</option>
                         <option value="common">Common</option>
                     </select>
-                    <label for="from-level">From:</label>
+                    <label for="from-level">  From: </label>
                     <select
                         name="from-level"
                         id="from-level"
@@ -470,7 +474,7 @@ export default function GuardianCosts() {
                         <option value="13">13</option>
                         <option value="14">14</option>
                     </select>
-                    <label for="to-level">To:</label>
+                    <label for="to-level">  To: </label>
                     <select
                         name="to-level"
                         id="to-level"
@@ -1098,19 +1102,3 @@ export default function GuardianCosts() {
         </Fragment>
     );
 }
-
-// document
-//     .getElementById("from-level")
-//     .addEventListener("change", changeAvailableToNumbers);
-
-// document
-//     .getElementById("from-level")
-//     .addEventListener("change", calculateUpgradeCosts);
-
-// document
-//     .getElementById("to-level")
-//     .addEventListener("change", calculateUpgradeCosts);
-
-// document
-//     .getElementById("rarity-selector")
-//     .addEventListener("change", calculateUpgradeCosts);
