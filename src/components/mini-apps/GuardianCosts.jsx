@@ -1,6 +1,10 @@
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
 
 export default function GuardianCosts() {
+    const [fromLevel, setFromLevel] = useState(1);
+    const [toLevel, setToLevel] = useState(2);
+    const [rarity, setRarity] = useState("mythic");
+
     const upgradeCosts = {
         immortal: {
             1: {
@@ -376,77 +380,39 @@ export default function GuardianCosts() {
         },
     };
 
-    function calculateUpgradeCosts(currentLevel, targetLevel, rarity, output) {
-        // Output is
+    let totalGold = 0;
+    let totalDuplicates = 0;
+    let totalStones = 0;
+    let costMessage = "";
 
-        let totalGold = 0;
-        let totalDuplicates = 0;
-        let totalStones = 0;
-
-        if (Number(currentLevel) >= Number(targetLevel)) {
-            // alert("Desired level must be greater than current level");
-            let errortext = `Desired level ${targetLevel} must be greater than current level ${currentLevel}`;
-            // console.log(errortext);
-            return;
+    if (rarity === "mythic" || rarity === "immortal") {
+        for (let i = Number(fromLevel) + 1; i <= Number(toLevel); i++) {
+            totalStones += upgradeCosts[rarity][i].stones;
+            totalGold += upgradeCosts[rarity][i].gold;
         }
-
-        if (rarity === "mythic" || rarity === "immortal") {
-            for (
-                let i = Number(currentLevel) + 1;
-                i <= Number(targetLevel);
-                i++
-            ) {
-                totalStones += upgradeCosts[rarity][i].stones;
-                totalGold += upgradeCosts[rarity][i].gold;
-            }
-            if (totalGold > 1000) {
-                totalGold = totalGold / 1000 + "k";
-            }
-            const resultText = `Total Stones: ${totalStones}<br>Total Gold: ${totalGold}`;
-            output.innerHTML = resultText;
-        } else {
-            for (
-                let i = Number(currentLevel) + 1;
-                i <= Number(targetLevel);
-                i++
-            ) {
-                totalDuplicates += upgradeCosts[rarity][i].duplicates;
-                totalGold += upgradeCosts[rarity][i].gold;
-            }
-            if (totalGold > 1000) {
-                totalGold = totalGold / 1000 + "k";
-            }
-            const resultText = `Total Duplicates: ${totalDuplicates}<br>Total Gold: ${totalGold}`;
-            output.innerHTML = resultText;
+        if (totalGold > 1000) {
+            totalGold = totalGold / 1000 + "k";
         }
-    }
-
-    function changeAvailableToNumbers() {
-        let from = +document.getElementById("from-level").value;
-        const select = document.getElementById("to-level");
-        const startingFrom = +select.value;
-        from++;
-
-        if (select.value < from) {
-            select.value = from;
+        costMessage = (
+            <p>
+                Total Stones: {totalStones} <br /> Total Gold: {totalGold}
+            </p>
+        );
+    } else {
+        for (let i = Number(fromLevel) + 1; i <= Number(toLevel); i++) {
+            totalDuplicates += upgradeCosts[rarity][i].duplicates;
+            totalGold += upgradeCosts[rarity][i].gold;
         }
-        select.innerHTML = "";
-        const options = [];
-
-        for (i = from; i < 16; i++) {
-            options.push(i);
+        if (totalGold > 1000) {
+            totalGold = totalGold / 1000 + "k";
         }
-
-        options.forEach((value) => {
-            const option = document.createElement("option");
-            option.value = value;
-            option.textContent = value;
-            select.appendChild(option);
-        });
-
-        if (select.value < startingFrom) {
-            select.value = startingFrom;
-        }
+        costMessage = (
+            <p>
+                Total Duplicates: {totalDuplicates}
+                <br />
+                Total Gold:{totalGold}
+            </p>
+        );
     }
 
     return (
@@ -461,7 +427,12 @@ export default function GuardianCosts() {
 
                 <form action="">
                     <label for="rarity-selector">Rarity:</label>
-                    <select name="rarity-selector" id="rarity-selector">
+                    <select
+                        name="rarity-selector"
+                        id="rarity-selector"
+                        value={rarity}
+                        onChange={(e) => setRarity(e.target.value)}
+                    >
                         <option value="mythic">Mythic</option>
                         <option value="immortal">Immortal</option>
                         <option value="legendary">Legendary</option>
@@ -470,7 +441,18 @@ export default function GuardianCosts() {
                         <option value="common">Common</option>
                     </select>
                     <label for="from-level">From:</label>
-                    <select name="from-level" id="from-level">
+                    <select
+                        name="from-level"
+                        id="from-level"
+                        value={fromLevel}
+                        onChange={(e) => {
+                            const value =
+                                +e.target.value < +toLevel
+                                    ? +e.target.value
+                                    : +toLevel - 1;
+                            setFromLevel(value);
+                        }}
+                    >
                         <option value="1">1</option>
                         <option value="2">2</option>
                         <option value="3">3</option>
@@ -487,7 +469,18 @@ export default function GuardianCosts() {
                         <option value="14">14</option>
                     </select>
                     <label for="to-level">To:</label>
-                    <select name="to-level" id="to-level">
+                    <select
+                        name="to-level"
+                        id="to-level"
+                        value={toLevel}
+                        onChange={(e) => {
+                            const value =
+                                +e.target.value > +fromLevel
+                                    ? +e.target.value
+                                    : +fromLevel + 1;
+                            setToLevel(value);
+                        }}
+                    >
                         <option value="2">2</option>
                         <option value="3">3</option>
                         <option value="4">4</option>
@@ -504,7 +497,7 @@ export default function GuardianCosts() {
                         <option value="15">15</option>
                     </select>
                 </form>
-                <p id="output"></p>
+                {costMessage}
             </div>
 
             <div class="rarity-tables">
@@ -1091,4 +1084,3 @@ export default function GuardianCosts() {
 // document
 //     .getElementById("rarity-selector")
 //     .addEventListener("change", calculateUpgradeCosts);
-
