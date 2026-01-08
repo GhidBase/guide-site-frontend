@@ -1,6 +1,7 @@
 import NavbarButton from "./NavbarButton";
 import { Fragment } from "react";
 import NavbarSection from "./NavbarSection";
+import { type } from "@testing-library/user-event/dist/cjs/utility/index.js";
 
 const navbar = [
     {
@@ -106,6 +107,13 @@ const navbar = [
         slug: "/magic-hell-build",
         navbarTitle: "Magic Hell Build",
         type: "page",
+    },
+    { id: 28, navbarTitle: "Guild Battle", type: "section" },
+    {
+        id: 29,
+        navbarTitle: "Guild Battle Guide",
+        type: "page",
+        slug: "/guild-battle",
     },
     {
         id: 25,
