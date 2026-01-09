@@ -1,0 +1,161 @@
+.immortal-guide #roulette-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  width: 350px;
+}
+
+.immortal-guide #roulette-form > * {
+  width: 100%;
+}
+
+.immortal-guide .bottom-margin {
+  margin-bottom: 8px;
+}
+
+.immortal-guide #roulette-log {
+  height: 300px;
+  overflow-y: auto;
+}
+
+.immortal-guide #summary-panel > h3,
+.immortal-guide #artifact-details-panel > h3 {
+  margin: 4px;
+}
+
+.immortal-guide #summary-panel > p,
+.immortal-guide #artifact-details-panel > p {
+  margin: 2px;
+}
+
+.immortal-guide #roulette-log > p {
+  margin: 0;
+}
+
+.immortal-guide .toggle-button {
+  padding: 0 18px;
+  justify-content: space-between;
+  display: flex;
+  align-items: center;
+  border: 3px solid var(--outline-brown);
+  border-radius: 0.5em;
+  margin-top: 8px;
+  background-color: var(--primary);
+  color: white;
+}
+
+
+
+
+
+.immortal-guide .icon {
+  margin-right: auto;
+  margin-left: 8px;
+  height: 1.9em;
+}
+
+.immortal-guide .toggle-button-arrow {
+  transform: rotate(0.5turn);
+  transition: transform 0.3s;
+}
+
+.immortal-guide .toggle-button.expanded-button .toggle-button-arrow {
+  transform: rotate(0turn);
+}
+
+.immortal-guide #roulette-sim-title {
+  margin: 0;
+  margin-top: 12px;
+}
+
+.immortal-guide .toggle-panel {
+  min-height: 0;
+  overflow-y: hidden;
+  border: 3px solid var(--text-color);
+  border-top: none;
+  padding: 8px;
+  border-radius: 0 0 0.5em 0.5em;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--accent);
+  max-height: 0;
+  /* padding-top: 0; */
+
+  transition: max-height 0.5s;
+}
+
+.immortal-guide .collapsed {
+  border: none;
+  padding: 0;
+}
+
+.immortal-guide .center {
+  display: flex;
+  justify-content: center;
+}
+
+.immortal-guide .main-panel {
+  border: 3px solid var(--text-color);
+  padding: 8px;
+  border-radius: 0.5em;
+  background-color: var(--accent);
+
+  display: flex;
+  justify-content: center;
+  margin: 12px;
+}
+
+.immortal-guide #details-panel.expand-details {
+  max-height: none;
+  height: none;
+}
+
+@media (max-width: 1000px) {
+  .immortal-guide #roulette-form {
+    width: 250px;
+  }
+  .immortal-guide .results {
+    width: 250px;
+  }
+}
+
+.immortal-guide .hidden {
+  display: none;
+}
+
+.immortal-guide .expanded-button {
+  border-radius: 0.5em 0.5em 0 0;
+}
+
+.immortal-guide #summary-panel.hidden {
+  display: none;
+}
+
+.immortal-guide .centered-imgs {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.immortal-guide .two-centered-imgs {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.immortal-guide .two-centered-imgs-flat-height img {
+  max-height: 100px;
+  height: auto;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+}
+.immortal-guide .two-centered-imgs-flat-height {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding: 20px;
+}

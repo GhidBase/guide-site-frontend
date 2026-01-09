@@ -79,17 +79,17 @@ export default function SingleImageBlock({
 
     return (
         <div
-            className={`text-(--text-color) ${adminMode && "bg-black/10 border-b border-(--primary) mb-0"}`}
+            className={`text-(--text-color) mt-2 ${adminMode && "bg-black/10 border-b border-(--primary) mb-0"}`}
             id={"image-block-" + block.id}
         >
-            <div className="flex">
+            <div className="flex justify-stretch">
                 {block.files &&
                     block.files.map((file) => {
                         return (
                             <div
                                 id={file.id}
                                 key={file.id}
-                                className="w-full my-2"
+                                className="w-full m-auto"
                             >
                                 <img
                                     id={"photo-img-" + file.id}

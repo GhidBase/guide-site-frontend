@@ -3,6 +3,7 @@
 :root {
     /* Theme Colors */
     --red-brown: #794e3b; /* Primary Color */
+    --red-brown-trans: #794e3b3a;
     --khaki-brown: #845744; /* Used in the repeating bg-pattern */
     --accent: #f0e3c3; /* Used as a secondary surface */
     --accent-transparent: #44403575; /* Used on the pop-up bg cover */
@@ -141,7 +142,16 @@ ol {
     transform: scaleX(1);
 }
 
-
 iframe[src*="youtube.com/embed"] {
-  max-width: 100%;
+    max-width: 100%;
+}
+
+input,
+select {
+    /* background-color: var(--khaki-brown);
+    color: white;
+    padding: 1px 2px; */
+    /* border-radius: 0.25em; */
+    border-bottom: 2px solid var(--text-color);
+    background-color: var(--red-brown-trans);
 }

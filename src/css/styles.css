@@ -1,0 +1,732 @@
+.immortal-guide .title {
+  font-size: 80px;
+  color: white;
+  text-shadow: 2px 2px 0 black, -2px 2px 0 black, 2px -2px 0 black,
+    -2px -2px 0 black;
+  padding: 0 30px;
+  margin-top: 40px;
+  min-height: 100px;
+  margin-bottom: 40px;
+  text-align: center;
+  word-break: break-word;
+}
+
+.immortal-guide .image-cropped {
+  width: 100%; /* or any desired width */
+  height: 200px; /* set desired visible height */
+  object-fit: cover; /* ensures image fills the container */
+  object-position: center; /* keeps the center of the image visible */
+  display: block;
+}
+
+.immortal-guide .title-container {
+  width: 100%;
+  height: 180px;
+  padding: 20px;
+  box-sizing: border-box;
+  justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.immortal-guide .image-cropped-two {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: cover; /* ensures image fills the container */
+  object-position: center;
+}
+
+.immortal-guide h2 {
+  text-decoration: underline;
+}
+
+/* ============================================================
+      Layout Utilities
+      ============================================================ */
+
+/* Good when you just need a section to be flexbox */
+.immortal-guide .flex-row {
+  display: flex;
+}
+
+/* Makes the content inside my main-content panel */
+/* a consistent width */
+.immortal-guide .text-width {
+  margin: auto;
+  max-width: 900px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 6px;
+  overflow-x: visible;
+}
+
+.immortal-guide .centered-text-block {
+  text-align: center;
+  display: block;
+}
+
+/* ============================================================
+      Main Layout Sections
+      ============================================================ */
+.immortal-guide .main-body {
+  background-color: var(--surface-background);
+  border-top: 4px solid var(--outline-brown);
+  border-left: 2px solid var(--outline-brown);
+  padding: 8px 16px;
+  justify-items: center;
+  /* I use padding-right because the side-panel is 200px wide */
+  /* The mobile screen media query resets this though */
+  padding-right: 200px;
+}
+
+.immortal-guide .side-bar {
+  background-color: var(--surface-background);
+  display: flex;
+  flex-direction: column;
+  max-width: 220px;
+}
+
+.immortal-guide .side-bar:first-child {
+  margin: 0;
+  border-top: 2px solid var(--outline-brown);
+}
+
+/* this is the row that contains the side-bar and the body */
+.immortal-guide .side-bar-body-row {
+  flex: 1;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: stretch;
+}
+
+/* ============================================================
+      Lists & Navigation
+      ============================================================ */
+.immortal-guide ul {
+  margin: 0;
+  justify-content: center;
+}
+
+/* ============================================================
+      Buttons
+      ============================================================ */
+
+.immortal-guide .side-bar > * {
+  border-top: 1px solid var(--outline-brown);
+  border-bottom: 1px solid var(--outline-brown);
+}
+
+.immortal-guide .side-bar h2 {
+  padding: 10px 0;
+  border-right: 2px solid var(--outline-brown);
+}
+
+.immortal-guide .side-bar > a {
+  text-decoration: none;
+  color: white;
+  border-right: 2px solid var(--outline-brown);
+  background-color: var(--primary);
+  text-align: center;
+  height: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0 10px;
+  will-change: transform;
+  transition: transform 0.5s;
+}
+
+.immortal-guide .side-bar > a:hover {
+  background-color: var(--khaki-brown);
+  transform: scale(1.1);
+  z-index: 1;
+}
+
+.immortal-guide #discord-button:hover {
+  transform: scale(1.03);
+}
+
+.immortal-guide .side-bar .section-header {
+  margin: 0;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ============================================================
+      Images
+      ============================================================ */
+.immortal-guide .max-width-img {
+  width: 45%;
+  height: auto;
+  margin: auto;
+  display: block;
+}
+
+.immortal-guide .max-width-img-66 {
+  width: 66%;
+  height: auto;
+  margin: auto;
+  display: block;
+}
+
+.immortal-guide .stretch-img {
+  width: 100%;
+  max-width: 400px;
+  padding: 8px;
+}
+
+.immortal-guide .max-width-img-23 {
+  width: 23%;
+  height: auto;
+  margin: auto;
+  display: block;
+}
+
+.immortal-guide .img-height {
+  max-height: 250px;
+  width: auto;
+  max-width: 40%;
+  margin: auto;
+  display: block;
+}
+
+.immortal-guide .inline-img {
+  height: 1.5em;
+}
+
+/* ============================================================
+      Components
+      ============================================================ */
+.immortal-guide #discord-button {
+  display: flex;
+  background-color: #5865f2;
+  border: none;
+  color: white;
+  font-size: 16px;
+  padding: 12px 20px;
+  text-align: center;
+  border-radius: 8px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 30px;
+  text-decoration: none;
+  margin: 10px;
+}
+
+.immortal-guide #discord-button img {
+  border: none;
+}
+
+.immortal-guide #guardian-preview {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 25px;
+  border: var(--khaki-brown) 10px solid;
+  background-color: var(--accent);
+  margin: 30px 0;
+}
+
+.immortal-guide .view-counter {
+  display: flex;
+  margin-top: auto;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.immortal-guide .cover {
+  display: none;
+}
+
+.immortal-guide .menu {
+  display: none;
+}
+
+.immortal-guide .footer {
+  background-color: var(--red-brown);
+  display: flex;
+  width: 100%;
+  height: 50px;
+  justify-content: center;
+  border-top: 2px solid var(--outline-brown);
+}
+
+.immortal-guide .footer p {
+  color: white;
+}
+
+.immortal-guide .main-body > a:hover,
+.immortal-guide .main-body > a:focus {
+  color: var(--hover-blue, #0056b3);
+  text-decoration: underline;
+}
+
+.immortal-guide a {
+  color: var(--accent-blue, #0050a7);
+  position: relative;
+  text-decoration: none;
+}
+
+.immortal-guide .footer > p > a {
+  color: var(--accent-blue, #5facff);
+}
+
+.immortal-guide .main-body a::after,
+.immortal-guide .footer a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  height: 2px;
+  width: 100%;
+  background-color: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.2s ease-out;
+}
+
+.immortal-guide .main-body a:hover::after,
+.immortal-guide .footer a:hover::after {
+  transform: scaleX(1);
+}
+
+.immortal-guide .nav-footer {
+  display: none;
+}
+
+/* Modal background */
+.immortal-guide .modal {
+  display: none;
+  position: fixed;
+  z-index: 999;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+/* Modal box */
+.immortal-guide .modal-content {
+  background-color: #fefefe;
+  margin: 15% auto;
+  padding: 20px;
+  border-radius: 8px;
+  width: 80%;
+  max-width: 400px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+  text-align: center;
+}
+
+/* Close button */
+.immortal-guide .close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+/* Donation link style */
+.immortal-guide .nav-footer .donate-btn {
+  display: inline-block;
+  margin-top: 15px;
+  padding: 10px 20px;
+  background-color: #ffdd00;
+  color: #333;
+  text-decoration: none;
+  border-radius: 5px;
+  font-weight: bold;
+}
+
+.immortal-guide ::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+.immortal-guide ::-webkit-scrollbar-track {
+  background: var(--surface-background); /* or any color */
+}
+
+.immortal-guide ::-webkit-scrollbar-thumb {
+  background-color: var(--khaki-brown);
+  border-radius: 6px;
+  border: 3px solid var(--surface-background); /* for padding effect */
+}
+
+.immortal-guide ::-webkit-scrollbar-thumb:hover {
+  background-color: var(--red-brown);
+}
+
+@media (min-width: 1000px) {
+  .immortal-guide .text-width-desktop-only {
+    margin: auto;
+    max-width: 900px;
+    padding: 0 20px;
+  }
+}
+
+/* ============================================================
+      mobile modifications
+   ============================================================ */
+
+@media (max-width: 1000px) {
+  .immortal-guide .side-bar-body-row {
+    display: grid;
+    grid-template-columns: auto;
+  }
+
+  .immortal-guide .footer {
+    margin-top: auto;
+    background-color: var(--red-brown);
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 50dvw;
+    width: 100dvw;
+    justify-content: center;
+    transform: translateX(-50%);
+    border-top: 2px solid var(--outline-brown);
+  }
+
+  .immortal-guide .stretch-img {
+    padding: 0;
+  }
+
+  .immortal-guide .footer > p {
+    display: none;
+  }
+
+  .immortal-guide .menu {
+    display: block;
+    width: 50px;
+  }
+
+  .immortal-guide .cover {
+    position: fixed;
+    display: none;
+    top: 0;
+    background-color: var(--accent-transparent);
+    z-index: 1;
+    width: 100dvw;
+    height: 100dvh;
+  }
+
+  .immortal-guide .cover.visible {
+    display: block;
+  }
+
+  .immortal-guide .title {
+    font-size: 50px;
+  }
+
+  .immortal-guide body {
+    max-width: 100%;
+  }
+
+  .immortal-guide .main-body {
+    margin: 0;
+    border-left: none;
+    border-right: none;
+    padding: 0 20px;
+    box-sizing: border-box;
+    padding-bottom: 100px;
+    overflow: hidden;
+  }
+
+  .immortal-guide .side-bar {
+    opacity: 0;
+    position: fixed;
+    top: 0;
+    left: calc(50dvw);
+    transform: translateX(-50%);
+    max-width: 100dvw;
+    width: 70dvw;
+    overflow-y: auto;
+    max-height: 100dvh;
+    z-index: 2;
+    overflow-x: hidden;
+    pointer-events: none;
+    transform: translateY(0);
+    transition: opacity 0.25s, transform 0.5s;
+  }
+
+  .immortal-guide .side-bar.visible {
+    opacity: 1;
+    pointer-events: initial;
+    transform: translate(-50%);
+  }
+
+  .immortal-guide .side-bar,
+  .immortal-guide .side-bar > a {
+    border: 2px solid var(--outline-brown);
+    min-height: 50px;
+  }
+
+  .immortal-guide iframe {
+    max-width: 70dvw;
+  }
+
+  .immortal-guide .nav-footer {
+    text-align: center;
+    display: block;
+  }
+
+  .immortal-guide .no-side-padding-mobile {
+    padding-left: 0px;
+    padding-right: 0px;
+  }
+
+  .immortal-guide .no-border-radius-mobile {
+    border-radius: 0px;
+    border-left: none;
+    border-right: none;
+  }
+
+  .immortal-guide .max-width-mobile-only {
+    width: 100%;
+  }
+}
+
+/* Mobile overlay menu styles */
+.immortal-guide body.unscrollable {
+  overflow: hidden;
+}
+
+.immortal-guide .mobile-menu-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+.immortal-guide .mobile-menu-overlay.visible {
+  display: flex;
+}
+
+.immortal-guide .mobile-menu-panel {
+  background: var(--surface-background);
+  color: white;
+  border: 2px solid var(--outline-brown);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  width: 90vw;
+  max-width: 640px;
+  max-height: 80vh;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+}
+.immortal-guide .mobile-menu-header {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 12px;
+  border-bottom: 2px solid var(--outline-brown);
+}
+.immortal-guide .mobile-menu-search {
+  flex: 1;
+  padding: 10px 12px;
+  border: 2px solid var(--outline-brown);
+  background: var(--primary);
+  color: white;
+}
+.immortal-guide .mobile-menu-search::placeholder {
+  color: #ddd;
+}
+.immortal-guide .mobile-menu-close {
+  padding: 10px 14px;
+  background: var(--primary);
+  color: white;
+  border: 2px solid var(--outline-brown);
+  cursor: pointer;
+}
+
+.immortal-guide .mobile-menu-categories {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 12px;
+}
+.immortal-guide .mobile-menu-category {
+  margin-bottom: 8px;
+}
+.immortal-guide .mobile-menu-cat-header {
+  width: 100%;
+  text-align: left;
+  background: var(--primary);
+  color: white;
+  border: 2px solid var(--outline-brown);
+  padding: 10px 12px;
+  cursor: pointer;
+}
+.immortal-guide .mobile-menu-cat-header.open {
+  background: var(--primary);
+  filter: brightness(1.05);
+}
+.immortal-guide .mobile-menu-links {
+  display: none;
+  border-left: 2px solid var(--outline-brown);
+  border-right: 2px solid var(--outline-brown);
+  border-bottom: 2px solid var(--outline-brown);
+  background: var(--surface-background);
+}
+.immortal-guide .mobile-menu-links a {
+  display: block;
+  padding: 10px 12px;
+  color: black !important;
+  text-decoration: none;
+  border-top: 1px solid var(--outline-brown);
+}
+.immortal-guide .mobile-menu-links a:visited {
+  color: black !important;
+}
+.immortal-guide .mobile-menu-links a:hover {
+  background: var(--primary);
+}
+
+.immortal-guide .mobile-menu-persistent,
+.immortal-guide .mobile-menu-persistent p,
+.immortal-guide .mobile-menu-persistent a {
+  color: black;
+}
+
+.immortal-guide .mobile-menu-feedback {
+  padding: 10px 12px;
+  color: black;
+  background: var(--surface-background);
+  border: 2px solid var(--outline-brown);
+  margin: 8px 12px;
+  text-align: center;
+}
+
+/* Only show overlay behavior on mobile viewports */
+@media (min-width: 1001px) {
+  .immortal-guide .mobile-menu-overlay.visible {
+    display: none; /* safeguard: prevent affecting desktop */
+  }
+}
+
+@media (max-width: 1000px) {
+  .immortal-guide .banner {
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: 50px 1fr 50px;
+    margin: 0;
+    width: 100%;
+    border-radius: 0;
+    border: none;
+    max-width: 100%;
+    padding: 0;
+    border-top: 4px solid black;
+  }
+
+  .immortal-guide .banner > .content {
+    grid-row: 2;
+    grid-column: 1/-1;
+  }
+
+  .immortal-guide .banner .banner-title {
+    font-size: 18px;
+  }
+  .immortal-guide .banner * {
+    font-size: 18px;
+  }
+
+  .immortal-guide .desktop-only {
+    display: none;
+    box-shadow: 0 0 15px #ffcc00;
+  }
+}
+@media (min-width: 1001px) {
+  .immortal-guide .mobile-only {
+    display: none;
+  }
+}
+
+/* Desktop sidebar search styles */
+.immortal-guide .desktop-menu-search {
+  border-right: 2px solid var(--outline-brown);
+}
+
+.immortal-guide .desktop-menu-search input {
+  width: 100%;
+  height: 50px;
+  box-sizing: border-box;
+  background: var(--primary);
+  color: #FFFFFF;
+  caret-color: #FFFFFF;
+  border: 2px solid var(--outline-brown);
+  border-left: none;
+  border-right: none;
+  padding: 0 10px;
+  font-size: 16px;
+  outline: none;
+}
+
+/* Preserve white text across interactive states */
+.immortal-guide .desktop-menu-search input:focus,
+.immortal-guide .desktop-menu-search input:hover,
+.immortal-guide .desktop-menu-search input:active {
+  color: #FFFFFF;
+  caret-color: #FFFFFF;
+}
+
+.immortal-guide .desktop-menu-search input::placeholder {
+  color: var(--overlay-link);
+  opacity: 0.8;
+}
+
+.immortal-guide .desktop-menu-feedback {
+  padding: 8px 10px;
+  background: var(--surface-background);
+  color: var(--outline-brown);
+  border-top: 2px solid var(--outline-brown);
+  border-bottom: 2px solid var(--outline-brown);
+}
+
+/* Only show overlay behavior on mobile viewports */
+@media (min-width: 1001px) {
+  .immortal-guide .mobile-menu-overlay.visible {
+    display: none; /* safeguard: prevent affecting desktop */
+  }
+}
+
+@media (max-width: 1000px) {
+  .immortal-guide .banner {
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: 50px 1fr 50px;
+    margin: 0;
+    width: 100%;
+    border-radius: 0;
+    border: none;
+    max-width: 100%;
+    padding: 0;
+    border-top: 4px solid black;
+  }
+
+  .immortal-guide .banner > .content {
+    grid-row: 2;
+    grid-column: 1/-1;
+  }
+
+  .immortal-guide .banner .banner-title {
+    font-size: 18px;
+  }
+  .immortal-guide .banner * {
+    font-size: 18px;
+  }
+
+  .immortal-guide .desktop-only {
+    display: none;
+    box-shadow: 0 0 15px #ffcc00;
+  }
+}
+@media (min-width: 1001px) {
+  .immortal-guide .mobile-only {
+    display: none;
+  }
+}

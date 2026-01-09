@@ -10,8 +10,14 @@ const navbar = [
         type: "page",
     },
     {
+        id: 32,
+        slug: "/immortal-guardians",
+        navbarTitle: "Immortal Guardians",
+        type: "page",
+    },
+    {
         id: 2,
-        slug: "/page-manager/56",
+        slug: "/",
         navbarTitle: "Homepage",
         type: "page",
     },
@@ -57,15 +63,32 @@ const navbar = [
         type: "page",
     },
     {
+        id: 28,
+        navbarTitle: "General",
+        type: "section",
+    },
+    {
+        id: 27,
+        slug: "/guardian-upgrade-costs",
+        navbarTitle: "Guardian Upgrade Costs",
+        type: "page",
+    },
+    {
         id: 23,
         navbarTitle: "Hard Mode",
         type: "section",
     },
     {
         id: 10,
-        slug: "/unlock-order",
+        slug: "/unlock-order-hard",
         navbarTitle: "Mythic Unlock Order",
         type: "page",
+    },
+    {
+        id: 31,
+        navbarTitle: "Lance Kitty Strat",
+        type: "page",
+        slug: "/lance-kitty",
     },
     {
         id: 24,
@@ -95,6 +118,13 @@ const navbar = [
         slug: "/magic-hell-build",
         navbarTitle: "Magic Hell Build",
         type: "page",
+    },
+    { id: 30, navbarTitle: "Guild Battle", type: "section" },
+    {
+        id: 29,
+        navbarTitle: "Guild Battle Guide",
+        type: "page",
+        slug: "/guild-battle",
     },
     {
         id: 25,
