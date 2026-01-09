@@ -11,8 +11,14 @@ const navbar = [
         type: "page",
     },
     {
+        id: 32,
+        slug: "/immortal-guardians",
+        navbarTitle: "Immortal Guardians",
+        type: "page",
+    },
+    {
         id: 2,
-        slug: "/page-manager/56",
+        slug: "/",
         navbarTitle: "Homepage",
         type: "page",
     },
