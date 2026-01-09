@@ -3,6 +3,7 @@ import TextBlock from "./blocks/TextBlock";
 import { useParams, Link, useNavigate } from "react-router";
 import { usePage } from "../contexts/PageProvider";
 import SingleImageBlock from "./blocks/SingleImageBlock";
+const env = import.meta.env.VITE_ENV;
 
 export default function PageBuilder({ className }) {
     const navigate = useNavigate();
@@ -254,20 +255,22 @@ export default function PageBuilder({ className }) {
                     }
                     return blockType;
                 })}
-            <div className="flex flex-col items-center mt-2 gap-2">
-                <Link
-                    className="text-amber-50 bg-(--primary) w-50 rounded px-2 py-0.5"
-                    to={"/page-manager/"}
-                >
-                    Back to Page Manager
-                </Link>
-                <button
-                    className={`text-amber-50 bg-(--primary) w-50 rounded px-2 py-0.5`}
-                    onClick={() => setAdminMode(!adminMode)}
-                >
-                    Switch View
-                </button>
-            </div>
+            {env == "DEV" && (
+                <div className="flex flex-col items-center mt-2 gap-2">
+                    <Link
+                        className="text-amber-50 bg-(--primary) w-50 rounded px-2 py-0.5"
+                        to={"/page-manager/"}
+                    >
+                        Back to Page Manager
+                    </Link>
+                    <button
+                        className={`text-amber-50 bg-(--primary) w-50 rounded px-2 py-0.5`}
+                        onClick={() => setAdminMode(!adminMode)}
+                    >
+                        Switch View
+                    </button>
+                </div>
+            )}
         </Fragment>
     );
 }
