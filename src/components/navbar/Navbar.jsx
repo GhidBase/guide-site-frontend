@@ -1,7 +1,6 @@
 import NavbarButton from "./NavbarButton";
 import { Fragment } from "react";
 import NavbarSection from "./NavbarSection";
-import { type } from "@testing-library/user-event/dist/cjs/utility/index.js";
 
 const navbar = [
     {
