@@ -1,4 +1,4 @@
-#roulette-form {
+.immortal-guide #roulette-form {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -6,34 +6,34 @@
   width: 350px;
 }
 
-#roulette-form > * {
+.immortal-guide #roulette-form > * {
   width: 100%;
 }
 
-.bottom-margin {
+.immortal-guide .bottom-margin {
   margin-bottom: 8px;
 }
 
-#roulette-log {
+.immortal-guide #roulette-log {
   height: 300px;
   overflow-y: auto;
 }
 
-#summary-panel > h3,
-#artifact-details-panel > h3 {
+.immortal-guide #summary-panel > h3,
+.immortal-guide #artifact-details-panel > h3 {
   margin: 4px;
 }
 
-#summary-panel > p,
-#artifact-details-panel > p {
+.immortal-guide #summary-panel > p,
+.immortal-guide #artifact-details-panel > p {
   margin: 2px;
 }
 
-#roulette-log > p {
+.immortal-guide #roulette-log > p {
   margin: 0;
 }
 
-.toggle-button {
+.immortal-guide .toggle-button {
   padding: 0 18px;
   justify-content: space-between;
   display: flex;
@@ -49,27 +49,27 @@
 
 
 
-.icon {
+.immortal-guide .icon {
   margin-right: auto;
   margin-left: 8px;
   height: 1.9em;
 }
 
-.toggle-button-arrow {
+.immortal-guide .toggle-button-arrow {
   transform: rotate(0.5turn);
   transition: transform 0.3s;
 }
 
-.toggle-button.expanded-button .toggle-button-arrow {
+.immortal-guide .toggle-button.expanded-button .toggle-button-arrow {
   transform: rotate(0turn);
 }
 
-#roulette-sim-title {
+.immortal-guide #roulette-sim-title {
   margin: 0;
   margin-top: 12px;
 }
 
-.toggle-panel {
+.immortal-guide .toggle-panel {
   min-height: 0;
   overflow-y: hidden;
   border: 3px solid var(--text-color);
@@ -86,17 +86,17 @@
   transition: max-height 0.5s;
 }
 
-.collapsed {
+.immortal-guide .collapsed {
   border: none;
   padding: 0;
 }
 
-.center {
+.immortal-guide .center {
   display: flex;
   justify-content: center;
 }
 
-.main-panel {
+.immortal-guide .main-panel {
   border: 3px solid var(--text-color);
   padding: 8px;
   border-radius: 0.5em;
@@ -107,51 +107,51 @@
   margin: 12px;
 }
 
-#details-panel.expand-details {
+.immortal-guide #details-panel.expand-details {
   max-height: none;
   height: none;
 }
 
 @media (max-width: 1000px) {
-  #roulette-form {
+  .immortal-guide #roulette-form {
     width: 250px;
   }
-  .results {
+  .immortal-guide .results {
     width: 250px;
   }
 }
 
-.hidden {
+.immortal-guide .hidden {
   display: none;
 }
 
-.expanded-button {
+.immortal-guide .expanded-button {
   border-radius: 0.5em 0.5em 0 0;
 }
 
-#summary-panel.hidden {
+.immortal-guide #summary-panel.hidden {
   display: none;
 }
 
-.centered-imgs {
+.immortal-guide .centered-imgs {
   display: flex;
   justify-content: center;
   gap: 20px;
 }
 
-.two-centered-imgs {
+.immortal-guide .two-centered-imgs {
   display: flex;
   justify-content: center;
   align-items: center;
 }
-.two-centered-imgs-flat-height img {
+.immortal-guide .two-centered-imgs-flat-height img {
   max-height: 100px;
   height: auto;
   width: auto;
   max-width: 100%;
   object-fit: contain;
 }
-.two-centered-imgs-flat-height {
+.immortal-guide .two-centered-imgs-flat-height {
   display: flex;
   justify-content: center;
   align-items: flex-start;

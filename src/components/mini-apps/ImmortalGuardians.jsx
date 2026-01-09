@@ -70,7 +70,7 @@ export default function ImmortalGuardians() {
     setTitle("Immortal Guardians");
 
     return (
-        <div class="text-width content-block">
+        <div class="text-width content-block immortal-guide">
             <ToggleSection title="How to unlock Immortal Guardians">
                 <p>
                     An Immortal Guardian unlocks when you get their mythic form
@@ -509,10 +509,7 @@ export default function ImmortalGuardians() {
             <ToggleSection title="Primeval Bomba" imgSrc={primevalBomba}>
                 <div class="two-centered-imgs">
                     <img src={primevalBomba} alt="" />
-                    <img
-                        src={primevalBomba1}
-                        alt=""
-                    />
+                    <img src={primevalBomba1} alt="" />
                 </div>
                 <h2>Playstyle</h2>
                 <p>
@@ -558,10 +555,7 @@ export default function ImmortalGuardians() {
                     <img class="mini" src={primevalBomba} alt="" />
                 </h2>
                 <div class="two-centered-imgs-flat-height">
-                    <img
-                        src={primevalBombaSkills}
-                        alt=""
-                    />
+                    <img src={primevalBombaSkills} alt="" />
                 </div>
                 <p>
                     <b>Shockwave - Passive</b>
@@ -641,17 +635,10 @@ export default function ImmortalGuardians() {
                 <p>In conclusion, Ghost Ninja is rather unremarkable.</p>
                 <h2>
                     Skills
-                    <img
-                        class="mini"
-                        src={ghostNinja}
-                        alt=""
-                    />
+                    <img class="mini" src={ghostNinja} alt="" />
                 </h2>
                 <div class="two-centered-imgs-flat-height">
-                    <img
-                        src={ghostNinjaSkills}
-                        alt=""
-                    />
+                    <img src={ghostNinjaSkills} alt="" />
                 </div>
                 <p>
                     <b>Opportunity - Passive</b>
@@ -752,11 +739,7 @@ export default function ImmortalGuardians() {
                 </p>
                 <h2>
                     Skills
-                    <img
-                        class="mini"
-                        src={chronoAto}
-                        alt=""
-                    />
+                    <img class="mini" src={chronoAto} alt="" />
                 </h2>
                 <div class="two-centered-imgs-flat-height">
                     <img src={chronoAtoSkills} />
@@ -836,11 +819,7 @@ export default function ImmortalGuardians() {
                 </p>
                 <h2>
                     Skills
-                    <img
-                        class="mini"
-                        src={doctorPulse}
-                        alt=""
-                    />
+                    <img class="mini" src={doctorPulse} alt="" />
                 </h2>
                 <div class="two-centered-imgs-flat-height">
                     <img src={doctorPulseSkills} alt="" />
@@ -931,11 +910,7 @@ export default function ImmortalGuardians() {
                 </p>
                 <h3>
                     Immortal Form
-                    <img
-                        class="mini"
-                        src={topVayne}
-                        alt=""
-                    />
+                    <img class="mini" src={topVayne} alt="" />
                 </h3>
                 <p>
                     Her Immortal Form is very strong. Unlike Vayne, Top Vayne
@@ -986,11 +961,7 @@ export default function ImmortalGuardians() {
                 </p>
                 <h2>
                     Skills
-                    <img
-                        class="mini"
-                        src={topVayne}
-                        alt=""
-                    />
+                    <img class="mini" src={topVayne} alt="" />
                 </h2>
                 <div class="two-centered-imgs-flat-height">
                     <img src={topVayneSkills} alt="" />
