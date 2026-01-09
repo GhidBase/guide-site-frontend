@@ -75,9 +75,15 @@ const navbar = [
     },
     {
         id: 10,
-        slug: "/unlock-order",
+        slug: "/unlock-order-hard",
         navbarTitle: "Mythic Unlock Order",
         type: "page",
+    },
+    {
+        id: 31,
+        navbarTitle: "Lance Kitty Strat",
+        type: "page",
+        slug: "/lance-kitty",
     },
     {
         id: 24,
@@ -108,7 +114,7 @@ const navbar = [
         navbarTitle: "Magic Hell Build",
         type: "page",
     },
-    { id: 28, navbarTitle: "Guild Battle", type: "section" },
+    { id: 30, navbarTitle: "Guild Battle", type: "section" },
     {
         id: 29,
         navbarTitle: "Guild Battle Guide",
