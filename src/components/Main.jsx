@@ -64,7 +64,7 @@ export default function Main() {
                         lg:flex lg:flex-col
                         overflow-y-auto`}
                     obstructorClassName={`z-1 ${navOpen ? "fixed" : "hidden"} top-0 w-full h-full bg-black/30`}
-                    toggleNav={toggleNav}
+                    toggleNav={() => toggleNav()}
                     navOpen={navOpen}
                     closeClassName={`
                         ${navOpen ? "fixed" : "hidden"}
@@ -83,7 +83,7 @@ export default function Main() {
                     "lg:hidden sticky bottom-0 flex w-full justify-center border-t-4 border-(--outline) bg-(--red-brown)"
                 }
                 buttonClassName={"h-13 w-13"}
-                toggleNav={toggleNav}
+                toggleNav={() => toggleNav()}
             ></NavBarOpenButton>
         </div>
     );
