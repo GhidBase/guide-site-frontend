@@ -103,9 +103,11 @@ export default function PageManager({ isAdmin }) {
 
         await fetch(currentAPI + "/pages/" + id, {
             method: "PUT",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                "X-Admin-Secret": import.meta.env.VITE_SECRET,
+            },
             body: JSON.stringify({ slug }),
-            "X-Admin-Secret": import.meta.env.VITE_SECRET,
         });
 
         const newPages = [...pages];
