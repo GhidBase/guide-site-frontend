@@ -71,12 +71,30 @@ export default function PagesItem({
             >
                 {(!editMode && "Rename") || "Cancel"}
             </button>
-            <Link
-                className="text-amber-50 bg-(--primary) w-22 mr-2 rounded px-2 py-0.5"
-                to={"/" + page.slug}
-            >
-                Edit
-            </Link>
+
+            {/* Real edit button  */}
+            {page.slug != null && (
+                <Link
+                    className="text-amber-50 bg-(--primary) text-center w-22 mr-2 rounded px-2 py-0.5"
+                    to={"/" + page.slug}
+                >
+                    Edit
+                </Link>
+            )}
+
+            {/* Fake edit button to warn user */}
+            {page.slug == null && (
+                <button
+                    className={`${
+                        !editMode && "ml-auto"
+                    } mr-2 text-amber-50 bg-(--primary) w-22 rounded px-2 py-0.5`}
+                    onClick={() =>
+                        alert("Page must have url before it can be edited")
+                    }
+                >
+                    Edit
+                </button>
+            )}
             <button
                 onClick={async () => {
                     await deletePage(page.id);
