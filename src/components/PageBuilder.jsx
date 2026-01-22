@@ -16,18 +16,18 @@ export default function PageBuilder({ className }) {
     const orders = blocks.map((block) => (block.order ? block.order : 0));
     const highestOrder = Math.max(...orders);
 
-    const { title, setTitle, currentAPI, gameId: contextGameId } = usePage();
+    const { title, setTitle, currentAPI, gameId } = usePage();
     if (pageData && title != pageData.title && pageData.title) {
         setTitle(pageData.title);
     }
 
     useEffect(() => {
-        const gameId = 1;
         const homepage = "lucky-defense";
 
         async function loadPageByName(name) {
-            const apiUrl =
-                currentAPI + "/pages/" + name + "?type=title&gameId=" + 1;
+            const apiUrl = currentAPI + "/games/" + gameId + "/pages/by-slug/" + name;
+            console.log(apiUrl);
+            // http://localhost:3000/pages/stun-guide?type=title&gameId=1
 
             const response = await fetch(apiUrl);
             const result = await response.json();
@@ -47,13 +47,13 @@ export default function PageBuilder({ className }) {
         }
         async function loadHomepage() {
             const responseGameData = await fetch(
-                currentAPI + "/games/" + contextGameId,
+                currentAPI + "/games/" + gameId + "/games/" + gameId,
             );
             const resultGameData = await responseGameData.json();
             const { slug, title } = resultGameData;
 
             const apiUrl =
-                currentAPI + "/pages/" + slug + "?type=title&gameId=" + 1;
+                currentAPI + "/games/" + gameId + "/pages/by-slug/" + slug;
 
             const responsePageData = await fetch(apiUrl);
             const resultPageData = await responsePageData.json();
@@ -80,6 +80,11 @@ export default function PageBuilder({ className }) {
     }
 
     async function addBlock({ nextOrder = highestOrder + 1, type } = {}) {
+        // nextOrder is used to insert blocks at the beginning,
+        // end, or middle where the user intends
+
+        console.log("adding block")
+        console.log(currentAPI + "/games/" + gameId + "/pages/by-id/" + pageId + "/blocks")
         const orderTaken = isOrderTaken(nextOrder);
 
         if (orderTaken) {
@@ -87,7 +92,7 @@ export default function PageBuilder({ className }) {
         }
 
         const response = await fetch(
-            currentAPI + "/pages/" + pageId + "/blocks",
+            currentAPI + "/games/" + gameId + "/pages/by-id/" + pageId + "/blocks",
             {
                 method: "POST",
                 headers: {
@@ -104,7 +109,7 @@ export default function PageBuilder({ className }) {
 
     async function shiftBlocks(order) {
         const response = await fetch(
-            currentAPI + "/pages/" + pageId + "/blocks",
+            currentAPI + "/games/" + gameId + "/pages/by-id/" + pageId + "/blocks",
             {
                 method: "PUT",
                 headers: {
@@ -144,6 +149,7 @@ export default function PageBuilder({ className }) {
     async function updateBlockWithEditorData(block, editorRef) {
         const content = editorRef.current.getContent();
         const content2 = block.content2;
+
 
         const response = await fetch(currentAPI + "/blocks/" + block.id, {
             method: "PUT",

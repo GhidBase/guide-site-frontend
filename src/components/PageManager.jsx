@@ -12,11 +12,11 @@ const secret = import.meta.env.VITE_SECRET;
 export default function PageManager({ isAdmin }) {
     const [pages, setPages] = useState([]);
     const [title, setTitleInput] = useState("");
-    const { currentAPI, setTitle } = usePage();
+    const { currentAPI, setTitle, gameId } = usePage();
     setTitle("Page Manager");
 
     useEffect(() => {
-        fetch(currentAPI + "/pages")
+        fetch(currentAPI + "/games/" + gameId + "/pages")
             .then((response) => response.json())
             .then((result) => setPages(result));
     }, []);
@@ -29,7 +29,7 @@ export default function PageManager({ isAdmin }) {
 
         let response;
         try {
-            response = await fetch(currentAPI + "/pages", {
+            response = await fetch(currentAPI + "/games/" + gameId + "/pages", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -59,13 +59,13 @@ export default function PageManager({ isAdmin }) {
         setTitleInput("");
     }
 
-    function deletePage(id) {
+    async function deletePage(id) {
         if (!+id) {
             console.log("Error - Invalid ID " + +id);
             return;
         }
 
-        fetch(currentAPI + "/pages/" + id, {
+        const response = fetch(currentAPI + "/games/" + gameId + "/pages/by-id/" + id, {
             method: "DELETE",
             headers: {
                 "Content-Type": "application/json",
@@ -73,6 +73,7 @@ export default function PageManager({ isAdmin }) {
             },
             body: JSON.stringify(),
         });
+
     }
 
     async function updatePageTitle(id, title, index) {
@@ -81,7 +82,7 @@ export default function PageManager({ isAdmin }) {
             return;
         }
 
-        await fetch(currentAPI + "/pages/" + id, {
+        await fetch(currentAPI + "/games/" + gameId + "/pages/by-id/" + id, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
@@ -101,7 +102,7 @@ export default function PageManager({ isAdmin }) {
             return;
         }
 
-        await fetch(currentAPI + "/pages/" + id, {
+        const response = await fetch(currentAPI + "/games/" + gameId + "/pages/by-id/" + id, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
