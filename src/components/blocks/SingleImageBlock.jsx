@@ -10,9 +10,8 @@ export default function SingleImageBlock({
     addBlock,
 }) {
     async function deleteAllFiles() {
-        console.log(currentAPI + "/blocks/" + block.id + "/files");
         const response = await fetch(
-            currentAPI + "/blocks/" + block.id + "/files",
+            currentAPIgames + "/blocks/" + block.id + "/files",
             {
                 method: "Delete",
                 headers: { "X-Admin-Secret": import.meta.env.VITE_SECRET },
@@ -29,7 +28,7 @@ export default function SingleImageBlock({
         // Upload a file to amazon
         const formData = new FormData(e.target);
         const response = await fetch(
-            currentAPI + "/blocks/" + block.id + "/files",
+            currentAPIgames + "/blocks/" + block.id + "/files",
             {
                 method: "POST",
                 body: formData,
@@ -47,7 +46,7 @@ export default function SingleImageBlock({
     }
 
     async function deleteFileById(id) {
-        const response = await fetch(currentAPI + "/files/" + id, {
+        const response = await fetch(currentAPIgames + "/files/" + id, {
             method: "Delete",
             headers: {
                 "X-Admin-Secret": import.meta.env.VITE_SECRET,
@@ -59,7 +58,7 @@ export default function SingleImageBlock({
 
     async function deleteFile(number) {
         const fileId = block.files[number].id;
-        const response = await fetch(currentAPI + "/files/" + fileId, {
+        const response = await fetch(currentAPIgames + "/files/" + fileId, {
             method: "Delete",
             headers: {
                 "X-Admin-Secret": import.meta.env.VITE_SECRET,
@@ -68,7 +67,7 @@ export default function SingleImageBlock({
         const result = await response.json();
     }
 
-    const { currentAPI } = usePage();
+    const { currentAPI, currentAPIgames } = usePage();
     const [stagedFiles, setStagedFiles] = useState(["No File Chosen"]);
     const blockHasFiles = !!block.files;
 

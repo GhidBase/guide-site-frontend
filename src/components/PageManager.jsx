@@ -2,14 +2,14 @@ import "../tailwind.css";
 import { Fragment, useEffect, useState } from "react";
 import PagesItem from "./PagesItem";
 import { usePage } from "../contexts/PageProvider";
-const secret = import.meta.env.VITE_SECRET;
+// const secret = import.meta.env.VITE_SECRET;
 
 // title refers to the title input field
 // setTitleInput updates that field
 // setTitle updates the title of the page at the top
 // of the ui to ("Page Manager")
 
-export default function PageManager({ isAdmin }) {
+export default function PageManager() {
     const [pages, setPages] = useState([]);
     const [title, setTitleInput] = useState("");
     const { currentAPI, setTitle, gameId } = usePage();
@@ -19,11 +19,11 @@ export default function PageManager({ isAdmin }) {
         fetch(currentAPI + "/games/" + gameId + "/pages")
             .then((response) => response.json())
             .then((result) => setPages(result));
-    }, []);
+    }, [currentAPI, gameId]);
 
     async function createPage(title) {
         if (!title?.trim()) {
-            console.log("Error - title cannot be empty");
+            console.log("Error - title cannot be empty")
             return;
         }
 
@@ -65,7 +65,7 @@ export default function PageManager({ isAdmin }) {
             return;
         }
 
-        const response = fetch(currentAPI + "/games/" + gameId + "/pages/by-id/" + id, {
+        fetch(currentAPI + "/games/" + gameId + "/pages/by-id/" + id, {
             method: "DELETE",
             headers: {
                 "Content-Type": "application/json",
@@ -102,7 +102,7 @@ export default function PageManager({ isAdmin }) {
             return;
         }
 
-        const response = await fetch(currentAPI + "/games/" + gameId + "/pages/by-id/" + id, {
+        await fetch(currentAPI + "/games/" + gameId + "/pages/by-id/" + id, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",

@@ -5,7 +5,8 @@ import { usePage } from "../contexts/PageProvider";
 import SingleImageBlock from "./blocks/SingleImageBlock";
 const env = import.meta.env.VITE_ENV;
 
-export default function PageBuilder({ className }) {
+
+export default function PageBuilder() {
     const navigate = useNavigate();
     const { pageTitle } = useParams();
 
@@ -22,7 +23,6 @@ export default function PageBuilder({ className }) {
     }
 
     useEffect(() => {
-        const homepage = "lucky-defense";
 
         async function loadPageByName(name) {
             const apiUrl = currentAPI + "/games/" + gameId + "/pages/by-slug/" + name;
@@ -35,9 +35,7 @@ export default function PageBuilder({ className }) {
             if (page == null) {
                 console.log("Page is null");
                 if (notFound) {
-                    console.log(
-                        "Page null caused by 0 search results, display 404",
-                    );
+                    console.log("Page null caused by 0 search results, display 404");
                 }
                 navigate("/404", { replace: true });
             } else {
@@ -50,10 +48,9 @@ export default function PageBuilder({ className }) {
                 currentAPI + "/games/" + gameId + "/games/" + gameId,
             );
             const resultGameData = await responseGameData.json();
-            const { slug, title } = resultGameData;
+            const { slug } = resultGameData;
 
-            const apiUrl =
-                currentAPI + "/games/" + gameId + "/pages/by-slug/" + slug;
+            const apiUrl = currentAPI + "/games/" + gameId + "/pages/by-slug/" + slug;
 
             const responsePageData = await fetch(apiUrl);
             const resultPageData = await responsePageData.json();
@@ -73,7 +70,7 @@ export default function PageBuilder({ className }) {
         } else if (!pageTitle) {
             loadHomepage();
         }
-    }, [pageId, pageTitle]);
+    }, [pageId, pageTitle, currentAPI, gameId, navigate]);
 
     function isOrderTaken(order) {
         return blocks.find((block) => block.order == order) != undefined;
@@ -83,8 +80,10 @@ export default function PageBuilder({ className }) {
         // nextOrder is used to insert blocks at the beginning,
         // end, or middle where the user intends
 
-        console.log("adding block")
-        console.log(currentAPI + "/games/" + gameId + "/pages/by-id/" + pageId + "/blocks")
+        console.log("adding block");
+        console.log(
+            currentAPI + "/games/" + gameId + "/pages/by-id/" + pageId + "/blocks",
+        );
         const orderTaken = isOrderTaken(nextOrder);
 
         if (orderTaken) {
@@ -132,12 +131,15 @@ export default function PageBuilder({ className }) {
     }
 
     async function deleteBlock(block) {
-        const response = await fetch(currentAPI + "/blocks/" + block.id, {
-            method: "DELETE",
-            headers: {
-                "X-Admin-Secret": import.meta.env.VITE_SECRET,
+        const response = await fetch(
+            currentAPI + "/games/" + gameId + "/blocks/" + block.id,
+            {
+                method: "DELETE",
+                headers: {
+                    "X-Admin-Secret": import.meta.env.VITE_SECRET,
+                },
             },
-        });
+        );
 
         const deletedBlock = await response.json();
         const newBlocks = blocks.filter((block) => {
@@ -150,33 +152,33 @@ export default function PageBuilder({ className }) {
         const content = editorRef.current.getContent();
         const content2 = block.content2;
 
-
-        const response = await fetch(currentAPI + "/blocks/" + block.id, {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                "X-Admin-Secret": import.meta.env.VITE_SECRET,
+        const response = await fetch(
+            currentAPI + "/games/" + gameId + "/blocks/" + block.id,
+            {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Admin-Secret": import.meta.env.VITE_SECRET,
+                },
+                body: JSON.stringify({ content, content2 }),
             },
-            body: JSON.stringify({ content, content2 }),
-        });
+        );
 
         const result = await response.json();
         const newBlocks = [...blocks];
-        const adjustIndex = newBlocks.findIndex(
-            (block) => block.id == result.id,
-        );
+        const adjustIndex = newBlocks.findIndex((block) => block.id == result.id);
         newBlocks[adjustIndex] = result;
         setBlocks(newBlocks);
     }
 
     async function refreshBlock(id) {
-        const response = await fetch(currentAPI + "/blocks/" + id);
+        const response = await fetch(
+            currentAPI + "/games/" + gameId + "/blocks/" + id,
+        );
 
         const result = await response.json();
         const newBlocks = [...blocks];
-        const adjustIndex = newBlocks.findIndex(
-            (block) => block.id == result.id,
-        );
+        const adjustIndex = newBlocks.findIndex((block) => block.id == result.id);
         newBlocks[adjustIndex] = result;
         setBlocks(newBlocks);
     }
@@ -245,9 +247,7 @@ export default function PageBuilder({ className }) {
                                     <TextBlock
                                         deleteBlock={() => deleteBlock(block)}
                                         block={block}
-                                        updateBlockWithEditorData={
-                                            updateBlockWithEditorData
-                                        }
+                                        updateBlockWithEditorData={updateBlockWithEditorData}
                                         adminMode={adminMode}
                                         addBlock={addBlock}
                                     />
