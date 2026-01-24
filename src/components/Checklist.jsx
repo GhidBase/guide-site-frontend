@@ -1,9 +1,8 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import "../tailwind.css";
 import ChecklistItem from "./ChecklistItem";
 import PlaceholderMenu from "./OutletMenu";
-import { usePage } from "../contexts/PageProvider";
-
+import { usePage } from "../hooks/usePage";
 
 // IMPORTANT
 // Note that to use Checklist you need to give it a checklistId

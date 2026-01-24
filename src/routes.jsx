@@ -1,3 +1,5 @@
+import { useAuth } from "./hooks/useAuth.js";
+import { createBrowserRouter, RouterProvider } from "react-router";
 import Checklist from "./components/Checklist";
 import Main from "./components/Main";
 import PageManager from "./components/PageManager";
@@ -7,32 +9,59 @@ import oldRoutes from "./js/oldRoutes.jsx";
 import NotFound from "./components/NotFound.jsx";
 import GuardianCosts from "./components/mini-apps/GuardianCosts.jsx";
 import ImmortalGuardians from "./components/mini-apps/ImmortalGuardians.jsx";
-const env = import.meta.env.VITE_ENV;
+import LoginPage from "./components/pages/LoginPage.jsx";
+import SignupPage from "./components/pages/SignupPage.jsx";
+import Dashboard from "./components/pages/Dashboard.jsx";
+import AccessDeniedPage from "./components/pages/AccessDeniedPage.jsx";
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
 
-const routes = [
-    ...oldRoutes,
-    {
-        path: "*",
-        element: <Main />,
-        children: [
-            { path: ":pageTitle", element: <PageBuilder /> },
-            { path: "guardian-upgrade-costs", element: <GuardianCosts /> },
-            { path: "immortal-guardians", element: <ImmortalGuardians /> },
-            { path: "flea-guide/", element: <Checklist checklistId={1} /> },
-            // { path: "page-manager/:pageId", element: <PageBuilder /> }, deprecated
+export function AppRouter() {
+    const { user, loading } = useAuth();
 
-            { path: "editor-test/", element: <EditorExample /> },
-            { path: "404/", element: <NotFound /> },
-            { path: "*", element: <PageBuilder /> },
-        ],
-    },
-];
+    if (loading) return;
 
-if (env == "DEV") {
-    routes[routes.length - 1].children.unshift({
-        path: "page-manager/",
-        element: <PageManager isAdmin={true} />,
-    });
+    const routes = [
+        ...oldRoutes,
+        {
+            path: "/dashboard",
+            element: <Dashboard />,
+        },
+        {
+            path: "/access-denied",
+            element: <AccessDeniedPage />,
+        },
+        {
+            path: "*",
+            element: <Main />,
+            children: [
+                ...(user?.role === "ADMIN"
+                    ? [
+                          {
+                              path: "page-manager/",
+                              element: (
+                                  <ProtectedRoute requiredRole="ADMIN">
+                                      <PageManager isAdmin={true} />
+                                  </ProtectedRoute>
+                              ),
+                          },
+                      ]
+                    : []),
+                { path: "login", element: <LoginPage /> },
+                { path: "signup", element: <SignupPage /> },
+                { path: ":pageTitle", element: <PageBuilder /> },
+                { path: "guardian-upgrade-costs", element: <GuardianCosts /> },
+                { path: "immortal-guardians", element: <ImmortalGuardians /> },
+                { path: "flea-guide/", element: <Checklist checklistId={1} /> },
+
+                { path: "editor-test/", element: <EditorExample /> },
+                { path: "404/", element: <NotFound /> },
+                { path: "*", element: <PageBuilder /> },
+            ],
+        },
+    ];
+
+    const router = createBrowserRouter(routes);
+    return <RouterProvider router={router} />;
 }
 
-export default routes;
+export default AppRouter;
