@@ -1,13 +1,10 @@
-import { createContext, useContext, useEffect, useState } from "react";
-
-const PageContext = createContext(null);
+import { useState } from "react";
+import { PageContext } from "./PageContext";
 
 export function PageProvider({ children }) {
     const [title, setTitle] = useState("");
     const [gameId, setGameId] = useState(1);
-    const serverAPI = "https://guide-site-backend.onrender.com";
-    const localAPI = "http://localhost:3000";
-    const currentAPI = import.meta.env.VITE_SERVER == "LOCAL" ? localAPI : serverAPI;
+    const currentAPI = import.meta.env.VITE_API_URL;
 
     return (
         <PageContext.Provider
@@ -22,14 +19,4 @@ export function PageProvider({ children }) {
             {children}
         </PageContext.Provider>
     );
-}
-
-export function usePage() {
-    const context = useContext(PageContext);
-
-    if (!context) {
-        throw new Error("usePage must be used within a PageProvider");
-    }
-
-    return context;
 }

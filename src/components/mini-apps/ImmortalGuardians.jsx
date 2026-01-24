@@ -1,5 +1,5 @@
 import { Fragment, useState } from "react";
-import { usePage } from "../../contexts/PageProvider";
+import { usePage } from "../../hooks/usePage";
 import "../../css/immortal-guardians.css";
 import "../../css/roulette-sim.css";
 import "../../css/styles.css";

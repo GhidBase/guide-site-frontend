@@ -1,5 +1,5 @@
 import { Fragment, useState } from "react";
-import { usePage } from "../../contexts/PageProvider";
+import { usePage } from "../../hooks/usePage";
 
 export default function GuardianCosts() {
     const [fromLevel, setFromLevel] = useState(1);
