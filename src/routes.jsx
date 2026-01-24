@@ -11,7 +11,7 @@ import GuardianCosts from "./components/mini-apps/GuardianCosts.jsx";
 import ImmortalGuardians from "./components/mini-apps/ImmortalGuardians.jsx";
 import LoginPage from "./components/pages/LoginPage.jsx";
 import SignupPage from "./components/pages/SignupPage.jsx";
-import Dashboard from "./components/pages/Dashboard.jsx";
+import DashboardContent from "./components/pages/Dashboard.jsx";
 import AccessDeniedPage from "./components/pages/AccessDeniedPage.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 
@@ -22,10 +22,6 @@ export function AppRouter() {
 
     const routes = [
         ...oldRoutes,
-        {
-            path: "/dashboard",
-            element: <Dashboard />,
-        },
         {
             path: "/access-denied",
             element: <AccessDeniedPage />,
@@ -40,12 +36,20 @@ export function AppRouter() {
                               path: "page-manager/",
                               element: (
                                   <ProtectedRoute requiredRole="ADMIN">
-                                      <PageManager isAdmin={true} />
+                                      <PageManager />
                                   </ProtectedRoute>
                               ),
                           },
                       ]
                     : []),
+                {
+                    path: "dashboard/",
+                    element: (
+                        <ProtectedRoute requiredRole="EDITOR">
+                            <DashboardContent />
+                        </ProtectedRoute>
+                    ),
+                },
                 { path: "login", element: <LoginPage /> },
                 { path: "signup", element: <SignupPage /> },
                 { path: ":pageTitle", element: <PageBuilder /> },
