@@ -23,10 +23,6 @@ export function AppRouter() {
     const routes = [
         ...oldRoutes,
         {
-            path: "/access-denied",
-            element: <AccessDeniedPage />,
-        },
-        {
             path: "*",
             element: <Main />,
             children: [
@@ -49,6 +45,10 @@ export function AppRouter() {
                             <DashboardContent />
                         </ProtectedRoute>
                     ),
+                },
+                {
+                    path: "access-denied/",
+                    element: <AccessDeniedPage />,
                 },
                 { path: "login", element: <LoginPage /> },
                 { path: "signup", element: <SignupPage /> },
