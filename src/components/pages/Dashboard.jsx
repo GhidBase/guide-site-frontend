@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import ProtectedRoute from "../ProtectedRoute";
 import ReviewPanel from "../dashboard/ReviewPanel";
@@ -10,7 +10,9 @@ export default function DashboardContent() {
     const [activeTab, setActiveTab] = useState("reviews");
     const { setTitle } = usePage();
 
-    setTitle("Dashboard");
+    useEffect(() => {
+        setTitle("Dashboard");
+    }, [setTitle]);
 
     return (
         <div className="w-full max-w-6xl mx-auto mt-8 px-4">
