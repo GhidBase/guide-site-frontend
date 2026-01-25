@@ -65,8 +65,17 @@ export function AuthProvider({ children }) {
                 return false;
             }
 
-            setUser(data);
-            setIsAuthenticated(true);
+            const userResponse = await fetch(`${currentAPI}/user`, {
+                method: "GET",
+                credentials: "include",
+            });
+
+            if (userResponse.ok) {
+                const userData = await userResponse.json();
+                setUser(userData);
+                setIsAuthenticated(true);
+            }
+
             return true;
         } catch (err) {
             setError(err.message || "Signup Error");
@@ -93,12 +102,24 @@ export function AuthProvider({ children }) {
             const data = await response.json();
 
             if (!response.ok) {
-                setError(data.errors?.[0]?.msg || "Signup Failed");
+                setError(data.errors?.[0]?.msg || "Login Failed");
                 return false;
             }
 
-            setUser(data);
-            setIsAuthenticated(true);
+            const userResponse = await fetch(`${currentAPI}/user`, {
+                method: "GET",
+                credentials: "include",
+            });
+
+            if (userResponse.ok) {
+                const userData = await userResponse.json();
+                setUser(userData);
+                setIsAuthenticated(true);
+            } else {
+                setError("Failed to fetch user data");
+                return false;
+            }
+
             return true;
         } catch (err) {
             setError(err.message || "Login Error");
