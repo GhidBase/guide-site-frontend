@@ -259,7 +259,7 @@ export default function Navbar({
                     )}
                 </div>
                 {navbar.map((item, index, arr) => {
-                    if (item.type == "page") {
+                    if (item.type === "page") {
                         return (
                             <NavbarButton
                                 slug={item.slug}
@@ -274,7 +274,7 @@ export default function Navbar({
                             />
                         );
                     }
-                    if (item.type == "section") {
+                    if (item.type === "section") {
                         return (
                             <NavbarSection
                                 navbarTitle={item.navbarTitle}
