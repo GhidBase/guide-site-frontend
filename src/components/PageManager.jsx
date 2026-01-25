@@ -1,22 +1,26 @@
-import "../tailwind.css";
 import { Fragment, useEffect, useState } from "react";
+import { usePage } from "../hooks/usePage";
+import "../tailwind.css";
 import PagesItem from "./PagesItem";
-import { usePage } from "../contexts/PageProvider";
-const secret = import.meta.env.VITE_SECRET;
 
 // title refers to the title input field
 // setTitleInput updates that field
 // setTitle updates the title of the page at the top
 // of the ui to ("Page Manager")
 
-export default function PageManager({ isAdmin }) {
+export default function PageManager() {
     const [pages, setPages] = useState([]);
     const [title, setTitleInput] = useState("");
-    const { currentAPI, setTitle } = usePage();
-    setTitle("Page Manager");
+    const { setTitle, currentAPI, gameId } = usePage();
 
     useEffect(() => {
-        fetch(currentAPI + "/pages")
+        setTitle("Page Manager");
+    }, [setTitle]);
+
+    useEffect(() => {
+        fetch(currentAPI + "/pages", {
+            credentials: "include",
+        })
             .then((response) => response.json())
             .then((result) => setPages(result));
     }, []);
@@ -27,36 +31,29 @@ export default function PageManager({ isAdmin }) {
             return;
         }
 
-        let response;
         try {
-            response = await fetch(currentAPI + "/pages", {
+            const response = await fetch(currentAPI + "/pages", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "X-Admin-Secret": import.meta.env.VITE_SECRET,
                 },
-                body: JSON.stringify({ title }),
+                credentials: "include",
+                body: JSON.stringify({ title, gameId: gameId || 1 }),
             });
+            if (!response.ok) {
+                const data = await response.json();
+                console.error("Create page failed:", data);
+                return;
+            }
+            const newPage = await response.json();
+            const newPages = [...pages];
+            newPages.push(newPage);
+            setPages(newPages);
+            setTitleInput("");
         } catch (err) {
             console.error("Error", err);
             return;
         }
-
-        if (!response.ok) {
-            try {
-                await response.json();
-            } catch {
-                ("");
-            }
-            console.error("Create page failed");
-            return;
-        }
-
-        const newPage = await response.json();
-        const newPages = [...pages];
-        newPages.push(newPage);
-        setPages(newPages);
-        setTitleInput("");
     }
 
     function deletePage(id) {
@@ -69,8 +66,8 @@ export default function PageManager({ isAdmin }) {
             method: "DELETE",
             headers: {
                 "Content-Type": "application/json",
-                "X-Admin-Secret": import.meta.env.VITE_SECRET,
             },
+            credentials: "include",
             body: JSON.stringify(),
         });
     }
@@ -85,8 +82,8 @@ export default function PageManager({ isAdmin }) {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
-                "X-Admin-Secret": import.meta.env.VITE_SECRET,
             },
+            credentials: "include",
             body: JSON.stringify({ title }),
         });
 
@@ -105,8 +102,8 @@ export default function PageManager({ isAdmin }) {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
-                "X-Admin-Secret": import.meta.env.VITE_SECRET,
             },
+            credentials: "include",
             body: JSON.stringify({ slug }),
         });
 
@@ -135,7 +132,7 @@ export default function PageManager({ isAdmin }) {
                             e.preventDefault();
                             createPage(title);
                         }}
-                        className="text-amber-50 bg-(--primary) w-38 rounded px-2 py-0.5"
+                        className="text-amber-50 bg-(--primary) w-38 rounded px-2 py-0.5 cursor-pointer"
                     >
                         Create Page
                     </button>
