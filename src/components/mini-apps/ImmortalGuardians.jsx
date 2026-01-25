@@ -40,7 +40,7 @@ function ToggleSection({ title, icon, children, id, imgSrc }) {
                     <img
                         src={chevron}
                         alt=""
-                        class="inline-img toggle-button-arrow"
+                        className="inline-img toggle-button-arrow"
                     />
                 </p>
 
@@ -70,7 +70,7 @@ export default function ImmortalGuardians() {
     setTitle("Immortal Guardians");
 
     return (
-        <div class="text-width content-block immortal-guide">
+        <div className="text-width content-block immortal-guide">
             <ToggleSection title="How to unlock Immortal Guardians">
                 <p>
                     An Immortal Guardian unlocks when you get their mythic form
@@ -79,11 +79,11 @@ export default function ImmortalGuardians() {
                     tab to view Immortal Guardians unlocks once you get any
                     mythic to level 12.
                 </p>
-                <div class="centered-imgs">
+                <div className="centered-imgs">
                     <img
                         src="../pics/screens/finding-immortal-tab.webp"
                         alt=""
-                        class="image-one"
+                        className="image-one"
                     />
                 </div>
                 <p>
@@ -96,7 +96,7 @@ export default function ImmortalGuardians() {
             </ToggleSection>
 
             <ToggleSection title="Leveling Up">
-                <div class="text-right-img-left">
+                <div className="text-right-img-left">
                     <p>
                         Each immortal guardian has a different level separate
                         from the level of their mythic form, and it starts at
@@ -109,7 +109,7 @@ export default function ImmortalGuardians() {
                         is through:
                     </p>
                     <img
-                        class="image-two"
+                        className="image-two"
                         src="../pics/immortal-guide/immortal-upgrade-screen.webp"
                         alt=""
                     />
@@ -165,14 +165,14 @@ export default function ImmortalGuardians() {
             </p>
 
             <ToggleSection title="Reaper Frog/Dian" imgSrc={reaperDian}>
-                <div class="two-centered-imgs">
+                <div className="two-centered-imgs">
                     <img src={reaperFrog} alt="" />
                     <img src={reaperDian} alt="" />
                 </div>
                 <h2>Playstyle</h2>
                 <h3>
                     Frog Form
-                    <img class="mini" src={reaperFrog} alt="" />
+                    <img className="mini" src={reaperFrog} alt="" />
                 </h3>
                 <p>
                     Reaper Frog is a Physical Damage DPS Guardian. He's easy to
@@ -203,7 +203,7 @@ export default function ImmortalGuardians() {
                 </p>
                 <h3>
                     Dian Form
-                    <img class="mini" src={reaperDian} alt="" />
+                    <img className="mini" src={reaperDian} alt="" />
                 </h3>
                 <p>
                     Reaper Dian is a Magic Damage DPS Guardian. When you get
@@ -220,13 +220,13 @@ export default function ImmortalGuardians() {
                     passives all revolve around dealing massive damage.
                 </p>
                 <h2>Skills</h2>
-                <div class="two-centered-imgs-flat-height">
+                <div className="two-centered-imgs-flat-height">
                     <img src={reaperFrogSkills} alt="" />
                     <img src={reaperDianSkills} alt="" />
                 </div>
                 <h3>
                     Frog Form
-                    <img class="mini" src={reaperFrog} alt="" />
+                    <img className="mini" src={reaperFrog} alt="" />
                 </h3>
                 <p>
                     <b>Reaper's Ascension - Passive</b>
@@ -251,7 +251,7 @@ export default function ImmortalGuardians() {
                 </p>
                 <h3>
                     Dian Form
-                    <img class="mini" src={reaperDian} alt="" />
+                    <img className="mini" src={reaperDian} alt="" />
                 </h3>
                 <p>
                     <b>Reaper's Instinct - Passive</b>
@@ -294,22 +294,22 @@ export default function ImmortalGuardians() {
                     having his base Frog Form if you fail.
                 </p>
                 <h2 className="text-align: center">Gameplay</h2>
-                <div class="centered-imgs">
+                <div className="centered-imgs">
                     <iframe
                         width="560"
                         height="315"
                         src="https://www.youtube.com/embed/6GRcoLeNQhY?si=bAmQ-D2YqJqxSFbV"
                         title="YouTube video player"
-                        frameborder="0"
+                        style={{ border: 0 }}
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                        referrerpolicy="strict-origin-when-cross-origin"
-                        allowfullscreen
+                        referrerPolicy="strict-origin-when-cross-origin"
+                        allowFullScreen
                     ></iframe>
                 </div>
             </ToggleSection>
 
             <ToggleSection title="Awakened Hailey" imgSrc={awakenedHailey}>
-                <div class="two-centered-imgs">
+                <div className="two-centered-imgs">
                     <img src={awakenedHailey} alt="" />
                 </div>
                 <h2>Playstyle</h2>
@@ -343,9 +343,9 @@ export default function ImmortalGuardians() {
                 </p>
                 <h2>
                     Skills
-                    <img class="mini" src={awakenedHailey} alt="" />
+                    <img className="mini" src={awakenedHailey} alt="" />
                 </h2>
-                <div class="two-centered-imgs-flat-height">
+                <div className="two-centered-imgs-flat-height">
                     <img src={awakenedHaileySkills} alt="" />
                 </div>
                 <p>
@@ -389,7 +389,7 @@ export default function ImmortalGuardians() {
             </ToggleSection>
 
             <ToggleSection title="Grand Mama" imgSrc={grandMama}>
-                <div class="two-centered-imgs">
+                <div className="two-centered-imgs">
                     <img src={grandMama} alt="" />
                 </div>
                 <h2>Playstyle</h2>
@@ -426,9 +426,9 @@ export default function ImmortalGuardians() {
                 </p>
                 <h2>
                     Skills
-                    <img class="mini" src={grandMama} alt="" />
+                    <img className="mini" src={grandMama} alt="" />
                 </h2>
-                <div class="two-centered-imgs-flat-height">
+                <div className="two-centered-imgs-flat-height">
                     <img src={grandMamaSkills} alt="" />
                 </div>
                 <p>
@@ -492,22 +492,22 @@ export default function ImmortalGuardians() {
                     viable if you have Mama's exclusive treasure.
                 </p>
                 <h2 className="text-align: center">Gameplay</h2>
-                <div class="centered-imgs">
+                <div className="centered-imgs">
                     <iframe
                         width="560"
                         height="315"
                         src="https://www.youtube.com/embed/dibri7t3aP4?si=gHg04zF5N3YG_sST"
                         title="YouTube video player"
-                        frameborder="0"
+                        style={{ border: 0 }}
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                        referrerpolicy="strict-origin-when-cross-origin"
-                        allowfullscreen
+                        referrerPolicy="strict-origin-when-cross-origin"
+                        allowFullScreen
                     ></iframe>
                 </div>
             </ToggleSection>
 
             <ToggleSection title="Primeval Bomba" imgSrc={primevalBomba}>
-                <div class="two-centered-imgs">
+                <div className="two-centered-imgs">
                     <img src={primevalBomba} alt="" />
                     <img src={primevalBomba1} alt="" />
                 </div>
@@ -552,9 +552,9 @@ export default function ImmortalGuardians() {
                 </p>
                 <h2>
                     Skills
-                    <img class="mini" src={primevalBomba} alt="" />
+                    <img className="mini" src={primevalBomba} alt="" />
                 </h2>
-                <div class="two-centered-imgs-flat-height">
+                <div className="two-centered-imgs-flat-height">
                     <img src={primevalBombaSkills} alt="" />
                 </div>
                 <p>
@@ -603,22 +603,22 @@ export default function ImmortalGuardians() {
                     Primeval Bomba process.
                 </p>
                 <h2 className="text-align: center">Gameplay</h2>
-                <div class="centered-imgs">
+                <div className="centered-imgs">
                     <iframe
                         width="560"
                         height="315"
                         src="https://www.youtube.com/embed/234N-q5iJUs?si=_xhhmwqxCsgeGvb8"
                         title="YouTube video player"
-                        frameborder="0"
+                        style={{ border: 0 }}
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                        referrerpolicy="strict-origin-when-cross-origin"
-                        allowfullscreen
+                        referrerPolicy="strict-origin-when-cross-origin"
+                        allowFullScreen
                     ></iframe>
                 </div>
             </ToggleSection>
 
             <ToggleSection title="Ghost Ninja" imgSrc={ghostNinja}>
-                <div class="two-centered-imgs">
+                <div className="two-centered-imgs">
                     <img src={ghostNinja} alt="" />
                 </div>
                 <h2>Playstyle</h2>
@@ -635,9 +635,9 @@ export default function ImmortalGuardians() {
                 <p>In conclusion, Ghost Ninja is rather unremarkable.</p>
                 <h2>
                     Skills
-                    <img class="mini" src={ghostNinja} alt="" />
+                    <img className="mini" src={ghostNinja} alt="" />
                 </h2>
-                <div class="two-centered-imgs-flat-height">
+                <div className="two-centered-imgs-flat-height">
                     <img src={ghostNinjaSkills} alt="" />
                 </div>
                 <p>
@@ -707,7 +707,7 @@ export default function ImmortalGuardians() {
             </ToggleSection>
 
             <ToggleSection title="Chrono Ato" imgSrc={chronoAto}>
-                <div class="two-centered-imgs">
+                <div className="two-centered-imgs">
                     <img src={chronoAto} alt="" />
                 </div>
                 <h2>Playstyle</h2>
@@ -739,9 +739,9 @@ export default function ImmortalGuardians() {
                 </p>
                 <h2>
                     Skills
-                    <img class="mini" src={chronoAto} alt="" />
+                    <img className="mini" src={chronoAto} alt="" />
                 </h2>
-                <div class="two-centered-imgs-flat-height">
+                <div className="two-centered-imgs-flat-height">
                     <img src={chronoAtoSkills} />
                 </div>
                 <p>
@@ -791,22 +791,22 @@ export default function ImmortalGuardians() {
                     <li>Ghost Ninja</li>
                 </ul>
                 <h2 className="text-align: center">Gameplay</h2>
-                <div class="centered-imgs">
+                <div className="centered-imgs">
                     <iframe
                         width="560"
                         height="315"
                         src="https://www.youtube.com/embed/AN35fUjAUlw?si=HP43jzMYU-RmF1Jd"
                         title="YouTube video player"
-                        frameborder="0"
+                        style={{ border: 0 }}
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                        referrerpolicy="strict-origin-when-cross-origin"
-                        allowfullscreen
+                        referrerPolicy="strict-origin-when-cross-origin"
+                        allowFullScreen
                     ></iframe>
                 </div>
             </ToggleSection>
 
             <ToggleSection title="Doctor Pulse" imgSrc={doctorPulse}>
-                <div class="two-centered-imgs">
+                <div className="two-centered-imgs">
                     <img src={doctorPulse} alt="" />
                 </div>
                 <h2>Playstyle</h2>
@@ -819,9 +819,9 @@ export default function ImmortalGuardians() {
                 </p>
                 <h2>
                     Skills
-                    <img class="mini" src={doctorPulse} alt="" />
+                    <img className="mini" src={doctorPulse} alt="" />
                 </h2>
-                <div class="two-centered-imgs-flat-height">
+                <div className="two-centered-imgs-flat-height">
                     <img src={doctorPulseSkills} alt="" />
                 </div>
                 <p className="margin-bottom: 0">
@@ -871,7 +871,7 @@ export default function ImmortalGuardians() {
             </ToggleSection>
 
             <ToggleSection title="Top Vayne" imgSrc={topVayne}>
-                <div class="two-centered-imgs">
+                <div className="two-centered-imgs">
                     <img src={topVayne} alt="" />
                 </div>
                 <h2>Playstyle</h2>
@@ -885,7 +885,7 @@ export default function ImmortalGuardians() {
                 <h3>
                     Mythic Form
                     <img
-                        class="mini"
+                        className="mini"
                         src="../pics/unit/mythics/Vayne.png"
                         alt=""
                     />
@@ -910,7 +910,7 @@ export default function ImmortalGuardians() {
                 </p>
                 <h3>
                     Immortal Form
-                    <img class="mini" src={topVayne} alt="" />
+                    <img className="mini" src={topVayne} alt="" />
                 </h3>
                 <p>
                     Her Immortal Form is very strong. Unlike Vayne, Top Vayne
@@ -961,9 +961,9 @@ export default function ImmortalGuardians() {
                 </p>
                 <h2>
                     Skills
-                    <img class="mini" src={topVayne} alt="" />
+                    <img className="mini" src={topVayne} alt="" />
                 </h2>
-                <div class="two-centered-imgs-flat-height">
+                <div className="two-centered-imgs-flat-height">
                     <img src={topVayneSkills} alt="" />
                 </div>
                 <p className="margin-bottom: 0">
@@ -1005,7 +1005,7 @@ export default function ImmortalGuardians() {
             </ToggleSection>
 
             <ToggleSection title="Super Graviton">
-                <div class="two-centered-imgs">
+                <div className="two-centered-imgs">
                     <img src="../pics/unit/immortals/Top Vaynee.png" alt="" />
                 </div>
                 <h2>Playstyle</h2>
@@ -1031,12 +1031,12 @@ export default function ImmortalGuardians() {
                 <h2>
                     Skills
                     <img
-                        class="mini"
+                        className="mini"
                         src="../pics/unit/immortals/Top Vaynee.png"
                         alt=""
                     />
                 </h2>
-                <div class="two-centered-imgs-flat-height">
+                <div className="two-centered-imgs-flat-height">
                     <img
                         src="../pics/immortal-guide/vayneskillss.webp"
                         alt=""
@@ -1090,7 +1090,7 @@ export default function ImmortalGuardians() {
             </ToggleSection>
 
             <ToggleSection title="Dark Lord Dragon">
-                <div class="two-centered-imgs">
+                <div className="two-centered-imgs">
                     <img src="../pics/unit/immortals/Top Vaynee.png" alt="" />
                 </div>
                 <h2>Playstyle</h2>
@@ -1104,12 +1104,12 @@ export default function ImmortalGuardians() {
                 <h2>
                     Skills
                     <img
-                        class="mini"
+                        className="mini"
                         src="../pics/unit/immortals/Top Vaynee.png"
                         alt=""
                     />
                 </h2>
-                <div class="two-centered-imgs-flat-height">
+                <div className="two-centered-imgs-flat-height">
                     <img
                         src="../pics/immortal-guide/vayneskillss.webp"
                         alt=""
