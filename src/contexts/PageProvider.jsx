@@ -5,7 +5,6 @@ const PageContext = createContext(null);
 export function PageProvider({ children }) {
     const [title, setTitle] = useState("");
     const [gameId, setGameId] = useState();
-    console.log("Game Id: " + gameId);
     const serverAPI = "https://guide-site-backend.onrender.com";
     const localAPI = "http://localhost:3000";
     const currentAPI =
@@ -13,7 +12,6 @@ export function PageProvider({ children }) {
     const currentAPIgames = currentAPI + "/games/" + gameId;
 
     const [gameSlug, setGameSlug] = useState();
-    console.log(gameSlug);
 
     // Create a useEffect that uses gameSlug as a
     // dependency
@@ -27,15 +25,11 @@ export function PageProvider({ children }) {
                 currentAPI + "/games/by-slug/" + gameSlug,
             );
             if (response.status === 404) {
-                console.log("Game not found");
                 setGameId(null);
             } else {
                 game = await response.json();
                 gameId = game.id;
                 setGameId(gameId);
-
-                console.log("game found");
-                console.log(gameId);
             }
         }
         fetchGameByTitle();

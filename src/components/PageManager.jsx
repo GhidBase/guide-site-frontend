@@ -17,14 +17,17 @@ export default function PageManager() {
     setTitle("Page Manager");
 
     useEffect(() => {
+        if (!gameId) {
+            return;
+        }
         fetch(currentAPI + "/games/" + gameId + "/pages")
             .then((response) => response.json())
             .then((result) => setPages(result));
     }, [currentAPI, gameId]);
 
-    async function createPage(title) {
+    async function createPage() {
         if (!title?.trim()) {
-            console.log("Error - title cannot be empty")
+            console.log("Error - title cannot be empty");
             return;
         }
 
@@ -74,7 +77,6 @@ export default function PageManager() {
             },
             body: JSON.stringify(),
         });
-
     }
 
     async function updatePageTitle(id, title, index) {
@@ -135,7 +137,7 @@ export default function PageManager() {
                         type="submit"
                         onClick={(e) => {
                             e.preventDefault();
-                            createPage(title);
+                            createPage();
                         }}
                         className="text-amber-50 bg-(--primary) w-38 rounded px-2 py-0.5"
                     >

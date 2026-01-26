@@ -26,7 +26,9 @@ export default function PageBuilder() {
             const apiUrl =
                 currentAPI + "/games/" + gameId + "/pages/by-slug/" + name;
 
-            console.log(gameId);
+            if (gameId == null) {
+                return;
+            }
             const response = await fetch(apiUrl);
             const result = await response.json();
             const { page, blocks, notFound } = result;
