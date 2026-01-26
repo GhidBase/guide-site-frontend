@@ -10,14 +10,13 @@ export default function SingleImageBlock({
     addBlock,
 }) {
     async function deleteAllFiles() {
-        const response = await fetch(
-            currentAPIgames + "/blocks/" + block.id + "/files",
+        await fetch(
+            currentAPIgames + gameId + "/blocks/" + block.id + "/files",
             {
                 method: "Delete",
                 headers: { "X-Admin-Secret": import.meta.env.VITE_SECRET },
             },
         );
-        const result = await response.json();
         refreshBlock(block.id);
         deleteBlock(block);
     }
@@ -46,13 +45,12 @@ export default function SingleImageBlock({
     }
 
     async function deleteFileById(id) {
-        const response = await fetch(currentAPIgames + "/files/" + id, {
+        await fetch(currentAPIgames + "/files/" + id, {
             method: "Delete",
             headers: {
                 "X-Admin-Secret": import.meta.env.VITE_SECRET,
             },
         });
-        const result = await response.json();
         refreshBlock(block.id);
     }
 
@@ -67,7 +65,7 @@ export default function SingleImageBlock({
         const result = await response.json();
     }
 
-    const { currentAPI, currentAPIgames } = usePage();
+    const { currentAPI, currentAPIgames, gameId } = usePage();
     const [stagedFiles, setStagedFiles] = useState(["No File Chosen"]);
     const blockHasFiles = !!block.files;
 

@@ -27,7 +27,6 @@ export default function PageBuilder() {
         async function loadPageByName(name) {
             const apiUrl = currentAPI + "/games/" + gameId + "/pages/by-slug/" + name;
             console.log(apiUrl);
-            // http://localhost:3000/pages/stun-guide?type=title&gameId=1
 
             const response = await fetch(apiUrl);
             const result = await response.json();
@@ -45,7 +44,7 @@ export default function PageBuilder() {
         }
         async function loadHomepage() {
             const responseGameData = await fetch(
-                currentAPI + "/games/" + gameId + "/games/" + gameId,
+                currentAPI + "/games/" + gameId,
             );
             const resultGameData = await responseGameData.json();
             const { slug } = resultGameData;

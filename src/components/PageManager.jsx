@@ -2,6 +2,7 @@ import "../tailwind.css";
 import { Fragment, useEffect, useState } from "react";
 import PagesItem from "./PagesItem";
 import { usePage } from "../contexts/PageProvider";
+import GameItem from "./GameItem";
 // const secret = import.meta.env.VITE_SECRET;
 
 // title refers to the title input field

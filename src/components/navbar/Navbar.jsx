@@ -183,19 +183,27 @@ const navbar = [
 ];
 
 if (env == "DEV") {
-    navbar.unshift({
-        id: 1,
-        slug: "/page-manager",
-        navbarTitle: "Page Manager",
-        type: "page",
-    });
+    navbar.unshift(
+        {
+            id: 33,
+            slug: "/game-manager",
+            navbarTitle: "Game Manager",
+            type: "page"
+        },
+        {
+            id: 1,
+            slug: "/page-manager",
+            navbarTitle: "Page Manager",
+            type: "page",
+        },
+
+    );
 }
 
 export default function Navbar({
     className,
     obstructorClassName,
     toggleNav,
-    navOpen,
     closeClassName,
 }) {
     return (
