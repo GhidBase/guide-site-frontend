@@ -12,7 +12,6 @@ export default function Main() {
     usePageTracking();
     const [navOpen, setNavOpen] = useState(false);
     const { gameSlug } = useParams();
-    console.log(gameSlug);
     const { setGameSlug } = usePage();
 
     useEffect(() => {
