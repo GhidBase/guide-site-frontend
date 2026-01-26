@@ -18,6 +18,7 @@ const routes = [
         path: useGameSlug ? ":gameSlug" : "*",
         element: <Main />,
         children: [
+            { index: true, element: <PageBuilder /> },
             { path: ":pageTitle", element: <PageBuilder /> }, // wip
             { path: "guardian-upgrade-costs", element: <GuardianCosts /> },
             { path: "immortal-guardians", element: <ImmortalGuardians /> },

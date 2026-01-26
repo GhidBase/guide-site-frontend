@@ -8,6 +8,7 @@ const env = import.meta.env.VITE_ENV;
 export default function PageBuilder() {
     const navigate = useNavigate();
     const { pageTitle } = useParams();
+    console.log(pageTitle);
 
     const [blocks, setBlocks] = useState([]);
     const [adminMode, setAdminMode] = useState(false);
@@ -46,11 +47,19 @@ export default function PageBuilder() {
             }
         }
         async function loadHomepage() {
+            console.log("Game Id");
+            console.log(gameId);
+            if (!gameId) {
+                return;
+            }
             const responseGameData = await fetch(
-                currentAPI + "/games/" + gameId,
+                currentAPI + "/games/by-id/" + gameId,
             );
+            console.log(responseGameData);
             const resultGameData = await responseGameData.json();
             const { slug } = resultGameData;
+            console.log("Resulting game data");
+            console.log(resultGameData);
 
             const apiUrl =
                 currentAPI + "/games/" + gameId + "/pages/by-slug/" + slug;
@@ -72,6 +81,7 @@ export default function PageBuilder() {
             loadPageByName(pageTitle);
         } else if (!pageTitle) {
             loadHomepage();
+            console.log("no page title found");
         }
     }, [pageId, pageTitle, currentAPI, gameId, navigate]);
 
