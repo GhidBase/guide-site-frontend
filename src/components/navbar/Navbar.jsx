@@ -1,4 +1,5 @@
 import NavbarButton from "./NavbarButton";
+import { usePage } from "../../contexts/PageProvider";
 import { Fragment } from "react";
 import NavbarSection from "./NavbarSection";
 const env = import.meta.env.VITE_ENV;
@@ -188,7 +189,7 @@ if (env == "DEV") {
             id: 33,
             slug: "/game-manager",
             navbarTitle: "Game Manager",
-            type: "page"
+            type: "page",
         },
         {
             id: 1,
@@ -196,7 +197,6 @@ if (env == "DEV") {
             navbarTitle: "Page Manager",
             type: "page",
         },
-
     );
 }
 
@@ -206,6 +206,7 @@ export default function Navbar({
     toggleNav,
     closeClassName,
 }) {
+    const { gameSlug } = usePage();
     return (
         <Fragment>
             <div id="nav-bar" className={className}>
@@ -222,6 +223,7 @@ export default function Navbar({
                                     lg:h-15 lg:border-b-4 border-(--outline)
                                     ${index < arr.length - 1 && "border-b-4"}`}
                                 toggleNav={toggleNav}
+                                gameSlug={gameSlug}
                             />
                         );
                     }

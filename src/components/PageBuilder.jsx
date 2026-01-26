@@ -5,7 +5,6 @@ import { usePage } from "../contexts/PageProvider";
 import SingleImageBlock from "./blocks/SingleImageBlock";
 const env = import.meta.env.VITE_ENV;
 
-
 export default function PageBuilder() {
     const navigate = useNavigate();
     const { pageTitle } = useParams();
@@ -17,24 +16,26 @@ export default function PageBuilder() {
     const orders = blocks.map((block) => (block.order ? block.order : 0));
     const highestOrder = Math.max(...orders);
 
-    const { title, setTitle, currentAPI, gameId } = usePage();
+    const { title, setTitle, currentAPI, gameId, setGameTitle } = usePage();
     if (pageData && title != pageData.title && pageData.title) {
         setTitle(pageData.title);
     }
 
     useEffect(() => {
-
         async function loadPageByName(name) {
-            const apiUrl = currentAPI + "/games/" + gameId + "/pages/by-slug/" + name;
-            console.log(apiUrl);
+            const apiUrl =
+                currentAPI + "/games/" + gameId + "/pages/by-slug/" + name;
 
+            console.log(gameId);
             const response = await fetch(apiUrl);
             const result = await response.json();
             const { page, blocks, notFound } = result;
             if (page == null) {
                 console.log("Page is null");
                 if (notFound) {
-                    console.log("Page null caused by 0 search results, display 404");
+                    console.log(
+                        "Page null caused by 0 search results, display 404",
+                    );
                 }
                 navigate("/404", { replace: true });
             } else {
@@ -49,7 +50,8 @@ export default function PageBuilder() {
             const resultGameData = await responseGameData.json();
             const { slug } = resultGameData;
 
-            const apiUrl = currentAPI + "/games/" + gameId + "/pages/by-slug/" + slug;
+            const apiUrl =
+                currentAPI + "/games/" + gameId + "/pages/by-slug/" + slug;
 
             const responsePageData = await fetch(apiUrl);
             const resultPageData = await responsePageData.json();
@@ -81,7 +83,12 @@ export default function PageBuilder() {
 
         console.log("adding block");
         console.log(
-            currentAPI + "/games/" + gameId + "/pages/by-id/" + pageId + "/blocks",
+            currentAPI +
+                "/games/" +
+                gameId +
+                "/pages/by-id/" +
+                pageId +
+                "/blocks",
         );
         const orderTaken = isOrderTaken(nextOrder);
 
@@ -90,7 +97,12 @@ export default function PageBuilder() {
         }
 
         const response = await fetch(
-            currentAPI + "/games/" + gameId + "/pages/by-id/" + pageId + "/blocks",
+            currentAPI +
+                "/games/" +
+                gameId +
+                "/pages/by-id/" +
+                pageId +
+                "/blocks",
             {
                 method: "POST",
                 headers: {
@@ -107,7 +119,12 @@ export default function PageBuilder() {
 
     async function shiftBlocks(order) {
         const response = await fetch(
-            currentAPI + "/games/" + gameId + "/pages/by-id/" + pageId + "/blocks",
+            currentAPI +
+                "/games/" +
+                gameId +
+                "/pages/by-id/" +
+                pageId +
+                "/blocks",
             {
                 method: "PUT",
                 headers: {
@@ -165,7 +182,9 @@ export default function PageBuilder() {
 
         const result = await response.json();
         const newBlocks = [...blocks];
-        const adjustIndex = newBlocks.findIndex((block) => block.id == result.id);
+        const adjustIndex = newBlocks.findIndex(
+            (block) => block.id == result.id,
+        );
         newBlocks[adjustIndex] = result;
         setBlocks(newBlocks);
     }
@@ -177,7 +196,9 @@ export default function PageBuilder() {
 
         const result = await response.json();
         const newBlocks = [...blocks];
-        const adjustIndex = newBlocks.findIndex((block) => block.id == result.id);
+        const adjustIndex = newBlocks.findIndex(
+            (block) => block.id == result.id,
+        );
         newBlocks[adjustIndex] = result;
         setBlocks(newBlocks);
     }
@@ -246,7 +267,9 @@ export default function PageBuilder() {
                                     <TextBlock
                                         deleteBlock={() => deleteBlock(block)}
                                         block={block}
-                                        updateBlockWithEditorData={updateBlockWithEditorData}
+                                        updateBlockWithEditorData={
+                                            updateBlockWithEditorData
+                                        }
                                         adminMode={adminMode}
                                         addBlock={addBlock}
                                     />

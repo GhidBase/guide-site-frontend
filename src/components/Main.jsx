@@ -1,15 +1,22 @@
 import "../tailwind.css";
 import "../css/tables.css";
-import { Outlet } from "react-router";
+import { Outlet, useParams } from "react-router";
 import Navbar from "./navbar/Navbar.jsx";
 import Title from "./Title.jsx";
 import NavBarOpenButton from "./NavBarOpenButton.jsx";
 import { useEffect, useState } from "react";
 import { usePageTracking } from "../hooks/usePageTracking.js";
+import { usePage } from "../contexts/PageProvider.jsx";
 
 export default function Main() {
     usePageTracking();
     const [navOpen, setNavOpen] = useState(false);
+    const { gameSlug } = useParams();
+    const { setGameSlug } = usePage();
+
+    useEffect(() => {
+        setGameSlug(gameSlug);
+    }, [gameSlug]);
 
     function toggleNav(state) {
         // I go by typeof because events can
@@ -20,7 +27,6 @@ export default function Main() {
             setNavOpen(!navOpen);
         }
     }
-
 
     useEffect(() => {
         if (navOpen) {

@@ -8,15 +8,17 @@ import NotFound from "./components/NotFound.jsx";
 import GuardianCosts from "./components/mini-apps/GuardianCosts.jsx";
 import ImmortalGuardians from "./components/mini-apps/ImmortalGuardians.jsx";
 import GameManager from "./components/GameManager.jsx";
+
 const env = import.meta.env.VITE_ENV;
+const useGameSlug = import.meta.env.VITE_MULTIGAME;
 
 const routes = [
     ...oldRoutes,
     {
-        path: "*",
+        path: useGameSlug ? ":gameSlug" : "*",
         element: <Main />,
         children: [
-            { path: ":pageTitle", element: <PageBuilder /> },
+            { path: ":pageTitle", element: <PageBuilder /> }, // wip
             { path: "guardian-upgrade-costs", element: <GuardianCosts /> },
             { path: "immortal-guardians", element: <ImmortalGuardians /> },
             { path: "flea-guide/", element: <Checklist checklistId={1} /> },
@@ -35,8 +37,8 @@ if (env == "DEV") {
         },
         {
             path: "game-manager/",
-            element: <GameManager isAdmin={true} />
-        }
+            element: <GameManager isAdmin={true} />,
+        },
     );
 }
 
