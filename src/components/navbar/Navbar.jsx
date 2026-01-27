@@ -183,6 +183,15 @@ const navbar = [
     },
 ];
 
+const navbarSilksong = [
+    {
+        id: 1,
+        slug: "/",
+        navbarTitle: "Silksong Guides",
+        type: "page",
+    },
+];
+
 if (env == "DEV") {
     navbar.unshift(
         {
@@ -207,10 +216,11 @@ export default function Navbar({
     closeClassName,
 }) {
     const { gameSlug } = usePage();
+    const curNav = gameSlug == "silksong" ? navbarSilksong : navbar;
     return (
         <Fragment>
             <div id="nav-bar" className={className}>
-                {navbar.map((item, index, arr) => {
+                {curNav.map((item, index, arr) => {
                     if (item.type == "page") {
                         return (
                             <NavbarButton

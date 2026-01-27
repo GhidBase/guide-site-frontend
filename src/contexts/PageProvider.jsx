@@ -13,6 +13,17 @@ export function PageProvider({ children }) {
 
     const [gameSlug, setGameSlug] = useState();
 
+    function checkIsRootHomepage() {
+        console.log("gameId: " + gameId);
+        console.log("gameSlug: " + gameSlug);
+        console.log("pageTitle: " + title);
+
+        return !gameId && !gameSlug && !title;
+    }
+
+    const isRootHomepage = checkIsRootHomepage();
+    console.log("On root homepage: " + isRootHomepage);
+
     // Create a useEffect that uses gameSlug as a
     // dependency
     useEffect(() => {

@@ -8,12 +8,18 @@ import NotFound from "./components/NotFound.jsx";
 import GuardianCosts from "./components/mini-apps/GuardianCosts.jsx";
 import ImmortalGuardians from "./components/mini-apps/ImmortalGuardians.jsx";
 import GameManager from "./components/GameManager.jsx";
+import { Homepage } from "./components/Homepage.jsx";
 
 const env = import.meta.env.VITE_ENV;
 const useGameSlug = import.meta.env.VITE_MULTIGAME;
 
 const routes = [
     ...oldRoutes,
+    {
+        path: "/",
+        element: <Main />,
+        children: [{ index: true, element: <Homepage /> }],
+    },
     {
         path: useGameSlug ? ":gameSlug" : "*",
         element: <Main />,
