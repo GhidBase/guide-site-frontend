@@ -8,34 +8,68 @@ import NotFound from "./components/NotFound.jsx";
 import GuardianCosts from "./components/mini-apps/GuardianCosts.jsx";
 import ImmortalGuardians from "./components/mini-apps/ImmortalGuardians.jsx";
 import GameManager from "./components/GameManager.jsx";
-import { Homepage } from "./components/Homepage.jsx";
 
 const env = import.meta.env.VITE_ENV;
-const useGameSlug = import.meta.env.VITE_MULTIGAME;
+const useLDGRoute = import.meta.env.VITE_LDG;
+// Clean up routes, then decide how to use "useGameSlug"
 
-const routes = [
-    ...oldRoutes,
-    {
-        path: "/",
-        element: <Main />,
-        children: [{ index: true, element: <Homepage /> }],
-    },
-    {
-        path: useGameSlug ? ":gameSlug" : "*",
-        element: <Main />,
-        children: [
-            { index: true, element: <PageBuilder /> },
-            { path: ":pageTitle", element: <PageBuilder /> }, // wip
-            { path: "guardian-upgrade-costs", element: <GuardianCosts /> },
-            { path: "immortal-guardians", element: <ImmortalGuardians /> },
-            { path: "flea-guide/", element: <Checklist checklistId={1} /> },
-            { path: "editor-test/", element: <EditorExample /> },
-            { path: "404/", element: <NotFound /> },
-            { path: "*", element: <PageBuilder /> },
-        ],
-    },
-];
+const mainRoute = {
+    path: "/",
+    element: <Main />,
+    children: [
+        { index: true, element: <PageBuilder /> },
+        { path: ":pageSlug", element: <PageBuilder /> },
+        {
+            path: "games/:gameSlug",
+            children: [
+                { index: true, element: <PageBuilder /> },
+                { path: ":pageSlug", element: <PageBuilder /> },
+                { path: "404/", element: <NotFound /> },
+                {
+                    path: "guardian-upgrade-costs",
+                    element: <GuardianCosts />,
+                },
+                {
+                    path: "immortal-guardians",
+                    element: <ImmortalGuardians />,
+                },
+                {
+                    path: "flea-guide",
+                    element: <Checklist checklistId={1} />,
+                },
+            ],
+        },
+        { path: "404/", element: <NotFound /> },
+        { path: "*", element: <PageBuilder /> },
+    ],
+};
 
+const luckyDefenseRoute = {
+    path: "/",
+    element: <Main />,
+    children: [
+        { index: true, element: <PageBuilder /> },
+        { path: ":pageSlug", element: <PageBuilder /> },
+        {
+            path: "lucky-defense/guardian-upgrade-costs",
+            element: <GuardianCosts />,
+        },
+        {
+            path: "lucky-defense/immortal-guardians",
+            element: <ImmortalGuardians />,
+        },
+        { path: "404/", element: <NotFound /> },
+        { path: "*", element: <PageBuilder /> },
+    ],
+};
+
+const curRoute = useLDGRoute ? luckyDefenseRoute : mainRoute;
+
+const routes = [...oldRoutes, curRoute];
+
+// this targets the last object in my route array, which is
+// my main route. I should adjust this in the future to
+// deliberately target my main route but it works for now
 if (env == "DEV") {
     routes[routes.length - 1].children.unshift(
         {

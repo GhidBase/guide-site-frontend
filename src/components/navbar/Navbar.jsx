@@ -189,17 +189,17 @@ export default function Navbar({
             navbarTitle: "Help I'm New! Guide Quests",
             type: "page",
         },
-        {
-            id: 501,
-            navbarTitle: "Other Games",
-            type: "section",
-        },
-        {
-            id: 502,
-            navbarTitle: "Coop TD",
-            slug: "/coop-td",
-            type: "page",
-        },
+        // {
+        //     id: 501,
+        //     navbarTitle: "Other Games",
+        //     type: "section",
+        // },
+        // {
+        //     id: 502,
+        //     navbarTitle: "Coop TD",
+        //     slug: "/coop-td",
+        //     type: "page",
+        // },
     ];
 
     const navbarSilksong = [

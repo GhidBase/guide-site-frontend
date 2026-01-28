@@ -7,7 +7,7 @@ const env = import.meta.env.VITE_ENV;
 
 export default function PageBuilder() {
     const navigate = useNavigate();
-    const { pageTitle } = useParams();
+    const { gameSlug, pageTitle } = useParams();
 
     const [blocks, setBlocks] = useState([]);
     const [adminMode, setAdminMode] = useState(false);
@@ -16,13 +16,14 @@ export default function PageBuilder() {
     const orders = blocks.map((block) => (block.order ? block.order : 0));
     const highestOrder = Math.max(...orders);
 
-    const { title, setTitle, currentAPI, gameId, gameSlug } = usePage();
+    const { title, setTitle, currentAPI, gameId, gameBasePath } = usePage();
+
     if (pageData && title != pageData.title && pageData.title) {
         setTitle(pageData.title);
     }
 
     useEffect(() => {
-        async function loadPageByName(name) {
+        async function loadGamePageByName(name) {
             const apiUrl =
                 currentAPI + "/games/" + gameId + "/pages/by-slug/" + name;
 
@@ -39,12 +40,34 @@ export default function PageBuilder() {
                         "Page null caused by 0 search results, display 404",
                     );
                 }
-                navigate("/" + gameSlug + "/404", { replace: true });
+                navigate(gameBasePath + "/404", { replace: true });
             } else {
                 setBlocks(blocks);
                 setPageData(page);
             }
         }
+
+        async function loadPageByName(name) {
+            console.log("loadPageByName(" + name + ")");
+            console.log(gameId);
+            const apiUrl = currentAPI + "/pages/by-slug/" + name;
+            const response = await fetch(apiUrl);
+            const result = await response.json();
+            const { page, blocks, notFound } = result;
+            if (page == null) {
+                console.log("Page is null");
+                if (notFound) {
+                    console.log(
+                        "Page null caused by 0 search results, display 404",
+                    );
+                }
+                navigate(gameBasePath + "/404", { replace: true });
+            } else {
+                setBlocks(blocks);
+                setPageData(page);
+            }
+        }
+
         async function loadHomepage() {
             if (!gameId) {
                 return;
@@ -71,9 +94,31 @@ export default function PageBuilder() {
             }
         }
 
+        async function loadRootHomepage() {
+            const apiUrl =
+                currentAPI + "/games/" + gameId + "/pages/by-slug/" + slug;
+
+            const responsePageData = await fetch(apiUrl);
+            const resultPageData = await responsePageData.json();
+
+            const { page, blocks } = resultPageData;
+            if (page == null) {
+                console.log("Page is null");
+                console.log("homepage fail");
+            } else {
+                setBlocks(blocks);
+                setPageData(page);
+            }
+        }
+
         if (pageTitle) {
-            loadPageByName(pageTitle);
-        } else if (!pageTitle) {
+            console.log("about to call load game page");
+            if (gameId != null) {
+                loadGamePageByName(pageTitle);
+            } else {
+                loadPageByName(pageTitle);
+            }
+        } else if (gameSlug) {
             loadHomepage();
         }
     }, [pageId, pageTitle, currentAPI, gameId, navigate]);
@@ -302,7 +347,7 @@ export default function PageBuilder() {
                 <div className="flex flex-col items-center mt-2 gap-2">
                     <Link
                         className="text-amber-50 bg-(--primary) w-50 rounded px-2 py-0.5"
-                        to={"/" + gameSlug + "/page-manager/"}
+                        to={gameBasePath + "/page-manager"}
                     >
                         Back to Page Manager
                     </Link>

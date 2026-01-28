@@ -12,11 +12,6 @@ export default function Main() {
     usePageTracking();
     const [navOpen, setNavOpen] = useState(false);
     const { gameSlug } = useParams();
-    const { setGameSlug } = usePage();
-
-    useEffect(() => {
-        setGameSlug(gameSlug);
-    }, [gameSlug]);
 
     function toggleNav(state) {
         // I go by typeof because events can
