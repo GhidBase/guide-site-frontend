@@ -24,7 +24,6 @@ const mainRoute = {
             children: [
                 { index: true, element: <PageBuilder /> },
                 { path: ":pageSlug", element: <PageBuilder /> },
-                { path: "404/", element: <NotFound /> },
                 {
                     path: "guardian-upgrade-costs",
                     element: <GuardianCosts />,
@@ -40,7 +39,6 @@ const mainRoute = {
             ],
         },
         { path: "404/", element: <NotFound /> },
-        { path: "*", element: <PageBuilder /> },
     ],
 };
 
@@ -51,15 +49,14 @@ const luckyDefenseRoute = {
         { index: true, element: <PageBuilder /> },
         { path: ":pageSlug", element: <PageBuilder /> },
         {
-            path: "lucky-defense/guardian-upgrade-costs",
+            path: "guardian-upgrade-costs",
             element: <GuardianCosts />,
         },
         {
-            path: "lucky-defense/immortal-guardians",
+            path: "immortal-guardians",
             element: <ImmortalGuardians />,
         },
         { path: "404/", element: <NotFound /> },
-        { path: "*", element: <PageBuilder /> },
     ],
 };
 
