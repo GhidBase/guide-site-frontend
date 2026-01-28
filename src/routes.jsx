@@ -2,15 +2,15 @@ import Checklist from "./components/Checklist";
 import Main from "./components/Main";
 import PageManager from "./components/PageManager";
 import PageBuilder from "./components/PageBuilder";
-import EditorExample from "./components/TextEditor";
 import oldRoutes from "./js/oldRoutes.jsx";
 import NotFound from "./components/NotFound.jsx";
 import GuardianCosts from "./components/mini-apps/GuardianCosts.jsx";
 import ImmortalGuardians from "./components/mini-apps/ImmortalGuardians.jsx";
 import GameManager from "./components/GameManager.jsx";
+import gameAndPageLoader from "./loaders/gameAndPageLoader.js";
 
 const env = import.meta.env.VITE_ENV;
-const useLDGRoute = import.meta.env.VITE_LDG;
+const useLDGRoute = import.meta.env.VITE_LDG == "True";
 // Clean up routes, then decide how to use "useGameSlug"
 
 const mainRoute = {
@@ -22,8 +22,16 @@ const mainRoute = {
         {
             path: "games/:gameSlug",
             children: [
-                { index: true, element: <PageBuilder /> },
-                { path: ":pageSlug", element: <PageBuilder /> },
+                {
+                    index: true,
+                    element: <PageBuilder />,
+                    loader: gameAndPageLoader,
+                },
+                {
+                    path: ":pageSlug",
+                    element: <PageBuilder />,
+                    loader: gameAndPageLoader,
+                },
                 {
                     path: "guardian-upgrade-costs",
                     element: <GuardianCosts />,

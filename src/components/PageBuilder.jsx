@@ -1,6 +1,6 @@
 import { useState, useEffect, Fragment } from "react";
 import TextBlock from "./blocks/TextBlock";
-import { useParams, Link, useNavigate } from "react-router";
+import { useParams, Link, useNavigate, useLoaderData } from "react-router";
 import { usePage } from "../contexts/PageProvider";
 import SingleImageBlock from "./blocks/SingleImageBlock";
 const env = import.meta.env.VITE_ENV;
@@ -17,6 +17,9 @@ export default function PageBuilder() {
     const highestOrder = Math.max(...orders);
 
     const { title, setTitle, currentAPI, gameId, gameBasePath } = usePage();
+
+    const game = useLoaderData();
+    console.log(game);
 
     if (pageData && title != pageData.title && pageData.title) {
         setTitle(pageData.title);
