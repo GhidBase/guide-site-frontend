@@ -13,6 +13,7 @@ export default function PageBuilder() {
     const [blocks, setBlocks] = useState(pageData.blocks);
     const [adminMode, setAdminMode] = useState(false);
     const pageId = pageData.page.id;
+    // test commit
     console.log(pageData);
     console.log(pageId);
     const orders = blocks.map((block) => (block.order ? block.order : 0));
