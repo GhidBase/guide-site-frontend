@@ -1,25 +1,22 @@
 import { useState, Fragment } from "react";
+import { currentAPI } from "../config/api";
 import TextBlock from "./blocks/TextBlock";
 import { Link, useNavigate, useRouteLoaderData } from "react-router";
-import { usePage } from "../contexts/PageProvider";
 import SingleImageBlock from "./blocks/SingleImageBlock";
 const env = import.meta.env.VITE_ENV;
 
 export default function PageBuilder() {
     const navigate = useNavigate();
-
-    const { pageData } = useRouteLoaderData("main");
-    const blocks = pageData.blocks;
+    const { pageData, gameData } = useRouteLoaderData("main");
+    const gameSlug = gameData.slug;
+    const gameId = gameData.id;
+    const [blocks, setBlocks] = useState(pageData.blocks);
     const [adminMode, setAdminMode] = useState(false);
-    const pageId = pageData.id;
+    const pageId = pageData.page.id;
+    console.log(pageData);
+    console.log(pageId);
     const orders = blocks.map((block) => (block.order ? block.order : 0));
     const highestOrder = Math.max(...orders);
-
-    const { title, setTitle, currentAPI, gameId, gameBasePath } = usePage();
-
-    if (pageData && title != pageData.title && pageData.title) {
-        setTitle(pageData.title);
-    }
 
     function isOrderTaken(order) {
         return blocks.find((block) => block.order == order) != undefined;
@@ -245,7 +242,7 @@ export default function PageBuilder() {
                 <div className="flex flex-col items-center mt-2 gap-2">
                     <Link
                         className="text-amber-50 bg-(--primary) w-50 rounded px-2 py-0.5"
-                        to={gameBasePath + "/page-manager"}
+                        to={"/games/" + gameSlug + "/page-manager"}
                     >
                         Back to Page Manager
                     </Link>

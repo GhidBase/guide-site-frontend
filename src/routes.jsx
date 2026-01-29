@@ -78,23 +78,6 @@ const curRoute = useLDGRoute ? luckyDefenseRoute : mainRoute;
 
 const routes = [...oldRoutes, curRoute];
 
-// this targets the last object in my route array, which is
-// my main route. I should adjust this in the future to
-// deliberately target my main route but it works for now
-/*
-if (env == "DEV") {
-    routes[routes.length - 1].children.unshift(
-        {
-            path: "games/:gameSlug/page-manager/",
-            element: <PageManager isAdmin={true} />,
-        },
-        {
-            path: "game-manager/",
-            element: <GameManager isAdmin={true} />,
-        },
-    );
-}
-*/
 if (env == "DEV") {
     const found = mainRoute.children.find(
         (child) => child.path == "games/:gameSlug",

@@ -6,19 +6,12 @@ const PageContext = createContext(null);
 
 export function PageProvider({ children }) {
     // set from pageBuilder
-    const [title, setTitle] = useState("");
 
     const [gameId, setGameId] = useState();
     const currentAPIgames = currentAPI + "/games/" + gameId;
 
     const { gameSlug } = useParams();
     const gameBasePath = gameId == undefined ? "" : "/" + gameSlug;
-
-    function checkIsRootHomepage() {
-        return !gameId && !gameSlug && !title;
-    }
-
-    const isRootHomepage = checkIsRootHomepage();
 
     useEffect(() => {
         // This is what runs to try and locate a gameId
@@ -48,13 +41,10 @@ export function PageProvider({ children }) {
     return (
         <PageContext.Provider
             value={{
-                title,
-                setTitle,
                 currentAPI,
                 gameId,
                 currentAPIgames,
                 gameSlug,
-                isRootHomepage,
                 gameBasePath,
             }}
         >

@@ -14,9 +14,6 @@ export default async function gameAndPageLoader({ params, request }) {
             path =
                 path + "/games/" + gameData.id + "/pages/by-slug/" + pageSlug;
         }
-        console.log(!!gameSlug);
-        console.log(!pageSlug);
-        console.log(path);
         const response = await fetch(path);
         const result = await response.json();
         return result;
