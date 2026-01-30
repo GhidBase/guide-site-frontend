@@ -1,17 +1,16 @@
 import "../tailwind.css";
 import "../css/tables.css";
-import { Outlet, useParams } from "react-router";
+import { Outlet, useLoaderData, useParams } from "react-router";
 import Navbar from "./navbar/Navbar.jsx";
 import Title from "./Title.jsx";
 import NavBarOpenButton from "./NavBarOpenButton.jsx";
 import { useEffect, useState } from "react";
 import { usePageTracking } from "../hooks/usePageTracking.js";
-import { usePage } from "../contexts/PageProvider.jsx";
 
 export default function Main() {
     usePageTracking();
     const [navOpen, setNavOpen] = useState(false);
-    const { gameSlug } = useParams();
+    const { gameData } = useLoaderData();
 
     function toggleNav(state) {
         // I go by typeof because events can
@@ -55,24 +54,28 @@ export default function Main() {
             <Title></Title>
             <div
                 id="side-bar-and-content"
-                className="w-full box-border border-t-4 border-(--outline) flex flex-1 xl:pr-30 2xl:pr-60 bg-(--surface-background)"
+                className={`w-full box-border border-t-4 border-(--outline) flex flex-1
+                bg-(--surface-background)
+                ${gameData && "xl:pr-30 2xl:pr-60"} `}
             >
-                <Navbar
-                    className={`
-                        w-70 max-w-100 z-2 lg:h-full lg:w-fit lg:min-w-60
-                        ${navOpen ? "fixed" : "hidden"} right-[50%] top-4 bottom-20 translate-x-1/2 lg:static lg:translate-0
-                        border-4 border-(--outline) lg:border-t-0 lg:border-b-0 lg:border-l-0 lg:border-r-4
-                        bg-(--primary)   
-                        lg:flex lg:flex-col
-                        overflow-y-auto`}
-                    obstructorClassName={`z-1 ${navOpen ? "fixed" : "hidden"} top-0 w-full h-full bg-black/30`}
-                    toggleNav={toggleNav}
-                    navOpen={navOpen}
-                    closeClassName={`
-                        ${navOpen ? "fixed" : "hidden"}
-                        w-70 max-w-100 bottom-4 h-16 z-2 right-[50%] translate-x-1/2
-                        bg-(--primary) border-4 border-t-0 border-(--outline)`}
-                ></Navbar>
+                {gameData && (
+                    <Navbar
+                        className={`
+                            w-70 max-w-100 z-2 lg:h-full lg:w-fit lg:min-w-60
+                            ${navOpen ? "fixed" : "hidden"} right-[50%] top-4 bottom-20 translate-x-1/2 lg:static lg:translate-0
+                            border-4 border-(--outline) lg:border-t-0 lg:border-b-0 lg:border-l-0 lg:border-r-4
+                            bg-(--primary)   
+                            lg:flex lg:flex-col
+                            overflow-y-auto`}
+                        obstructorClassName={`z-1 ${navOpen ? "fixed" : "hidden"} top-0 w-full h-full bg-black/30`}
+                        toggleNav={toggleNav}
+                        navOpen={navOpen}
+                        closeClassName={`
+                            ${navOpen ? "fixed" : "hidden"}
+                            w-70 max-w-100 bottom-4 h-16 z-2 right-[50%] translate-x-1/2
+                            bg-(--primary) border-4 border-t-0 border-(--outline)`}
+                    ></Navbar>
+                )}
                 <div
                     id="page-outer-bounds"
                     className={`gap-4 sm:px-4 pb-4 flex flex-col w-full max-w-230 mx-auto text-(--text-color)`}
@@ -80,13 +83,15 @@ export default function Main() {
                     <Outlet />
                 </div>
             </div>
-            <NavBarOpenButton
-                className={
-                    "lg:hidden sticky bottom-0 flex w-full justify-center border-t-4 border-(--outline) bg-(--red-brown)"
-                }
-                buttonClassName={"h-13 w-13"}
-                toggleNav={toggleNav}
-            ></NavBarOpenButton>
+            {gameData && (
+                <NavBarOpenButton
+                    className={
+                        "lg:hidden sticky bottom-0 flex w-full justify-center border-t-4 border-(--outline) bg-(--red-brown)"
+                    }
+                    buttonClassName={"h-13 w-13"}
+                    toggleNav={toggleNav}
+                ></NavBarOpenButton>
+            )}
         </div>
     );
 }

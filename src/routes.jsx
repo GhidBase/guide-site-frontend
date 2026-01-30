@@ -26,7 +26,6 @@ const mainRoute = {
     children: [
         { index: true, element: <PageBuilder /> },
         { path: ":pageSlug", element: <PageBuilder /> },
-        // /games/:gameSlug/page-manager
         {
             path: "games/:gameSlug",
             children: [
@@ -41,14 +40,17 @@ const mainRoute = {
                 {
                     path: "guardian-upgrade-costs",
                     element: <GuardianCosts />,
+                    handle: { title: "Upgrade Costs" },
                 },
                 {
                     path: "immortal-guardians",
                     element: <ImmortalGuardians />,
+                    handle: { title: "Immortal Guardians" },
                 },
                 {
                     path: "flea-guide",
                     element: <Checklist checklistId={1} />,
+                    handle: { title: "Flea Guide" },
                 },
             ],
         },
@@ -65,10 +67,12 @@ const luckyDefenseRoute = {
         {
             path: "guardian-upgrade-costs",
             element: <GuardianCosts />,
+            handle: { title: "Upgrade Costs" },
         },
         {
             path: "immortal-guardians",
             element: <ImmortalGuardians />,
+            handle: { title: "Immortal Guardians" },
         },
         { path: "404/", element: <NotFound /> },
     ],
@@ -87,10 +91,12 @@ if (env == "DEV") {
         {
             path: "page-manager/",
             element: <PageManager isAdmin={true} />,
+            handle: { title: "Page Manager" },
         },
         {
             path: "game-manager/",
             element: <GameManager isAdmin={true} />,
+            handle: { title: "Game Manager" },
         },
     );
 }

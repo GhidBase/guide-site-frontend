@@ -31,6 +31,12 @@ export default async function gameAndPageLoader({ params, request }) {
         return result;
     }
 
+    async function fetchMainHomepage() {
+        const response = await fetch(currentAPI + "/pages/by-slug/homepage");
+        const result = await response.json();
+        return result;
+    }
+
     async function fetchGameBySlug() {
         if (gameSlug == undefined) {
             return;
@@ -57,6 +63,12 @@ export default async function gameAndPageLoader({ params, request }) {
     // fetchGameHomepage
     if (!!gameData && !pageSlug) {
         pageData = await fetchGameHomepage();
+    }
+
+    console.log(!!gameData);
+    console.log(!!pageData);
+    if (!gameData && !pageData) {
+        pageData = await fetchMainHomepage();
     }
 
     return { gameData, pageData };

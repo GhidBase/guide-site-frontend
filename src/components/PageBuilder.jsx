@@ -8,16 +8,13 @@ const env = import.meta.env.VITE_ENV;
 export default function PageBuilder() {
     const navigate = useNavigate();
     const { pageData, gameData } = useRouteLoaderData("main");
-    const gameSlug = gameData.slug;
-    const gameId = gameData.id;
-    const [blocks, setBlocks] = useState(pageData.blocks);
+    const gameSlug = gameData?.slug;
+    const gameId = gameData?.id;
+    const [blocks, setBlocks] = useState(pageData?.blocks ?? []);
     const [adminMode, setAdminMode] = useState(false);
-    const pageId = pageData.page.id;
-    // test commit
-    console.log(pageData);
-    console.log(pageId);
+    const pageId = pageData?.page?.id;
     useEffect(() => {
-        setBlocks(pageData.blocks);
+        setBlocks(pageData?.blocks ?? []);
     }, [gameData]);
     const orders = blocks.map((block) => (block.order ? block.order : 0));
     const highestOrder = Math.max(...orders);

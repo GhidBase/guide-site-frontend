@@ -12,7 +12,7 @@ export default function Navbar({
     closeClassName,
 }) {
     const { gameData, pageData } = useLoaderData();
-    const gameSlug = "games/" + gameData.slug;
+    const gameSlug = "games/" + gameData?.slug;
     //console.log(gameData);
 
     const navbar = [

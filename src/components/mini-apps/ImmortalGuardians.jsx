@@ -1,5 +1,4 @@
-import { Fragment, useState } from "react";
-import { usePage } from "../../contexts/PageProvider";
+import { useState } from "react";
 import "../../css/immortal-guardians.css";
 import "../../css/roulette-sim.css";
 import "../../css/styles.css";
@@ -66,9 +65,6 @@ function ToggleSection({ title, icon, children, id, imgSrc }) {
 }
 
 export default function ImmortalGuardians() {
-    const { setTitle } = usePage();
-    setTitle("Immortal Guardians");
-
     return (
         <div class="text-width content-block immortal-guide">
             <ToggleSection title="How to unlock Immortal Guardians">

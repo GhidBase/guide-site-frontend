@@ -1,23 +1,21 @@
-import { usePage } from "../contexts/PageProvider.jsx";
 import { useEffect, useState, Fragment } from "react";
 import GameItem from "./GameItem";
+import { currentAPI } from "../config/api.js";
 
 export default function GameManager() {
-    const [games, setGames] = useState([])
-    const [titleInput, setTitleInput] = useState("")
-    const { currentAPI, setTitle, gameId } = usePage();
-    setTitle("Game Manager");
+    const [games, setGames] = useState([]);
+    const [titleInput, setTitleInput] = useState("");
 
     useEffect(() => {
         fetch(currentAPI + "/games/")
             .then((response) => response.json())
             .then((result) => setGames(result));
-    }, [currentAPI, gameId]);
+    }, [currentAPI]);
 
     async function createGame(title) {
-        console.log("Create game")
+        console.log("Create game");
         if (!title?.trim()) {
-            console.log("Error - title cannot be empty")
+            console.log("Error - title cannot be empty");
             return;
         }
 
@@ -34,16 +32,14 @@ export default function GameManager() {
             console.error("Error", err);
             return;
         }
-
-
-
     }
 
     return (
         <Fragment>
             <div className="mt-4 flex justify-between items-center mx-auto gap-2">
                 <h1 className="">Games:</h1>
-                <input type="text"
+                <input
+                    type="text"
                     name="title"
                     value={titleInput}
                     onChange={(e) => setTitleInput(e.target.value)}
@@ -65,11 +61,15 @@ export default function GameManager() {
             <ul>
                 {games.map((game) => {
                     return (
-                        <GameItem title={game.title} slug={game.slug} id={game.id} key={game.id} />
-                    )
+                        <GameItem
+                            title={game.title}
+                            slug={game.slug}
+                            id={game.id}
+                            key={game.id}
+                        />
+                    );
                 })}
             </ul>
         </Fragment>
     );
-
 }

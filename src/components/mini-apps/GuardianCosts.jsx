@@ -1,13 +1,9 @@
 import { Fragment, useState } from "react";
-import { usePage } from "../../contexts/PageProvider";
 
 export default function GuardianCosts() {
     const [fromLevel, setFromLevel] = useState(1);
     const [toLevel, setToLevel] = useState(2);
     const [rarity, setRarity] = useState("mythic");
-
-    const { setTitle } = usePage();
-    setTitle("Upgrade Costs");
 
     const upgradeCosts = {
         immortal: {
