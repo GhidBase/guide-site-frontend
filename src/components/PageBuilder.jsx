@@ -1,4 +1,4 @@
-import { useState, Fragment } from "react";
+import { useState, Fragment, useEffect } from "react";
 import { currentAPI } from "../config/api";
 import TextBlock from "./blocks/TextBlock";
 import { Link, useNavigate, useRouteLoaderData } from "react-router";
@@ -16,6 +16,9 @@ export default function PageBuilder() {
     // test commit
     console.log(pageData);
     console.log(pageId);
+    useEffect(() => {
+        setBlocks(pageData.blocks);
+    }, [gameData]);
     const orders = blocks.map((block) => (block.order ? block.order : 0));
     const highestOrder = Math.max(...orders);
 
