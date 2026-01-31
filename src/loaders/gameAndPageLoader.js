@@ -8,8 +8,6 @@ export default async function gameAndPageLoader({ params, request }) {
         // I need to change the path based on if
         // there's a gameSlug or not
         let path = currentAPI;
-        console.log(!!gameData, !!pageSlug);
-        console.log(!gameSlug, !!pageSlug);
         // localhost
         if (!gameData && !!pageSlug) {
             path = path + "/" + pageSlug;
@@ -57,11 +55,8 @@ export default async function gameAndPageLoader({ params, request }) {
 
     let gameData;
     let pageData;
-    console.log("isLDG:");
-    console.log(isLDG);
     if (isLDG) {
         gameData = await fetchGameBySlug("lucky-defense");
-        console.log(gameData);
 
         if (!!pageSlug) {
             pageData = await fetchPageBySlug();

@@ -92,7 +92,6 @@ const curRoute = isLDG ? luckyDefenseRoute : mainRoute;
 
 const routes = [...oldRoutes, curRoute];
 
-console.log(luckyDefenseRoute.children.push());
 if (env == "DEV") {
     const found = isLDG
         ? luckyDefenseRoute

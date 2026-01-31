@@ -12,9 +12,7 @@ export default function Navbar({
     closeClassName,
 }) {
     const { gameData } = useLoaderData();
-    console.log(gameData.slug);
     const gameSlug = isLDG ? "" : "/games/" + gameData?.slug;
-    console.log(gameSlug);
 
     const navbar = [
         {
