@@ -1,4 +1,5 @@
 import { currentAPI } from "../config/api.js";
+const isLDG = import.meta.env.VITE_LDG;
 
 export default async function gameAndPageLoader({ params, request }) {
     const { gameSlug, pageSlug } = params;
@@ -7,10 +8,12 @@ export default async function gameAndPageLoader({ params, request }) {
         // I need to change the path based on if
         // there's a gameSlug or not
         let path = currentAPI;
+        console.log(!!gameData, !!pageSlug);
+        console.log(!gameSlug, !!pageSlug);
         // localhost
-        if (!gameSlug && !!pageSlug) {
+        if (!gameData && !!pageSlug) {
             path = path + "/" + pageSlug;
-        } else if (!!gameSlug && !!pageSlug) {
+        } else if (!!gameData && !!pageSlug) {
             path =
                 path + "/games/" + gameData.id + "/pages/by-slug/" + pageSlug;
         }
@@ -37,7 +40,7 @@ export default async function gameAndPageLoader({ params, request }) {
         return result;
     }
 
-    async function fetchGameBySlug() {
+    async function fetchGameBySlug(gameSlug) {
         if (gameSlug == undefined) {
             return;
         }
@@ -50,25 +53,46 @@ export default async function gameAndPageLoader({ params, request }) {
         return result;
     }
 
+    // End of the function declarations
+
     let gameData;
     let pageData;
-    if (gameSlug != null && gameSlug != undefined) {
-        gameData = await fetchGameBySlug();
-    }
+    console.log("isLDG:");
+    console.log(isLDG);
+    if (isLDG) {
+        gameData = await fetchGameBySlug("lucky-defense");
+        console.log(gameData);
 
-    if (!!pageSlug) {
-        pageData = await fetchPageBySlug();
-    }
-    // if !!gameData && !pageSlug
-    // fetchGameHomepage
-    if (!!gameData && !pageSlug) {
-        pageData = await fetchGameHomepage();
-    }
+        if (!!pageSlug) {
+            pageData = await fetchPageBySlug();
+        }
 
-    console.log(!!gameData);
-    console.log(!!pageData);
-    if (!gameData && !pageData) {
-        pageData = await fetchMainHomepage();
+        // if !!gameData && !pageSlug
+        // fetchGameHomepage
+        if (!!gameData && !pageSlug) {
+            console.log("fetching LDG homepage");
+            pageData = await fetchGameHomepage();
+        }
+    } else {
+        if (gameSlug != null && gameSlug != undefined) {
+            gameData = await fetchGameBySlug(gameSlug);
+        }
+
+        if (!!pageSlug) {
+            pageData = await fetchPageBySlug();
+        }
+
+        // if !!gameData && !pageSlug
+        // fetchGameHomepage
+        if (!!gameData && !pageSlug) {
+            pageData = await fetchGameHomepage();
+        }
+
+        console.log(!!gameData);
+        console.log(!!pageData);
+        if (!gameData && !pageData) {
+            pageData = await fetchMainHomepage();
+        }
     }
 
     return { gameData, pageData };

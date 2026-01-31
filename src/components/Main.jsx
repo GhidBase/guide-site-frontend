@@ -1,6 +1,6 @@
 import "../tailwind.css";
 import "../css/tables.css";
-import { Outlet, useLoaderData, useParams } from "react-router";
+import { Outlet, useLoaderData } from "react-router";
 import Navbar from "./navbar/Navbar.jsx";
 import Title from "./Title.jsx";
 import NavBarOpenButton from "./NavBarOpenButton.jsx";

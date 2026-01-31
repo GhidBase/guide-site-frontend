@@ -1,14 +1,19 @@
 import { useMatches } from "react-router";
 import ldgLogo from "../assets/LDG_Title.webp";
 import { useRouteLoaderData } from "react-router";
+const isLDG = import.meta.env.VITE_LDG;
 
 export default function Title() {
     const { pageData } = useRouteLoaderData("main");
     const matches = useMatches();
+    console.log(matches);
+    const hardCodedTitle = isLDG
+        ? "test"
+        : matches?.find((m) => m.handle?.title)?.handle.title;
 
-    const hardCodedTitle = matches?.find((m) => m.handle?.title)?.handle.title;
-
+    console.log(hardCodedTitle);
     const title = !!hardCodedTitle ? hardCodedTitle : pageData?.page.title;
+    console.log(title);
 
     return (
         <div

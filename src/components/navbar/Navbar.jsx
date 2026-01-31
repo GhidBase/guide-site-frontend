@@ -1,9 +1,9 @@
 import NavbarButton from "./NavbarButton";
-import { usePage } from "../../contexts/PageProvider";
-import { useNavigate, useLoaderData } from "react-router";
+import { useLoaderData } from "react-router";
 import { Fragment } from "react";
 import NavbarSection from "./NavbarSection";
 const env = import.meta.env.VITE_ENV;
+const isLDG = import.meta.env.VITE_LDG;
 
 export default function Navbar({
     className,
@@ -11,20 +11,21 @@ export default function Navbar({
     toggleNav,
     closeClassName,
 }) {
-    const { gameData, pageData } = useLoaderData();
-    const gameSlug = "games/" + gameData?.slug;
-    //console.log(gameData);
+    const { gameData } = useLoaderData();
+    console.log(gameData.slug);
+    const gameSlug = isLDG ? "" : "/games/" + gameData?.slug;
+    console.log(gameSlug);
 
     const navbar = [
         {
             id: 32,
-            slug: "/" + gameSlug + "/immortal-guardians",
+            slug: gameSlug + "/immortal-guardians",
             navbarTitle: "Immortal Guardians",
             type: "page",
         },
         {
             id: 2,
-            slug: "/" + gameSlug,
+            slug: gameSlug,
             navbarTitle: "Homepage",
             type: "page",
         },
@@ -35,37 +36,37 @@ export default function Navbar({
         },
         {
             id: 3,
-            slug: "/" + gameSlug + "/stun-guide",
+            slug: gameSlug + "/stun-guide",
             navbarTitle: "Stun Guide",
             type: "page",
         },
         {
             id: 4,
-            slug: "/" + gameSlug + "/defense-reduction",
+            slug: gameSlug + "/defense-reduction",
             navbarTitle: "Defense Reduction",
             type: "page",
         },
         {
             id: 5,
-            slug: "/" + gameSlug + "/sb-mg",
+            slug: gameSlug + "/sb-mg",
             navbarTitle: "Safebox and Moneygun",
             type: "page",
         },
         {
             id: 6,
-            slug: "/" + gameSlug + "/mythic-categories",
+            slug: gameSlug + "/mythic-categories",
             navbarTitle: "Types of Mythics",
             type: "page",
         },
         {
             id: 7,
-            slug: "/" + gameSlug + "/mp-regen",
+            slug: gameSlug + "/mp-regen",
             navbarTitle: "MP Regen Guide",
             type: "page",
         },
         {
             id: 8,
-            slug: "/" + gameSlug + "/attack-speed",
+            slug: gameSlug + "/attack-speed",
             navbarTitle: "Attack Speed",
             type: "page",
         },
@@ -76,7 +77,7 @@ export default function Navbar({
         },
         {
             id: 27,
-            slug: "/" + gameSlug + "/guardian-upgrade-costs",
+            slug: gameSlug + "/guardian-upgrade-costs",
             navbarTitle: "Guardian Upgrade Costs",
             type: "page",
         },
@@ -87,7 +88,7 @@ export default function Navbar({
         },
         {
             id: 10,
-            slug: "/" + gameSlug + "/unlock-order-hard",
+            slug: gameSlug + "/unlock-order-hard",
             navbarTitle: "Mythic Unlock Order",
             type: "page",
         },
@@ -95,7 +96,7 @@ export default function Navbar({
             id: 31,
             navbarTitle: "Lance Kitty Strat",
             type: "page",
-            slug: "/" + gameSlug + "/lance-kitty",
+            slug: gameSlug + "/lance-kitty",
         },
         {
             id: 24,
@@ -104,25 +105,25 @@ export default function Navbar({
         },
         {
             id: 11,
-            slug: "/" + gameSlug + "/hell-mode-basics",
+            slug: gameSlug + "/hell-mode-basics",
             navbarTitle: "Hell Mode Fundamentals",
             type: "page",
         },
         {
             id: 12,
-            slug: "/" + gameSlug + "/hell-mode",
+            slug: gameSlug + "/hell-mode",
             navbarTitle: "Hell Mode Guide",
             type: "page",
         },
         {
             id: 13,
-            slug: "/" + gameSlug + "/hell-mode-bosses",
+            slug: gameSlug + "/hell-mode-bosses",
             navbarTitle: "Hell Mode Bosses/Debuffs",
             type: "page",
         },
         {
             id: 14,
-            slug: "/" + gameSlug + "/magic-hell-build",
+            slug: gameSlug + "/magic-hell-build",
             navbarTitle: "Magic Hell Build",
             type: "page",
         },
@@ -131,7 +132,7 @@ export default function Navbar({
             id: 29,
             navbarTitle: "Guild Battle Guide",
             type: "page",
-            slug: "/" + gameSlug + "/guild-battle",
+            slug: gameSlug + "/guild-battle",
         },
         {
             id: 25,
@@ -140,19 +141,19 @@ export default function Navbar({
         },
         {
             id: 15,
-            slug: "/" + gameSlug + "/exclusive-treasures",
+            slug: gameSlug + "/exclusive-treasures",
             navbarTitle: "Exclusive Treasures",
             type: "page",
         },
         {
             id: 16,
-            slug: "/" + gameSlug + "/treasure-upgrade-costs",
+            slug: gameSlug + "/treasure-upgrade-costs",
             navbarTitle: "Treasure Upgrade Costs",
             type: "page",
         },
         {
             id: 17,
-            slug: "/" + gameSlug + "/unlock-treasures",
+            slug: gameSlug + "/unlock-treasures",
             navbarTitle: "How to Unlock Treasures",
             type: "page",
         },
@@ -163,32 +164,32 @@ export default function Navbar({
         },
         {
             id: 18,
-            slug: "/" + gameSlug + "/safe-box-table",
+            slug: gameSlug + "/safe-box-table",
             navbarTitle: "Safe Box Earnings Table",
             type: "page",
         },
         {
             id: 19,
-            slug: "/" + gameSlug + "/pets",
+            slug: gameSlug + "/pets",
             navbarTitle: "List of Pets",
             type: "page",
         },
         {
             id: 20,
-            slug: "/" + gameSlug + "/daily-fortunes",
+            slug: gameSlug + "/daily-fortunes",
             navbarTitle: "List of Daily Fortunes",
             type: "page",
         },
 
         {
             id: 21,
-            slug: "/" + gameSlug + "/indy-treasures",
+            slug: gameSlug + "/indy-treasures",
             navbarTitle: "Indy's Treasures",
             type: "page",
         },
         {
             id: 9,
-            slug: "/" + gameSlug + "/newbie-quests",
+            slug: gameSlug + "/newbie-quests",
             navbarTitle: "Help I'm New! Guide Quests",
             type: "page",
         },
@@ -208,13 +209,13 @@ export default function Navbar({
     const navbarSilksong = [
         {
             id: 401,
-            slug: "/" + gameSlug + "/",
+            slug: gameSlug + "/",
             navbarTitle: "Silksong Guides",
             type: "page",
         },
         {
             id: 402,
-            slug: "/" + gameSlug + "/flea-guide",
+            slug: gameSlug + "/flea-guide",
             navbarTitle: "Flea Guide",
             type: "page",
         },
@@ -234,7 +235,7 @@ export default function Navbar({
     const navbarCoopTD = [
         {
             id: 201,
-            slug: "/" + gameSlug + "/",
+            slug: gameSlug + "/",
             navbarTitle: "Homepage",
             type: "page",
         },
@@ -247,30 +248,13 @@ export default function Navbar({
         {
             id: 203,
             navbarTitle: "Lucky Defense",
-            slug: "/lucky-defense",
+            slug: "https://luckydefenseguides.com/",
             type: "page",
         },
     ];
 
-    if (env == "DEV") {
-        navbar.unshift(
-            {
-                id: 102,
-                slug: "/" + gameSlug + "/game-manager",
-                navbarTitle: "Game Manager",
-                type: "page",
-            },
-            {
-                id: 101,
-                slug: "/" + gameSlug + "/page-manager",
-                navbarTitle: "Page Manager",
-                type: "page",
-            },
-        );
-    }
-
     let curNav = {};
-    switch (gameSlug) {
+    switch (gameData.slug) {
         case "silksong":
             curNav = navbarSilksong;
             break;
@@ -283,6 +267,23 @@ export default function Navbar({
         default:
             curNav = navbar;
             break;
+    }
+
+    if (env == "DEV") {
+        curNav.unshift(
+            {
+                id: 102,
+                slug: gameSlug + "/game-manager",
+                navbarTitle: "Game Manager",
+                type: "page",
+            },
+            {
+                id: 101,
+                slug: gameSlug + "/page-manager",
+                navbarTitle: "Page Manager",
+                type: "page",
+            },
+        );
     }
 
     return (

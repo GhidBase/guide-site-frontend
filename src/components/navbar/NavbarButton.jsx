@@ -1,5 +1,4 @@
 import { Link } from "react-router";
-import { usePage } from "../../contexts/PageProvider";
 
 export default function NavbarButton({
     slug,

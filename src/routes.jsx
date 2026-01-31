@@ -10,7 +10,7 @@ import GameManager from "./components/GameManager.jsx";
 import gameAndPageLoader from "./loaders/gameAndPageLoader.js";
 
 const env = import.meta.env.VITE_ENV;
-const useLDGRoute = import.meta.env.VITE_LDG == "True";
+const isLDG = import.meta.env.VITE_LDG == "True";
 // Clean up routes, then decide how to use "useGameSlug"
 
 const mainRoute = {
@@ -23,6 +23,9 @@ const mainRoute = {
         currentParams.gameSlug !== nextParams.gameSlug ||
         currentParams.pageSlug !== nextParams.pageSlug,
 
+    // handle : {title} is used on hard coded routes
+    // because they're missing the :pageSlug needed
+    // to find the title of the page
     children: [
         { index: true, element: <PageBuilder /> },
         { path: ":pageSlug", element: <PageBuilder /> },
@@ -59,8 +62,15 @@ const mainRoute = {
 };
 
 const luckyDefenseRoute = {
+    id: "main",
     path: "/",
     element: <Main />,
+    loader: gameAndPageLoader,
+
+    shouldRevalidate: ({ currentParams, nextParams }) =>
+        currentParams.gameSlug !== nextParams.gameSlug ||
+        currentParams.pageSlug !== nextParams.pageSlug,
+
     children: [
         { index: true, element: <PageBuilder /> },
         { path: ":pageSlug", element: <PageBuilder /> },
@@ -78,14 +88,15 @@ const luckyDefenseRoute = {
     ],
 };
 
-const curRoute = useLDGRoute ? luckyDefenseRoute : mainRoute;
+const curRoute = isLDG ? luckyDefenseRoute : mainRoute;
 
 const routes = [...oldRoutes, curRoute];
 
+console.log(luckyDefenseRoute.children.push());
 if (env == "DEV") {
-    const found = mainRoute.children.find(
-        (child) => child.path == "games/:gameSlug",
-    );
+    const found = isLDG
+        ? luckyDefenseRoute
+        : mainRoute.children.find((child) => child.path == "games/:gameSlug");
 
     found.children.push(
         {

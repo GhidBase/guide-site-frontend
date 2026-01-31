@@ -1,12 +1,11 @@
 import { useState, Fragment, useEffect } from "react";
 import { currentAPI } from "../config/api";
 import TextBlock from "./blocks/TextBlock";
-import { Link, useNavigate, useRouteLoaderData } from "react-router";
+import { Link, useRouteLoaderData } from "react-router";
 import SingleImageBlock from "./blocks/SingleImageBlock";
 const env = import.meta.env.VITE_ENV;
 
 export default function PageBuilder() {
-    const navigate = useNavigate();
     const { pageData, gameData } = useRouteLoaderData("main");
     const gameSlug = gameData?.slug;
     const gameId = gameData?.id;
