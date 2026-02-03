@@ -3,7 +3,7 @@ import { useLoaderData } from "react-router";
 import { Fragment } from "react";
 import NavbarSection from "./NavbarSection";
 const env = import.meta.env.VITE_ENV;
-const isLDG = import.meta.env.VITE_LDG;
+const isLDG = import.meta.env.VITE_LDG == "True";
 
 export default function Navbar({
     className,
@@ -283,7 +283,6 @@ export default function Navbar({
             },
         );
     }
-
     return (
         <Fragment>
             <div id="nav-bar" className={className}>
