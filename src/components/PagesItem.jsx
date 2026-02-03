@@ -48,18 +48,17 @@ export default function PagesItem({
 
     return (
         <li
-            id={"pageItem-" + pageIndex}
+            id={"page-item-" + pageIndex}
             className="mt-4 w-full
-                p-2
-                flex flex-col sm:flex-row
-                h-37
+                px-6 py-4 md:p-4
+                flex flex-col md:flex-row
                 items-center justify-center
                 bg-[#e2d2b9] rounded-lg shadow-lg
-                gap-2"
+                gap-4"
             key={page.id}
         >
             <div
-                className="flex flex-col w-full gap-2"
+                className="flex flex-col w-full gap-4"
                 id={"details-container-" + pageIndex}
             >
                 <div
@@ -68,7 +67,7 @@ export default function PagesItem({
                 >
                     <p className="m-0 p-0 w-12">Title:</p>
                     {titleEditMode ? ( // title edit mode
-                        <form action="" className="w-full flex">
+                        <form action="" className="w-full flex gap-2">
                             <input
                                 className="bg-(--red-brown) min-w-0 w-full px-2 text-white box-border rounded flex-1 max-w-100 "
                                 type="text"
@@ -76,7 +75,7 @@ export default function PagesItem({
                                 onChange={(e) => setInputText(e.target.value)}
                             />
                             <button
-                                className="ml-auto text-amber-50 w-10 h-10 p-2 rounded"
+                                className="ml-auto md:ml-0 text-amber-50 h-[1.5em] md:h-[1.1em] self-center rounded"
                                 type="button"
                                 onClick={(e) => {
                                     e.preventDefault();
@@ -90,7 +89,7 @@ export default function PagesItem({
                                 />
                             </button>
                             <button
-                                className="ml-auto text-amber-50 bg-none w-10 h-10 p-2 rounded"
+                                className="ml-auto md:ml-0 text-amber-50 h-[1.5em] md:h-[1.1em] self-center rounded"
                                 type="submit"
                                 onClick={(e) => {
                                     e.preventDefault();
@@ -106,10 +105,10 @@ export default function PagesItem({
                         </form>
                     ) : (
                         // title view mode
-                        <form action="" className="w-full flex items-center">
+                        <>
                             <p className="">{page.title}</p>
                             <button
-                                className="ml-auto text-amber-50 w-10 h-10 rounded p-2 "
+                                className="ml-auto md:ml-4 text-amber-50 h-[1.5em] md:h-[1.1em] self-center rounded"
                                 type="submit"
                                 onClick={(e) => {
                                     e.preventDefault();
@@ -123,7 +122,7 @@ export default function PagesItem({
                                     className=" w-full h-full"
                                 />
                             </button>
-                        </form>
+                        </>
                     )}
                 </div>
                 <div
@@ -132,9 +131,9 @@ export default function PagesItem({
                 >
                     <p className="w-12">url: </p>
                     {slugEditMode ? ( // slug edit mode
-                        <form action="" className="w-full flex">
+                        <form action="" className="w-full flex md:gap-2">
                             <input
-                                className="bg-(--red-brown) min-w-0 w-full px-2 text-white box-border rounded flex-1 max-w-100 mr-2"
+                                className="bg-(--red-brown) min-w-0 w-full px-2 text-white box-border rounded flex-1 max-w-100 "
                                 type="text"
                                 value={slugInputText}
                                 onChange={(e) =>
@@ -142,7 +141,7 @@ export default function PagesItem({
                                 }
                             />
                             <button
-                                className="ml-auto text-amber-50 w-10 h-10 p-2 rounded"
+                                className="ml-auto md:ml-0 text-amber-50 h-[1.5em] md:h-[1.1em] self-center rounded"
                                 type="button"
                                 onClick={(e) => {
                                     e.preventDefault();
@@ -156,7 +155,7 @@ export default function PagesItem({
                                 />
                             </button>
                             <button
-                                className="ml-auto text-amber-50 w-10 h-10 p-2 rounded"
+                                className="ml-auto md:ml-0 text-amber-50 h-[1.5em] md:h-[1.1em] self-center rounded"
                                 type="submit"
                                 onClick={(e) => {
                                     e.preventDefault();
@@ -172,14 +171,10 @@ export default function PagesItem({
                         </form>
                     ) : (
                         // slug view mode
-                        <form action="" className="w-full flex items-center">
+                        <>
                             <p className="">{slug}</p>
                             <button
-                                className="ml-auto
-                                    text-amber-50
-                                    w-10 h-10
-                                    p-2
-                                    rounded "
+                                className="ml-auto md:ml-4 text-amber-50 h-[1.5em] md:h-[1.1em] self-center rounded"
                                 type="submit"
                                 onClick={(e) => {
                                     e.preventDefault();
@@ -193,18 +188,20 @@ export default function PagesItem({
                                     className=" w-full h-full"
                                 />
                             </button>
-                        </form>
+                        </>
                     )}
                 </div>
             </div>
             <div
                 id={"button-container-" + pageIndex}
-                className={"flex sm:flex-row justify-around "}
+                className={
+                    "flex flex-row md:flex-col w-full justify-between md:items-end md:h-full gap-4 "
+                }
             >
                 {/* Real edit button  */}
                 {page.slug != null && (
                     <Link
-                        className="text-amber-50 bg-(--primary) text-center w-25 mr-2 rounded px-2 py-0.5"
+                        className="text-amber-50 bg-(--primary) w-30 rounded px-2 py-0.5 text-center"
                         to={"/games/" + gameSlug + "/" + page.slug}
                     >
                         View Page
@@ -231,7 +228,7 @@ export default function PagesItem({
                         newPages.splice(pageIndex, 1);
                         setPages(newPages);
                     }}
-                    className="text-amber-50 bg-(--primary) w-30 rounded px-2 py-0.5"
+                    className="text-amber-50 bg-(--primary) w-30 rounded px-2 py-0.5 text-center"
                 >
                     Delete Page
                 </button>

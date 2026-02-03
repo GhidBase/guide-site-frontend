@@ -83,8 +83,6 @@ export default async function gameAndPageLoader({ params, request }) {
             pageData = await fetchGameHomepage();
         }
 
-        console.log(!!gameData);
-        console.log(!!pageData);
         if (!gameData && !pageData) {
             pageData = await fetchMainHomepage();
         }
