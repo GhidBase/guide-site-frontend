@@ -1,6 +1,7 @@
 import { useState, Fragment } from "react";
 import { usePage } from "../contexts/PageProvider";
 import { Link, useRouteLoaderData } from "react-router";
+import pencilIcon from "../assets/pencil-svgrepo-com.svg";
 
 export default function PagesItem({
     page,
@@ -14,6 +15,8 @@ export default function PagesItem({
     const [inputText, setInputText] = useState("");
     const [slugInputText, setSlugInputText] = useState("");
     const [editMode, setEditMode] = useState(false);
+    const [titleEditMode, setTitleEditMode] = useState(false);
+    const [slugEditMode, setSlugEditMode] = useState(false);
     const slug = page.slug;
     // const { gameSlug } = usePage();
     const { gameData } = useRouteLoaderData("main");
@@ -35,73 +38,147 @@ export default function PagesItem({
         <li
             id={"pageItem-" + pageIndex}
             className="mt-4 w-full
+                p-2
                 flex flex-col sm:flex-row
-                h-30
-                items-center justify-around
-                bg-[#e2d2b9] rounded-lg shadow-lg "
+                h-37
+                items-center justify-center
+                bg-[#e2d2b9] rounded-lg shadow-lg
+                gap-2"
             key={page.id}
         >
-            {!editMode && (
+            <div
+                className="flex flex-col w-full gap-2"
+                id={"details-container-" + pageIndex}
+            >
                 <div
-                    className="flex sm:flex-row justify-between w-full px-2"
-                    id={"details-container-" + pageIndex}
+                    id={"title-container-" + pageIndex}
+                    className="flex justify-stretch items-center"
                 >
-                    <div className="">
-                        <p className="m-0 p-0">Page Title:</p>
-                        <p>{page.title}</p>
-                    </div>
-                    <div>
-                        <p>url: </p>
-                        <p>{slug}</p>
-                    </div>
+                    <p className="m-0 p-0 w-12">Title:</p>
+                    {titleEditMode ? (
+                        <form action="" className="w-full flex">
+                            <input
+                                className="bg-(--red-brown) min-w-0 w-full px-2 text-white box-border rounded flex-1 max-w-100 mr-2"
+                                type="text"
+                                value={inputText}
+                                onChange={(e) => setInputText(e.target.value)}
+                            />
+                            <button
+                                className="ml-auto text-amber-50 bg-(--primary) w-10 h-10 p-2 rounded"
+                                type="submit"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    setTitleEditMode(!titleEditMode);
+                                }}
+                            >
+                                <img
+                                    src={pencilIcon}
+                                    alt="Edit Slug"
+                                    className=" w-full h-full"
+                                />
+                            </button>
+                            <button
+                                className="ml-auto text-amber-50 bg-(--primary) w-10 h-10 p-2 rounded"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    setTitleEditMode(!titleEditMode);
+                                }}
+                            >
+                                <img
+                                    src={pencilIcon}
+                                    alt="Edit Slug"
+                                    className=" w-full h-full"
+                                />
+                            </button>
+                        </form>
+                    ) : (
+                        <form action="" className="w-full flex items-center">
+                            <p className="">{page.title}</p>
+                            <button
+                                className="ml-auto text-amber-50 bg-(--primary) w-10 h-10 rounded p-2 "
+                                type="submit"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    setInputText(page.title);
+                                    setTitleEditMode(!titleEditMode);
+                                }}
+                            >
+                                <img
+                                    src={pencilIcon}
+                                    alt="Edit Slug"
+                                    className=" w-full h-full"
+                                />
+                            </button>
+                        </form>
+                    )}
                 </div>
-            )}
-            {editMode && (
-                <form action="" className="w-full flex">
-                    <input
-                        className="bg-(--red-brown) min-w-0 px-2 text-white box-border rounded flex-1 max-w-100 mr-2"
-                        type="text"
-                        value={inputText}
-                        onChange={(e) => setInputText(e.target.value)}
-                    />
-                    <input
-                        className="bg-(--red-brown) min-w-0 px-2 text-white box-border rounded flex-1 max-w-100 mr-2"
-                        type="text"
-                        value={slugInputText}
-                        onChange={(e) => setSlugInputText(e.target.value)}
-                    />
-                    <button
-                        className="mr-2 ml-auto text-amber-50 bg-(--primary) w-22 rounded px-2 py-0.5"
-                        type="submit"
-                        onClick={(e) => {
-                            e.preventDefault();
-                            updatePageItem(page.id);
-                        }}
-                    >
-                        Save
-                    </button>
-                </form>
-            )}
+                <div
+                    id={"slug-container-" + pageIndex}
+                    className="flex justify-stretch w-full items-center"
+                >
+                    <p className="w-12">url: </p>
+                    {slugEditMode ? (
+                        <form action="" className="w-full flex">
+                            <input
+                                className="bg-(--red-brown) min-w-0 w-full px-2 text-white box-border rounded flex-1 max-w-100 mr-2"
+                                type="text"
+                                value={slugInputText}
+                                onChange={(e) =>
+                                    setSlugInputText(e.target.value)
+                                }
+                            />
+                            <button
+                                className="ml-auto text-amber-50 bg-(--primary) w-10 h-10 p-2 rounded"
+                                type="submit"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    setSlugEditMode(!slugEditMode);
+                                }}
+                            >
+                                <img
+                                    src={pencilIcon}
+                                    alt="Edit Slug"
+                                    className=" w-full h-full"
+                                />
+                            </button>
+                        </form>
+                    ) : (
+                        <form action="" className="w-full flex items-center">
+                            <p className="">{slug}</p>
+                            <button
+                                className="ml-auto
+                                    text-amber-50 bg-(--primary)
+                                    w-10 h-10
+                                    p-2
+                                    rounded "
+                                type="submit"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    setSlugInputText(page.slug);
+                                    setSlugEditMode(!slugEditMode);
+                                }}
+                            >
+                                <img
+                                    src={pencilIcon}
+                                    alt="Edit Slug"
+                                    className=" w-full h-full"
+                                />
+                            </button>
+                        </form>
+                    )}
+                </div>
+            </div>
             <div
                 id={"button-container-" + pageIndex}
                 className={"flex sm:flex-row justify-around "}
             >
-                <button
-                    className={`${!editMode && "ml-auto"} mr-2 text-amber-50 bg-(--primary) w-22 rounded px-2 py-0.5`}
-                    onClick={() => {
-                        toggleEditMode();
-                    }}
-                >
-                    {(!editMode && "Rename") || "Cancel"}
-                </button>
-
                 {/* Real edit button  */}
                 {page.slug != null && (
                     <Link
-                        className="text-amber-50 bg-(--primary) text-center w-22 mr-2 rounded px-2 py-0.5"
+                        className="text-amber-50 bg-(--primary) text-center w-25 mr-2 rounded px-2 py-0.5"
                         to={"/games/" + gameSlug + "/" + page.slug}
                     >
-                        Edit
+                        View Page
                     </Link>
                 )}
 
@@ -125,9 +202,9 @@ export default function PagesItem({
                         newPages.splice(pageIndex, 1);
                         setPages(newPages);
                     }}
-                    className="text-amber-50 bg-(--primary) w-22 rounded px-2 py-0.5"
+                    className="text-amber-50 bg-(--primary) w-30 rounded px-2 py-0.5"
                 >
-                    Delete
+                    Delete Page
                 </button>
             </div>
         </li>
