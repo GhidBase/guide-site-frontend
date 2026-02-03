@@ -13,6 +13,7 @@ const env = import.meta.env.VITE_ENV;
 const isLDG = import.meta.env.VITE_LDG == "True";
 // Clean up routes, then decide how to use "useGameSlug"
 
+console.log(isLDG);
 const mainRoute = {
     id: "main",
     path: "/",

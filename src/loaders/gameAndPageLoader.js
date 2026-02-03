@@ -1,5 +1,5 @@
 import { currentAPI } from "../config/api.js";
-const isLDG = import.meta.env.VITE_LDG;
+const isLDG = import.meta.env.VITE_LDG == "True";
 
 export default async function gameAndPageLoader({ params, request }) {
     const { gameSlug, pageSlug } = params;
