@@ -127,7 +127,10 @@ export default function PageManager() {
     return (
         <Fragment>
             <div className="mt-4 flex justify-between items-center mx-auto gap-2">
-                <form action="" className="flex gap-2 items-center">
+                <form
+                    action=""
+                    className="flex gap-2 items-center flex-col sm:flex-row "
+                >
                     <h1 className="">Pages:</h1>
                     <input
                         type="text"
@@ -150,7 +153,7 @@ export default function PageManager() {
                     </button>
                 </form>
             </div>
-            <ul className="">
+            <ul id={"pagemanager-list"} className="m-2">
                 {pages.map((page, pageIndex) => {
                     return (
                         <PagesItem

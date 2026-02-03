@@ -32,11 +32,28 @@ export default function PagesItem({
     }
 
     return (
-        <li className="mt-4 w-full flex items-center" key={page.id}>
+        <li
+            id={"pageItem-" + pageIndex}
+            className="mt-4 w-full
+                flex flex-col sm:flex-row
+                h-30
+                items-center justify-around
+                bg-[#e2d2b9] rounded-lg shadow-lg "
+            key={page.id}
+        >
             {!editMode && (
-                <div className="flex justify-between w-full px-2">
-                    <p>{page.title}</p>
-                    <p>{"ldg.com/" + slug}</p>
+                <div
+                    className="flex sm:flex-row justify-between w-full px-2"
+                    id={"details-container-" + pageIndex}
+                >
+                    <div className="">
+                        <p className="m-0 p-0">Page Title:</p>
+                        <p>{page.title}</p>
+                    </div>
+                    <div>
+                        <p>url: </p>
+                        <p>{slug}</p>
+                    </div>
                 </div>
             )}
             {editMode && (
@@ -65,51 +82,54 @@ export default function PagesItem({
                     </button>
                 </form>
             )}
-            <button
-                className={`${
-                    !editMode && "ml-auto"
-                } mr-2 text-amber-50 bg-(--primary) w-22 rounded px-2 py-0.5`}
-                onClick={() => {
-                    toggleEditMode();
-                }}
+            <div
+                id={"button-container-" + pageIndex}
+                className={"flex sm:flex-row justify-around "}
             >
-                {(!editMode && "Rename") || "Cancel"}
-            </button>
-
-            {/* Real edit button  */}
-            {page.slug != null && (
-                <Link
-                    className="text-amber-50 bg-(--primary) text-center w-22 mr-2 rounded px-2 py-0.5"
-                    to={"/games/" + gameSlug + "/" + page.slug}
-                >
-                    Edit
-                </Link>
-            )}
-
-            {/* Fake edit button to warn user */}
-            {page.slug == null && (
                 <button
-                    className={`${
-                        !editMode && "ml-auto"
-                    } mr-2 text-amber-50 bg-(--primary) w-22 rounded px-2 py-0.5`}
-                    onClick={() =>
-                        alert("Page must have url before it can be edited")
-                    }
+                    className={`${!editMode && "ml-auto"} mr-2 text-amber-50 bg-(--primary) w-22 rounded px-2 py-0.5`}
+                    onClick={() => {
+                        toggleEditMode();
+                    }}
                 >
-                    Edit
+                    {(!editMode && "Rename") || "Cancel"}
                 </button>
-            )}
-            <button
-                onClick={async () => {
-                    await deletePage(page.id);
-                    const newPages = [...pages];
-                    newPages.splice(pageIndex, 1);
-                    setPages(newPages);
-                }}
-                className="text-amber-50 bg-(--primary) w-22 rounded px-2 py-0.5"
-            >
-                Delete
-            </button>
+
+                {/* Real edit button  */}
+                {page.slug != null && (
+                    <Link
+                        className="text-amber-50 bg-(--primary) text-center w-22 mr-2 rounded px-2 py-0.5"
+                        to={"/games/" + gameSlug + "/" + page.slug}
+                    >
+                        Edit
+                    </Link>
+                )}
+
+                {/* Fake edit button to warn user */}
+                {page.slug == null && (
+                    <button
+                        className={`${
+                            !editMode && "ml-auto"
+                        } mr-2 text-amber-50 bg-(--primary) w-22 rounded px-2 py-0.5`}
+                        onClick={() =>
+                            alert("Page must have url before it can be edited")
+                        }
+                    >
+                        Edit
+                    </button>
+                )}
+                <button
+                    onClick={async () => {
+                        await deletePage(page.id);
+                        const newPages = [...pages];
+                        newPages.splice(pageIndex, 1);
+                        setPages(newPages);
+                    }}
+                    className="text-amber-50 bg-(--primary) w-22 rounded px-2 py-0.5"
+                >
+                    Delete
+                </button>
+            </div>
         </li>
     );
 }

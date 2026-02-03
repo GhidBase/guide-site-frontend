@@ -1,157 +1,155 @@
-@import "tailwindcss";
+@layer base {
+    :root {
+        /* Theme Colors */
+        --red-brown: #794e3b; /* Primary Color */
+        --red-brown-trans: #794e3b3a;
+        --khaki-brown: #845744; /* Used in the repeating bg-pattern */
+        --accent: #f0e3c3; /* Used as a secondary surface */
+        --accent-transparent: #44403575; /* Used on the pop-up bg cover */
+        --surface-background: #d1bc9f; /* Used as a main surface */
+        --outline-brown: #352b22; /* Main outline color */
 
-:root {
-    /* Theme Colors */
-    --red-brown: #794e3b; /* Primary Color */
-    --red-brown-trans: #794e3b3a;
-    --khaki-brown: #845744; /* Used in the repeating bg-pattern */
-    --accent: #f0e3c3; /* Used as a secondary surface */
-    --accent-transparent: #44403575; /* Used on the pop-up bg cover */
-    --surface-background: #d1bc9f; /* Used as a main surface */
-    --outline-brown: #352b22; /* Main outline color */
+        /* Colors for easy modification */
+        --primary: var(--red-brown);
+        --secondary: var(--khaki-brown);
+        --text-color: #604f45;
+        --outline: var(--outline-brown);
+        --footer-color: #8c7b6b;
+        --accent-text: #3a2a1a;
+    }
 
-    /* Colors for easy modification */
-    --primary: var(--red-brown);
-    --secondary: var(--khaki-brown);
-    --text-color: #604f45;
-    --outline: var(--outline-brown);
-    --footer-color: #8c7b6b;
-    --accent-text: #3a2a1a;
-}
+    .custom-background {
+        background: repeating-linear-gradient(
+            to right,
+            var(--primary),
+            var(--primary) 50px,
+            var(--secondary) 50px,
+            var(--secondary) 100px
+        );
+    }
 
-.custom-background {
-    background: repeating-linear-gradient(
-        to right,
-        var(--primary),
-        var(--primary) 50px,
-        var(--secondary) 50px,
-        var(--secondary) 100px
-    );
-}
+    html,
+    body,
+    #root {
+        /* height: 100% */
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        /* scrollbar-gutter: stable; */
+    }
 
-html,
-body,
-#root {
-    /* height: 100% */
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    /* scrollbar-gutter: stable; */
-}
+    .title {
+        color: white;
+        text-shadow:
+            2px 2px 0 black,
+            -2px 2px 0 black,
+            2px -2px 0 black,
+            -2px -2px 0 black;
+        padding: 0 30px;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        word-break: break-word;
+        box-sizing: border-box;
+        height: 180px;
+        min-height: 180px;
+    }
 
-.title {
-    color: white;
-    text-shadow:
-        2px 2px 0 black,
-        -2px 2px 0 black,
-        2px -2px 0 black,
-        -2px -2px 0 black;
-    padding: 0 30px;
-    text-align: center;
-    display: flex;
-    align-items: center;
-    word-break: break-word;
-    box-sizing: border-box;
-    height: 180px;
-    min-height: 180px;
-}
+    .content-block h1 {
+        font-size: 2.25rem; /* 36px */
+        line-height: 1.2;
+        margin: 1em 0 0.5em 0;
+        font-weight: 700;
+    }
 
-p {
-    margin: 16px 0;
-}
+    .content-block h2 {
+        font-size: 1.5rem; /* 30px */
+        line-height: 1.25;
+        margin: 1.5em 0 0.25em;
+        font-weight: 600;
+    }
 
-.content-block h1 {
-    font-size: 2.25rem; /* 36px */
-    line-height: 1.2;
-    margin: 1em 0 0.5em 0;
-    font-weight: 700;
-}
+    h3 {
+        font-size: 1.5rem; /* 24px */
+        line-height: 1.3;
+        margin: 1.25em 0 0.5em;
+        font-weight: 600;
+    }
 
-.content-block h2 {
-    font-size: 1.5rem; /* 30px */
-    line-height: 1.25;
-    margin: 1.5em 0 0.25em;
-    font-weight: 600;
-}
+    h4 {
+        font-size: 1.25rem; /* 20px */
+        line-height: 1.4;
+        margin: 1em 0 0.5em;
+        font-weight: 600;
+    }
 
-h3 {
-    font-size: 1.5rem; /* 24px */
-    line-height: 1.3;
-    margin: 1.25em 0 0.5em;
-    font-weight: 600;
-}
+    h5 {
+        font-size: 1.125rem; /* 18px */
+        line-height: 1.4;
+        margin: 1em 0 0.5em;
+        font-weight: 500;
+    }
 
-h4 {
-    font-size: 1.25rem; /* 20px */
-    line-height: 1.4;
-    margin: 1em 0 0.5em;
-    font-weight: 600;
-}
+    h6 {
+        font-size: 1rem; /* 16px */
+        line-height: 1.4;
+        margin: 1em 0 0.5em;
+        font-weight: 500;
+    }
 
-h5 {
-    font-size: 1.125rem; /* 18px */
-    line-height: 1.4;
-    margin: 1em 0 0.5em;
-    font-weight: 500;
-}
+    ul,
+    ol {
+        --margin: 0 0 1em 1.25em;
+        padding: 0;
+        line-height: 1.6;
+    }
 
-h6 {
-    font-size: 1rem; /* 16px */
-    line-height: 1.4;
-    margin: 1em 0 0.5em;
-    font-weight: 500;
-}
+    ul {
+        list-style-type: disc;
+    }
 
-ul,
-ol {
-    margin: 0 0 1em 1.25em;
-    padding: 0;
-    line-height: 1.6;
-}
+    ol {
+        list-style-type: decimal;
+    }
 
-ul {
-    list-style-type: disc;
-}
+    .content-block a {
+        color: var(--accent-blue, #0050a7);
+        position: relative;
+        text-decoration: none;
+    }
 
-ol {
-    list-style-type: decimal;
-}
+    .content-block a::after,
+    .content-block a::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: -2px;
+        height: 2px;
+        width: 100%;
+        background-color: currentColor;
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 0.2s ease-out;
+    }
 
-.content-block a {
-    color: var(--accent-blue, #0050a7);
-    position: relative;
-    text-decoration: none;
-}
+    .content-block a:hover::after,
+    .content-block a:hover::after {
+        transform: scaleX(1);
+    }
 
-.content-block a::after,
-.content-block a::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    bottom: -2px;
-    height: 2px;
-    width: 100%;
-    background-color: currentColor;
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.2s ease-out;
-}
+    iframe[src*="youtube.com/embed"] {
+        max-width: 100%;
+    }
 
-.content-block a:hover::after,
-.content-block a:hover::after {
-    transform: scaleX(1);
-}
-
-iframe[src*="youtube.com/embed"] {
-    max-width: 100%;
-}
-
-input,
-select {
-    /* background-color: var(--khaki-brown);
+    input,
+    select {
+        /* background-color: var(--khaki-brown);
     color: white;
     padding: 1px 2px; */
-    /* border-radius: 0.25em; */
-    border-bottom: 2px solid var(--text-color);
-    background-color: var(--red-brown-trans);
+        /* border-radius: 0.25em; */
+        border-bottom: 2px solid var(--text-color);
+        background-color: var(--red-brown-trans);
+    }
 }
+
+@import "tailwindcss";
