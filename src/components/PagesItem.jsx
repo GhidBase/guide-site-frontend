@@ -58,7 +58,7 @@ export default function PagesItem({
             key={page.id}
         >
             <div
-                className="flex flex-col w-full gap-4 px-6"
+                className="flex flex-col w-full gap-4 px-6 md:px-0"
                 id={"details-container-" + pageIndex}
             >
                 <div

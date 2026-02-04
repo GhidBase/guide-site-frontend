@@ -13,7 +13,7 @@ export default function Title() {
     return (
         <div
             id="page-builder-title"
-            className="title flex items-center justify-center text-4xl sm:text-7xl"
+            className="title flex items-center justify-center text-4xl md:text-7xl"
         >
             {title == "LD Homepage" ? (
                 <img

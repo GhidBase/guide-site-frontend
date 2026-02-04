@@ -129,7 +129,7 @@ export default function PageManager() {
             <div className="mt-4 flex justify-between items-center mx-auto gap-2">
                 <form
                     action=""
-                    className="flex gap-2 items-center flex-col sm:flex-row "
+                    className="flex gap-2 items-center flex-col md:flex-row "
                 >
                     <h1 className="">Pages:</h1>
                     <input
