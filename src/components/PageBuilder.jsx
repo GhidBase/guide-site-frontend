@@ -160,7 +160,7 @@ export default function PageBuilder() {
                         className=" text-amber-50 w-50 px-2 py-0.5 flex justify-center items-center border-r border-(--outline-brown)/25 "
                         onClick={() => setAdminMode(!adminMode)}
                     >
-                        {adminMode ? "User Mode" : "Admin Mode"}
+                        {adminMode ? "View Mode" : "Edit Mode"}
                     </button>
                     <Link
                         className=" text-amber-50 w-50 px-2 py-0.5 flex justify-center items-center"
