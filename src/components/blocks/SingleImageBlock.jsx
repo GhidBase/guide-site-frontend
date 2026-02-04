@@ -14,7 +14,33 @@ export default function SingleImageBlock({
     const [stagedFiles, setStagedFiles] = useState(["No File Chosen"]);
     const blockHasFiles = !!block.files;
 
-    async function deleteAllFiles() {
+    function checkDeletion(fileId = null) {
+        console.log(fileId);
+        if (!fileId) {
+            const confirmedDelete = window.confirm(
+                "Are you sure you want to delete this image block and all it's files?",
+            );
+            if (confirmedDelete) {
+                deleteBlockAndFiles();
+            }
+        } else {
+            const confirmedDelete = window.confirm(
+                "Are you sure you want to delete this image?",
+            );
+            if (confirmedDelete) {
+                deleteFileById(fileId);
+            }
+        }
+        return;
+        const confirmedDelete = window.confirm(
+            "Are you sure you want to delete this block?",
+        );
+        if (confirmedDelete) {
+            deleteBlock();
+        }
+    }
+
+    async function deleteBlockAndFiles() {
         await fetch(
             currentAPIgames + gameId + "/blocks/" + block.id + "/files",
             {
@@ -107,7 +133,7 @@ export default function SingleImageBlock({
                                 {adminMode && (
                                     <button
                                         className="text-amber-50 bg-(--primary) sticky bottom-15 md:bottom-2 w-25 rounded px-2 py-0.5 h-7"
-                                        onClick={() => deleteFileById(file.id)}
+                                        onClick={() => checkDeletion(file.id)}
                                     >
                                         Delete
                                     </button>
@@ -172,7 +198,7 @@ export default function SingleImageBlock({
                         className="flex gap-2 m-2 justify-center"
                     >
                         <button
-                            onClick={() => deleteAllFiles()}
+                            onClick={() => checkDeletion()}
                             className="text-amber-50 bg-(--primary) rounded px-2 py-0.5"
                         >
                             Delete Block
