@@ -89,7 +89,7 @@ export default function PagesItem({
                                 />
                             </button>
                             <button
-                                className="ml-auto md:ml-0 text-amber-50 h-[1.5em] md:h-[1.1em] self-center rounded"
+                                className=" md:ml-0 text-amber-50 h-[1.5em] md:h-[1.1em] self-center rounded"
                                 type="submit"
                                 onClick={(e) => {
                                     e.preventDefault();
@@ -106,7 +106,7 @@ export default function PagesItem({
                     ) : (
                         // title view mode
                         <>
-                            <p className="">{page.title}</p>
+                            <p className="mb-0.5">{page.title}</p>
                             <button
                                 className="ml-auto md:ml-4 text-amber-50 h-[1.5em] md:h-[1.1em] self-center rounded"
                                 type="submit"
@@ -131,7 +131,7 @@ export default function PagesItem({
                 >
                     <p className="w-12">url: </p>
                     {slugEditMode ? ( // slug edit mode
-                        <form action="" className="w-full flex md:gap-2">
+                        <form action="" className="w-full flex gap-2">
                             <input
                                 className="bg-(--red-brown) min-w-0 w-full px-2 text-white box-border rounded flex-1 max-w-100 "
                                 type="text"
@@ -155,7 +155,7 @@ export default function PagesItem({
                                 />
                             </button>
                             <button
-                                className="ml-auto md:ml-0 text-amber-50 h-[1.5em] md:h-[1.1em] self-center rounded"
+                                className=" md:ml-0 text-amber-50 h-[1.5em] md:h-[1.1em] self-center rounded"
                                 type="submit"
                                 onClick={(e) => {
                                     e.preventDefault();
@@ -172,7 +172,7 @@ export default function PagesItem({
                     ) : (
                         // slug view mode
                         <>
-                            <p className="">{slug}</p>
+                            <p className="mb-0.5">{slug}</p>
                             <button
                                 className="ml-auto md:ml-4 text-amber-50 h-[1.5em] md:h-[1.1em] self-center rounded"
                                 type="submit"
