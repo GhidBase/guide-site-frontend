@@ -1,14 +1,19 @@
-import { usePage } from "../../contexts/PageProvider";
 import { useState, Fragment } from "react";
-const secret = import.meta.env.VITE_SECRET;
+import { currentAPI } from "../../config/api";
+import { useRouteLoaderData } from "react-router";
 
 export default function SingleImageBlock({
     deleteBlock,
     block,
     refreshBlock,
     adminMode,
-    addBlock,
 }) {
+    const { gameData } = useRouteLoaderData("main");
+    const gameId = gameData?.id;
+    const currentAPIgames = currentAPI + "/games/" + gameId;
+    const [stagedFiles, setStagedFiles] = useState(["No File Chosen"]);
+    const blockHasFiles = !!block.files;
+
     async function deleteAllFiles() {
         await fetch(
             currentAPIgames + gameId + "/blocks/" + block.id + "/files",
@@ -24,7 +29,6 @@ export default function SingleImageBlock({
     async function uploadFile(e) {
         e.preventDefault();
 
-        // Upload a file to amazon
         const formData = new FormData(e.target);
         const response = await fetch(
             currentAPIgames + "/blocks/" + block.id + "/files",
@@ -45,6 +49,7 @@ export default function SingleImageBlock({
     }
 
     async function deleteFileById(id) {
+        console.log(id);
         await fetch(currentAPIgames + "/files/" + id, {
             method: "Delete",
             headers: {
@@ -64,10 +69,6 @@ export default function SingleImageBlock({
         });
         const result = await response.json();
     }
-
-    const { currentAPI, currentAPIgames, gameId } = usePage();
-    const [stagedFiles, setStagedFiles] = useState(["No File Chosen"]);
-    const blockHasFiles = !!block.files;
 
     // Image urls are the actual downloaded url from the storage
     // staged files are queued uploads
@@ -91,11 +92,12 @@ export default function SingleImageBlock({
             <div className="flex justify-stretch">
                 {block.files &&
                     block.files.map((file) => {
+                        console.log(file);
                         return (
                             <div
                                 id={file.id}
                                 key={file.id}
-                                className="w-full m-auto"
+                                className="w-full m-auto flex flex-col justify-center items-center gap-2"
                             >
                                 <img
                                     id={"photo-img-" + file.id}
@@ -123,7 +125,7 @@ export default function SingleImageBlock({
                         encType="multipart/form-data"
                         className={`flex flex-col`}
                     >
-                        <div className="flex justify-center items-center gap-2">
+                        <div className="my-2 flex justify-center items-center gap-2">
                             <label
                                 className="text-amber-50 bg-(--primary) rounded px-2 py-0.5 h-7"
                                 htmlFor={"upload-file" + block.id}
@@ -157,26 +159,23 @@ export default function SingleImageBlock({
                                 </p>
                             )}
                             {stagedFiles[0] != "No File Chosen" && (
-                                <button
-                                    className="text-amber-50 bg-(--primary) w-25 rounded px-2 py-0.5 h-7"
-                                    type="submit"
-                                >
-                                    Upload
-                                </button>
+                                <>
+                                    <button
+                                        className="text-amber-50 bg-(--primary) w-25 rounded px-2 py-0.5 h-7"
+                                        type="submit"
+                                    >
+                                        Upload
+                                    </button>
+                                    <button
+                                        onClick={() => deleteAllFiles()}
+                                        className="text-amber-50 bg-(--primary) rounded px-2 py-0.5"
+                                    >
+                                        Delete Block
+                                    </button>
+                                </>
                             )}
                         </div>
                     </form>
-                    <div
-                        id="lower-buttons"
-                        className="flex gap-2 m-2 justify-center"
-                    >
-                        <button
-                            onClick={() => deleteAllFiles()}
-                            className="text-amber-50 bg-(--primary) w-25 rounded px-2 py-0.5"
-                        >
-                            Delete
-                        </button>
-                    </div>
                 </Fragment>
             )}
         </div>

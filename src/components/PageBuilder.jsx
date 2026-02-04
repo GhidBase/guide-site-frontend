@@ -92,6 +92,7 @@ export default function PageBuilder() {
     }
 
     async function deleteBlock(block) {
+        console.log(gameId);
         const response = await fetch(
             currentAPI + "/games/" + gameId + "/blocks/" + block.id,
             {
@@ -250,7 +251,7 @@ export default function PageBuilder() {
                         className="text-amber-50 bg-(--primary) w-50 rounded px-2 py-0.5 flex justify-center items-center"
                         onClick={() => setAdminMode(!adminMode)}
                     >
-                        Switch View
+                        {adminMode ? "User Mode" : "Admin Mode"}
                     </button>
                 </div>
             )}
