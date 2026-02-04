@@ -11,11 +11,10 @@ export default function Title() {
     console.log(pageData);
     let title;
     useEffect(() => {
-        if (!pageData?.notFound) {
-            title = !!hardCodedTitle ? hardCodedTitle : pageData?.page.title;
-        } else navigate("/", { replace: true });
+        if (pageData?.notFound) navigate("/", { replace: true });
     }, [pageSlug]);
 
+    title = !!hardCodedTitle ? hardCodedTitle : pageData?.page?.title;
     /*
     useEffect(() => {
         if (!pageData?.notFound) {
