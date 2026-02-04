@@ -151,6 +151,22 @@ export default function PageBuilder() {
 
     return (
         <Fragment>
+            {env == "DEV" && (
+                <div className="-mx-4 flex sticky top-0 left-0 bg-(--primary) md:rounded-b max-w-full ">
+                    <button
+                        className=" text-amber-50 w-50 px-2 py-0.5 flex justify-center items-center border-r border-(--outline-brown)/25 "
+                        onClick={() => setAdminMode(!adminMode)}
+                    >
+                        {adminMode ? "User Mode" : "Admin Mode"}
+                    </button>
+                    <Link
+                        className=" text-amber-50 w-50 px-2 py-0.5 flex justify-center items-center"
+                        to={"/games/" + gameSlug + "/page-manager"}
+                    >
+                        Back to Page Manager
+                    </Link>
+                </div>
+            )}
             {adminMode && (
                 <div className="flex justify-center gap-2 mt-4">
                     <button
@@ -239,22 +255,6 @@ export default function PageBuilder() {
                     }
                     return blockType;
                 })}
-            {env == "DEV" && (
-                <div className="flex flex-col items-center mt-2 gap-2">
-                    <Link
-                        className="text-amber-50 bg-(--primary) w-50 rounded px-2 py-0.5 flex justify-center items-center"
-                        to={"/games/" + gameSlug + "/page-manager"}
-                    >
-                        Back to Page Manager
-                    </Link>
-                    <button
-                        className="text-amber-50 bg-(--primary) w-50 rounded px-2 py-0.5 flex justify-center items-center"
-                        onClick={() => setAdminMode(!adminMode)}
-                    >
-                        {adminMode ? "User Mode" : "Admin Mode"}
-                    </button>
-                </div>
-            )}
         </Fragment>
     );
 }

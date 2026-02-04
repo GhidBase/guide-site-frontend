@@ -92,7 +92,6 @@ export default function SingleImageBlock({
             <div className="flex justify-stretch">
                 {block.files &&
                     block.files.map((file) => {
-                        console.log(file);
                         return (
                             <div
                                 id={file.id}
@@ -159,23 +158,26 @@ export default function SingleImageBlock({
                                 </p>
                             )}
                             {stagedFiles[0] != "No File Chosen" && (
-                                <>
-                                    <button
-                                        className="text-amber-50 bg-(--primary) w-25 rounded px-2 py-0.5 h-7"
-                                        type="submit"
-                                    >
-                                        Upload
-                                    </button>
-                                    <button
-                                        onClick={() => deleteAllFiles()}
-                                        className="text-amber-50 bg-(--primary) rounded px-2 py-0.5"
-                                    >
-                                        Delete Block
-                                    </button>
-                                </>
+                                <button
+                                    className="text-amber-50 bg-(--primary) w-25 rounded px-2 py-0.5 h-7"
+                                    type="submit"
+                                >
+                                    Upload
+                                </button>
                             )}
                         </div>
                     </form>
+                    <div
+                        id="lower-buttons"
+                        className="flex gap-2 m-2 justify-center"
+                    >
+                        <button
+                            onClick={() => deleteAllFiles()}
+                            className="text-amber-50 bg-(--primary) rounded px-2 py-0.5"
+                        >
+                            Delete Block
+                        </button>
+                    </div>
                 </Fragment>
             )}
         </div>
