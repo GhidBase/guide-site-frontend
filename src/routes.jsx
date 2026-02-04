@@ -57,7 +57,8 @@ const mainRoute = {
                 },
             ],
         },
-        { path: "404/", element: <NotFound /> },
+        { path: "404/", element: <NotFound />, handle: { title: "404" } },
+        { path: "*", element: <NotFound />, handle: { title: "404" } },
     ],
 };
 

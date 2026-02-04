@@ -4,6 +4,22 @@ const isLDG = import.meta.env.VITE_LDG == "True";
 export default async function gameAndPageLoader({ params, request }) {
     const { gameSlug, pageSlug } = params;
 
+    async function safeFetch(url) {
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                console.warn(
+                    `Fetch failed with status ${response.status}:${url}`,
+                );
+                return null;
+            }
+            return await response.json();
+        } catch (err) {
+            console.warn(`Fetch error: ${err.message} - URL: ${url}`);
+            return null;
+        }
+    }
+
     async function fetchPageBySlug() {
         // I need to change the path based on if
         // there's a gameSlug or not
@@ -15,8 +31,7 @@ export default async function gameAndPageLoader({ params, request }) {
             path =
                 path + "/games/" + gameData.id + "/pages/by-slug/" + pageSlug;
         }
-        const response = await fetch(path);
-        const result = await response.json();
+        const result = await safeFetch(path);
         return result;
     }
 
@@ -88,5 +103,5 @@ export default async function gameAndPageLoader({ params, request }) {
         }
     }
 
-    return { gameData, pageData };
+    return { gameData, pageData, gameSlug, pageSlug };
 }

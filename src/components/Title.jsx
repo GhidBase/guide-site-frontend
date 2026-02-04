@@ -1,14 +1,32 @@
-import { useMatches } from "react-router";
 import ldgLogo from "../assets/LDG_Title.webp";
-import { useRouteLoaderData } from "react-router";
-const isLDG = import.meta.env.VITE_LDG;
+import { useMatches, useRouteLoaderData, useNavigate } from "react-router";
+import { useEffect } from "react";
 
 export default function Title() {
-    const { pageData } = useRouteLoaderData("main");
+    const navigate = useNavigate();
+    const { pageData, pageSlug } = useRouteLoaderData("main");
     const matches = useMatches();
     const hardCodedTitle = matches?.find((m) => m.handle?.title)?.handle.title;
 
-    const title = !!hardCodedTitle ? hardCodedTitle : pageData?.page.title;
+    console.log(pageData);
+    let title;
+    useEffect(() => {
+        if (!pageData?.notFound) {
+            title = !!hardCodedTitle ? hardCodedTitle : pageData?.page.title;
+        } else navigate("/", { replace: true });
+    }, [pageSlug]);
+
+    /*
+    useEffect(() => {
+        if (!pageData?.notFound) {
+            setTitle(!!hardCodedTitle ? hardCodedTitle : pageData?.page.title);
+        } else {
+            navigate("/404", { replace: true });
+        }
+    });
+    */
+
+    console.log(pageData);
 
     return (
         <div
