@@ -106,7 +106,7 @@ export default function SingleImageBlock({
                                 />
                                 {adminMode && (
                                     <button
-                                        className="text-amber-50 bg-(--primary) sticky bottom-15 w-25 rounded px-2 py-0.5 h-7"
+                                        className="text-amber-50 bg-(--primary) sticky bottom-15 md:bottom-2 w-25 rounded px-2 py-0.5 h-7"
                                         onClick={() => deleteFileById(file.id)}
                                     >
                                         Delete

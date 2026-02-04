@@ -41,7 +41,7 @@ export default function TextBlock({
             {adminMode && (
                 <div
                     id="lower-buttons"
-                    className="flex sticky bottom-15 m-2 gap-2 justify-center"
+                    className="flex sticky bottom-15 md:bottom-2 m-2 gap-2 justify-center"
                 >
                     {editMode && (
                         <button
