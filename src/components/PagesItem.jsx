@@ -195,7 +195,7 @@ export default function PagesItem({
             <div
                 id={"button-container-" + pageIndex}
                 className={
-                    "my-2 divide-x divide-x-reverse divide-(--outline-brown)/25 md:border-t-0 flex flex-row-reverse md:flex-col w-full justify-between md:items-end h-8 md:h-full md:gap-4 "
+                    "my-2 divide-x divide-x-reverse divide-(--outline-brown)/25 md:border-t-0 flex flex-row-reverse md:flex-col w-full justify-between md:items-end h-7 md:h-full md:gap-4 "
                 }
             >
                 {/* Real edit button  */}

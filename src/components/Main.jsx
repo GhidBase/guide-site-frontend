@@ -52,6 +52,9 @@ export default function Main() {
             className="h-full w-full flex flex-col grow box-border custom-background"
         >
             <Title></Title>
+            {
+                // title is partially styled in tailwind.css
+            }
             <div
                 id="side-bar-and-content"
                 className={`w-full box-border border-t-4 border-(--outline) flex flex-1
