@@ -241,13 +241,13 @@ export default function PageBuilder() {
             {env == "DEV" && (
                 <div className="flex flex-col items-center mt-2 gap-2">
                     <Link
-                        className="text-amber-50 bg-(--primary) w-50 rounded px-2 py-0.5"
+                        className="text-amber-50 bg-(--primary) w-50 rounded px-2 py-0.5 flex justify-center items-center"
                         to={"/games/" + gameSlug + "/page-manager"}
                     >
                         Back to Page Manager
                     </Link>
                     <button
-                        className={`text-amber-50 bg-(--primary) w-50 rounded px-2 py-0.5`}
+                        className="text-amber-50 bg-(--primary) w-50 rounded px-2 py-0.5 flex justify-center items-center"
                         onClick={() => setAdminMode(!adminMode)}
                     >
                         Switch View
