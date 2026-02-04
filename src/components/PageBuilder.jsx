@@ -152,7 +152,10 @@ export default function PageBuilder() {
     return (
         <Fragment>
             {env == "DEV" && (
-                <div className="-mx-4 flex sticky top-0 left-0 bg-(--primary) md:rounded-b max-w-full ">
+                <div
+                    id="dev-toolbar"
+                    className="-mx-4 self-center flex sticky top-0 left-0 bg-(--primary) md:rounded-b max-w-full "
+                >
                     <button
                         className=" text-amber-50 w-50 px-2 py-0.5 flex justify-center items-center border-r border-(--outline-brown)/25 "
                         onClick={() => setAdminMode(!adminMode)}

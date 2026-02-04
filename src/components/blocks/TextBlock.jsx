@@ -22,7 +22,7 @@ export default function TextBlock({
 
     return (
         <div
-            className={`content-block bg-(--surface-background) w-full text-(--text-color) ${
+            className={`relative content-block bg-(--surface-background) w-full text-(--text-color) ${
                 adminMode && "border-b border-(--primary) mb-0 pt-4 bg-black/10"
             }`}
         >
@@ -41,7 +41,7 @@ export default function TextBlock({
             {adminMode && (
                 <div
                     id="lower-buttons"
-                    className="flex gap-2 m-2 justify-center"
+                    className="flex sticky bottom-15 m-2 gap-2 justify-center"
                 >
                     {editMode && (
                         <button
