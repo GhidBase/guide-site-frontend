@@ -1,23 +1,14 @@
 import { currentAPI } from "../config/api.js";
+import { redirect, isRouteErrorResponse } from "react-router";
 const isLDG = import.meta.env.VITE_LDG == "True";
 
 export default async function gameAndPageLoader({ params, request }) {
     const { gameSlug, pageSlug } = params;
 
     async function safeFetch(url) {
-        try {
-            const response = await fetch(url);
-            if (!response.ok) {
-                console.warn(
-                    `Fetch failed with status ${response.status}:${url}`,
-                );
-                return null;
-            }
-            return await response.json();
-        } catch (err) {
-            console.warn(`Fetch error: ${err.message} - URL: ${url}`);
-            return null;
-        }
+        const response = await fetch(url);
+        if (!response.ok) return null;
+        return response.json();
     }
 
     async function fetchPageBySlug() {
@@ -70,6 +61,7 @@ export default async function gameAndPageLoader({ params, request }) {
 
     let gameData;
     let pageData;
+    let isHomePage = false;
     if (isLDG) {
         gameData = await fetchGameBySlug("lucky-defense");
 
@@ -96,12 +88,22 @@ export default async function gameAndPageLoader({ params, request }) {
         // fetchGameHomepage
         if (!!gameData && !pageSlug) {
             pageData = await fetchGameHomepage();
+            isHomePage = true;
         }
 
         if (!gameData && !pageData) {
             pageData = await fetchMainHomepage();
+            isHomePage = true;
         }
     }
 
+    console.log(pageSlug);
+    console.log(pageData);
+    if (pageSlug && isHomePage) {
+        throw redirect("/");
+    }
+    if (!pageData) {
+        throw redirect("/");
+    }
     return { gameData, pageData, gameSlug, pageSlug };
 }

@@ -3,31 +3,26 @@ import { currentAPI } from "../config/api";
 import { Fragment, useEffect, useState } from "react";
 import PagesItem from "./PagesItem";
 import { useRouteLoaderData } from "react-router";
-import { usePage } from "../contexts/PageProvider";
-import GameItem from "./GameItem";
-// const secret = import.meta.env.VITE_SECRET;
-
-// title refers to the title input field
-// setTitleInput updates that field
-// setTitle updates the title of the page at the top
-// of the ui to ("Page Manager")
 
 export default function PageManager() {
     const [pages, setPages] = useState([]);
     const { gameData } = useRouteLoaderData("main");
-    const gameId = gameData.id;
+    const gameId = gameData?.id;
 
     const [title, setTitleInput] = useState("");
-    //const { currentAPI, setTitle, gameId } = usePage();
-    //setTitle("Page Manager");
 
     useEffect(() => {
         if (!gameId) {
+            fetch(currentAPI + "/games/" + gameId + "/pages")
+                .then((response) => response.json())
+                .then((result) => setPages(result));
+            return;
+        } else {
+            fetch(currentAPI + "/games/" + gameId + "/pages")
+                .then((response) => response.json())
+                .then((result) => setPages(result));
             return;
         }
-        fetch(currentAPI + "/games/" + gameId + "/pages")
-            .then((response) => response.json())
-            .then((result) => setPages(result));
     }, [currentAPI, gameId]);
 
     async function createPage() {

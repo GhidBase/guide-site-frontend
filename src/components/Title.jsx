@@ -8,7 +8,6 @@ export default function Title() {
     const matches = useMatches();
     const hardCodedTitle = matches?.find((m) => m.handle?.title)?.handle.title;
 
-    console.log(pageData);
     let title;
     useEffect(() => {
         if (pageData?.notFound) navigate("/", { replace: true });
@@ -24,8 +23,6 @@ export default function Title() {
         }
     });
     */
-
-    console.log(pageData);
 
     return (
         <div

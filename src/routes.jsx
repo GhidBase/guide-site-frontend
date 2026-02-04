@@ -97,19 +97,48 @@ if (env == "DEV") {
     const found = isLDG
         ? luckyDefenseRoute
         : mainRoute.children.find((child) => child.path == "games/:gameSlug");
+    if (isLDG) {
+        luckyDefenseRoute.children.push(
+            {
+                path: "page-manager/",
+                element: <PageManager isAdmin={true} />,
+                handle: { title: "Page Manager" },
+            },
+            {
+                path: "game-manager/",
+                element: <GameManager isAdmin={true} />,
+                handle: { title: "Game Manager" },
+            },
+        );
+    } else {
+        mainRoute.children
+            .find((child) => child.path == "games/:gameSlug")
+            .children.push(
+                {
+                    path: "page-manager/",
+                    element: <PageManager isAdmin={true} />,
+                    handle: { title: "Page Manager" },
+                },
+                {
+                    path: "game-manager/",
+                    element: <GameManager isAdmin={true} />,
+                    handle: { title: "Game Manager" },
+                },
+            );
 
-    found.children.push(
-        {
-            path: "page-manager/",
-            element: <PageManager isAdmin={true} />,
-            handle: { title: "Page Manager" },
-        },
-        {
-            path: "game-manager/",
-            element: <GameManager isAdmin={true} />,
-            handle: { title: "Game Manager" },
-        },
-    );
+        mainRoute.children.push(
+            {
+                path: "page-manager/",
+                element: <PageManager isAdmin={true} />,
+                handle: { title: "Page Manager" },
+            },
+            {
+                path: "game-manager/",
+                element: <GameManager isAdmin={true} />,
+                handle: { title: "Game Manager" },
+            },
+        );
+    }
 }
 
 export default routes;
