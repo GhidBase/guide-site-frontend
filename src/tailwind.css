@@ -13,6 +13,7 @@
         --primary: var(--red-brown);
         --secondary: var(--khaki-brown);
         --text-color: #604f45;
+        --danger-text-color: #9b3a2f;
         --outline: var(--outline-brown);
         --footer-color: #8c7b6b;
         --accent-text: #3a2a1a;

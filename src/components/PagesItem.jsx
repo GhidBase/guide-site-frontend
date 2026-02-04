@@ -50,7 +50,7 @@ export default function PagesItem({
         <li
             id={"page-item-" + pageIndex}
             className="mt-4 w-full
-                px-6 py-4 md:p-4
+                md:px-6 pt-4 md:p-4
                 flex flex-col md:flex-row
                 items-center justify-center
                 bg-[#e2d2b9] rounded-lg shadow-lg
@@ -58,7 +58,7 @@ export default function PagesItem({
             key={page.id}
         >
             <div
-                className="flex flex-col w-full gap-4"
+                className="flex flex-col w-full gap-4 px-6"
                 id={"details-container-" + pageIndex}
             >
                 <div
@@ -195,13 +195,13 @@ export default function PagesItem({
             <div
                 id={"button-container-" + pageIndex}
                 className={
-                    "flex flex-row md:flex-col w-full justify-between md:items-end md:h-full gap-4 "
+                    "my-2 divide-x divide-x-reverse divide-(--outline-brown)/25 md:border-t-0 flex flex-row-reverse md:flex-col w-full justify-between md:items-end h-8 md:h-full md:gap-4 "
                 }
             >
                 {/* Real edit button  */}
                 {page.slug != null && (
                     <Link
-                        className="text-amber-50 bg-(--primary) w-30 rounded px-2 py-0.5 text-center"
+                        className="flex items-center justify-center w-full h-full md:text-amber-50 md:bg-(--primary) md:w-30 md:rounded md:px-2 md:py-0.5 text-center"
                         to={"/games/" + gameSlug + "/" + page.slug}
                     >
                         View Page
@@ -228,7 +228,7 @@ export default function PagesItem({
                         newPages.splice(pageIndex, 1);
                         setPages(newPages);
                     }}
-                    className="text-amber-50 bg-(--primary) w-30 rounded px-2 py-0.5 text-center"
+                    className="text-red-700/70 flex items-center justify-center w-full h-full md:text-amber-50 md:bg-(--primary) md:w-30 md:rounded md:px-2 md:py-0.5 text-center"
                 >
                     Delete Page
                 </button>
