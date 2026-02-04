@@ -20,6 +20,15 @@ export default function TextBlock({
         setEditMode(!editMode);
     }
 
+    function checkDeletion() {
+        const confirmedDelete = window.confirm(
+            "Are you sure you want to delete this block?",
+        );
+        if (confirmedDelete) {
+            deleteBlock();
+        }
+    }
+
     return (
         <div
             className={`relative content-block bg-(--surface-background) w-full text-(--text-color) ${
@@ -41,7 +50,7 @@ export default function TextBlock({
             {adminMode && (
                 <div
                     id="lower-buttons"
-                    className="flex sticky bottom-15 md:bottom-2 m-2 gap-2 justify-center"
+                    className="flex flex-row-reverse sticky bottom-15 md:bottom-2 divide-x divide-x-reverse divide-(--outline-brown)/25 m-2 gap-2 justify-center"
                 >
                     {editMode && (
                         <button
@@ -65,7 +74,7 @@ export default function TextBlock({
                         {editMode && "Cancel"}
                     </button>
                     <button
-                        onClick={deleteBlock}
+                        onClick={checkDeletion}
                         className="text-amber-50 bg-(--primary) w-25 rounded px-2 py-0.5"
                     >
                         Delete
