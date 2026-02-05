@@ -1,6 +1,5 @@
-import { type } from "@testing-library/user-event/dist/cjs/utility/type.js";
 import TextEditor from "../TextEditor.jsx";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 
 export default function TextBlock({
     deleteBlock,
@@ -11,11 +10,22 @@ export default function TextBlock({
 }) {
     const editorRef = useRef(null);
     const [editMode, setEditMode] = useState(false);
-    console.log(editMode);
+    const contentRef = useRef(null);
+    const [height, setHeight] = useState(0);
+
     let content;
+
     if (block && block.content && block.content.content) {
         content = block.content.content;
     }
+
+    useEffect(() => {
+        if (contentRef.current) {
+            setHeight(contentRef.current.offsetHeight);
+        }
+    }, [content, adminMode]);
+
+    console.log(height);
 
     function toggleEditorMode() {
         setEditMode(!editMode);
@@ -53,6 +63,7 @@ export default function TextBlock({
             )}
             {editMode && (
                 <TextEditor
+                    height={height}
                     editorRef={editorRef}
                     content={content}
                 ></TextEditor>
@@ -60,6 +71,7 @@ export default function TextBlock({
             {!editMode && (
                 <div
                     id={"text-content-" + block.id}
+                    ref={contentRef}
                     className={
                         `text-left px-8 py-1` +
                         (adminMode &&

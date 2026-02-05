@@ -52,12 +52,15 @@ import "tinymce/skins/content/default/content";
 import "tinymce/skins/ui/oxide/content";
 
 export default function BundledEditor(props) {
+    console.log("height");
+    console.log(props.height);
+    const height = props.height + 50;
     return (
         <Editor
             licenseKey="gpl"
             {...props}
             init={{
-                height: "80dvh",
+                height: height,
                 plugins: [
                     "lists",
                     "advlist",
