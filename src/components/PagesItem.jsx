@@ -1,5 +1,6 @@
 import { useState, Fragment } from "react";
 import { Link } from "react-router";
+import { usePage } from "../contexts/PageProvider";
 
 export default function PagesItem({
     page,
@@ -13,6 +14,7 @@ export default function PagesItem({
     const [inputText, setInputText] = useState("");
     const [slugInputText, setSlugInputText] = useState("");
     const [editMode, setEditMode] = useState(false);
+    const {currentAPI, setTitle} = usePage();
     const slug = page.slug;
 
     function toggleEditMode() {
@@ -64,7 +66,7 @@ export default function PagesItem({
             <button
                 className={`${
                     !editMode && "ml-auto"
-                } mr-2 text-amber-50 bg-(--primary) w-22 rounded px-2 py-0.5`}
+                } mr-2 text-amber-50 bg-(--primary) w-22 rounded px-2 py-0.5 hover: cursor-pointer`}
                 onClick={() => {
                     toggleEditMode();
                 }}
@@ -72,7 +74,7 @@ export default function PagesItem({
                 {(!editMode && "Rename") || "Cancel"}
             </button>
             <Link
-                className="text-amber-50 bg-(--primary) w-22 mr-2 rounded px-2 py-0.5"
+                className="text-amber-50 bg-(--primary) w-22 mr-2 rounded px-2 py-0.5 hover: cursor-pointer"
                 to={"/" + page.slug}
             >
                 Edit
@@ -84,10 +86,25 @@ export default function PagesItem({
                     newPages.splice(pageIndex, 1);
                     setPages(newPages);
                 }}
-                className="text-amber-50 bg-(--primary) w-22 rounded px-2 py-0.5"
+                className="text-amber-50 bg-(--primary) w-22 rounded px-2 py-0.5 hover: cursor-pointer"
             >
                 Delete
             </button>
+
+            {/* <button className="ml-2 text-xs text-amber-50 bg-(--primary) w-40 rounded px-2 py-0.5 hover: cursor-pointer"
+                onClick={
+                    async()=>{
+                        console.log(currentAPI + "/navbar/" , 'is the currentAPI');
+                        // await fetch(currentAPI)
+                        fetch(currentAPI + "/navbar/", {
+                            "Content-Type" : "application/json",
+                            "X-Admin-Secret" : import.meta.env.VITE_SECRET,
+                        })
+                    }
+                }
+            >
+                Add to navigation panel 
+            </button> */}
         </li>
     );
 }
