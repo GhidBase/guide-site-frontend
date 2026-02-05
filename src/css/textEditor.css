@@ -20,10 +20,20 @@ body #root .tox-toolbar__primary {
 body #root .tox-toolbar-overlord {
 }
 
+body #root .tox-tinymce,
+body #root .tox-editor-container {
+    overflow: visible;
+}
+
 body #root .tox-editor-header {
+    position: sticky;
+    top: 50;
     border-bottom: 1px solid var(--primary);
     border-left: 1px solid var(--primary);
     border-right: 1px solid var(--primary);
+    position: sticky;
+    top: 68px;
+    z-index: 999;
 }
 
 /* Toolbar buttons */
