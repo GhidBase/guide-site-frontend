@@ -97,8 +97,6 @@ export default async function gameAndPageLoader({ params, request }) {
         }
     }
 
-    console.log(pageSlug);
-    console.log(pageData);
     if (pageSlug && isHomePage) {
         throw redirect("/");
     }

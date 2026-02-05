@@ -25,8 +25,6 @@ export default function TextBlock({
         }
     }, [content, adminMode]);
 
-    console.log(height);
-
     function toggleEditorMode() {
         setEditMode(!editMode);
     }
