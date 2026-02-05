@@ -13,11 +13,14 @@ body .tox-tinymce {
 body #root .tox-editor-header,
 body #root .tox-toolbar-overlord,
 body #root .tox-toolbar__primary {
-    background-color: transparent;
     background-color: var(--accent);
 }
 
 body #root .tox-toolbar-overlord {
+}
+
+body #root .tox-toolbar--scrolling {
+    background-color: var(--accent);
 }
 
 body #root .tox-tinymce,
