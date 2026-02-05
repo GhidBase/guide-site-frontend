@@ -1,5 +1,5 @@
 import BundledEditor from "../BundledEditor.jsx";
-import "../css/textEditor.css"
+import "../css/textEditor.css";
 
 export default function TextEditor({ editorRef, content }) {
     /* const log = () => {
@@ -15,10 +15,11 @@ export default function TextEditor({ editorRef, content }) {
                 initialValue={content}
                 init={{
                     menubar: false,
-                    content_style:
-                        "body { font-family:Helvetica,Arial,sans-serif; font-size:14px }",
                 }}
             />
+            {
+                //Style the editor in BundledEditor.jsx
+            }
         </>
     );
 }

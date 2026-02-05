@@ -82,6 +82,7 @@ export default function BundledEditor(props) {
                 onboarding: false,
                 statusbar: false,
                 content_css: "/editor-content.css",
+                content_style: "body { padding: 0px 26px }",
             }}
         />
     );

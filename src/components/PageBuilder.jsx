@@ -154,7 +154,7 @@ export default function PageBuilder() {
             {env == "DEV" && (
                 <div
                     id="dev-toolbar"
-                    className="-mx-4 self-center flex sticky top-0 left-0 bg-(--primary) md:rounded-b max-w-full z-1 "
+                    className=" self-stretch flex justify-center sticky top-0 bg-(--primary) sm:rounded-b max-w-full z-2 "
                 >
                     <button
                         className=" text-amber-50 w-50 px-2 py-0.5 flex justify-center items-center border-r border-(--outline-brown)/25 "
