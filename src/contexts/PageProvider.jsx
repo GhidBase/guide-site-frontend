@@ -14,8 +14,8 @@ export function PageProvider({ children }) {
 		: serverAPI;
 
 	useEffect(() => {
-		hydrateNavbar(currentAPI);
-	}, [currentAPI]);
+		hydrateNavbar(currentAPI, gameId);
+	}, [currentAPI, gameId]);
 
 	return (
 		<PageContext.Provider
