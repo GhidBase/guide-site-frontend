@@ -8,7 +8,7 @@ import GuardianCosts from "./components/mini-apps/GuardianCosts.jsx";
 import ImmortalGuardians from "./components/mini-apps/ImmortalGuardians.jsx";
 import GameManager from "./components/GameManager.jsx";
 import gameAndPageLoader from "./loaders/gameAndPageLoader.js";
-
+import NavigationPanel from "./components/NavigationPanel.jsx";
 const env = import.meta.env.VITE_ENV;
 const isLDG = import.meta.env.VITE_LDG == "True";
 // Clean up routes, then decide how to use "useGameSlug"
@@ -139,6 +139,16 @@ if (env == "DEV") {
             },
         );
     }
+    routes[routes.length - 1].children.unshift(
+        {
+            path: "page-manager/",
+            element: <PageManager isAdmin={true} />,
+        },
+        {
+            path: "navigation-panel/",
+            element: <NavigationPanel isAdmin={true} />,
+        },
+    );
 }
 
 export default routes;

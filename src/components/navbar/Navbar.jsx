@@ -1,7 +1,9 @@
 import NavbarButton from "./NavbarButton";
 import { useLoaderData } from "react-router";
-import { Fragment } from "react";
+import { Fragment, useEffect, useState } from "react";
 import NavbarSection from "./NavbarSection";
+import { getNavbarMap, onHydrateNavbar } from "@/stores/navbarStore";
+
 const env = import.meta.env.VITE_ENV;
 const isLDG = import.meta.env.VITE_LDG == "True";
 
@@ -13,6 +15,10 @@ export default function Navbar({
 }) {
     const { gameData } = useLoaderData();
     const gameSlug = isLDG ? "" : "/games/" + gameData?.slug;
+    const [, forceRender] = useState(0);
+    const navbarMap = getNavbarMap();
+    // Convert map to array and flatten sections with their pages
+    const navbarItems = [];
 
     const navbar = [
         {
@@ -251,43 +257,84 @@ export default function Navbar({
         },
     ];
 
-    let curNav = {};
-    switch (gameData.slug) {
-        case "silksong":
-            curNav = navbarSilksong;
-            break;
-        case "lucky-defense":
-            curNav = navbar;
-            break;
-        case "coop-td":
-            curNav = navbarCoopTD;
-            break;
-        default:
-            curNav = navbar;
-            break;
-    }
+    useEffect(() => {
+        const unsubscribe = onHydrateNavbar(() => {
+            forceRender((x) => x + 1);
+        });
+        return unsubscribe;
+    }, []);
 
-    if (env == "DEV") {
-        curNav.unshift(
+    // Add dev-only pages at the start
+    if (env === "DEV") {
+        navbarItems.push(
             {
-                id: 102,
+                id: "game-manager",
                 slug: gameSlug + "/game-manager",
                 navbarTitle: "Game Manager",
                 type: "page",
             },
             {
-                id: 101,
-                slug: gameSlug + "/page-manager",
+                id: "nav-panel",
+                slug: "/navigation-panel",
+                navbarTitle: "Navigation Panel",
+                type: "page",
+            },
+            {
+                id: "page-mgr",
+                slug: "/page-manager",
                 navbarTitle: "Page Manager",
                 type: "page",
             },
         );
     }
+
+    const dynamicNav = false;
+    // Manual navbar
+    if (!dynamicNav) {
+        switch (gameData.slug) {
+            case "silksong":
+                navbarItems.push(navbarSilksong);
+                break;
+            case "lucky-defense":
+                navbarItems.push(navbar);
+                break;
+            case "coop-td":
+                navbarItems.push(navbarCoopTD);
+                break;
+            default:
+                navbarItems.push(navbar);
+                break;
+        }
+    } else {
+        // dynamic navbar
+        // Add sections and their pages from the map
+        Array.from(navbarMap.values())
+            .sort((a, b) => a.order - b.order)
+            .forEach((section) => {
+                // Add section header
+                navbarItems.push({
+                    id: section.id,
+                    navbarTitle: section.title,
+                    type: "section",
+                });
+
+                // Add pages under this section
+                section.pages.forEach((page) => {
+                    navbarItems.push({
+                        id: page.id,
+                        slug: page.slug,
+                        navbarTitle: page.title,
+                        type: "page",
+                    });
+                });
+            });
+    }
+
     return (
         <Fragment>
             <div id="nav-bar" className={className}>
-                {curNav.map((item, index, arr) => {
-                    if (item.type == "page") {
+                {navbarItems.map((item, index, arr) => {
+                    if (item.type === "page") {
                         return (
                             <NavbarButton
                                 slug={item.slug}
@@ -302,7 +349,7 @@ export default function Navbar({
                             />
                         );
                     }
-                    if (item.type == "section") {
+                    if (item.type === "section") {
                         return (
                             <NavbarSection
                                 navbarTitle={item.navbarTitle}
@@ -329,3 +376,4 @@ export default function Navbar({
         </Fragment>
     );
 }
+

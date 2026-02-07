@@ -1,5 +1,4 @@
-import { useState, Fragment } from "react";
-import { usePage } from "../contexts/PageProvider";
+import { useState } from "react";
 import { Link, useRouteLoaderData } from "react-router";
 import pencilIcon from "../assets/pencil-svgrepo-com.svg";
 import cancelIcon from "../assets/cancel-circle-svgrepo-com.svg";
@@ -133,6 +132,7 @@ export default function PagesItem({
                     {slugEditMode ? ( // slug edit mode
                         <form action="" className="w-full flex gap-2">
                             <input
+                                id={"slug-input-" + pageIndex}
                                 className="bg-(--red-brown) min-w-0 w-full px-2 text-white box-border rounded flex-1 max-w-100 "
                                 type="text"
                                 value={slugInputText}
@@ -141,6 +141,7 @@ export default function PagesItem({
                                 }
                             />
                             <button
+                                id={"slug-cancel-" + pageIndex}
                                 className="ml-auto md:ml-0 text-amber-50 h-[1.5em] md:h-[1.1em] self-center rounded"
                                 type="button"
                                 onClick={(e) => {
@@ -150,11 +151,11 @@ export default function PagesItem({
                             >
                                 <img
                                     src={cancelIcon}
-                                    alt="Edit Slug"
                                     className=" w-full h-full"
                                 />
                             </button>
                             <button
+                                id={"slug-save-" + pageIndex}
                                 className=" md:ml-0 text-amber-50 h-[1.5em] md:h-[1.1em] self-center rounded"
                                 type="submit"
                                 onClick={(e) => {
@@ -164,7 +165,6 @@ export default function PagesItem({
                             >
                                 <img
                                     src={saveIcon}
-                                    alt="Edit Slug"
                                     className=" w-full h-full"
                                 />
                             </button>
@@ -174,6 +174,7 @@ export default function PagesItem({
                         <>
                             <p className="mb-0.5">{slug}</p>
                             <button
+                                id={"slug-edit-button-" + pageIndex}
                                 className="ml-auto md:ml-4 text-amber-50 h-[1.5em] md:h-[1.1em] self-center rounded"
                                 type="submit"
                                 onClick={(e) => {
@@ -184,7 +185,6 @@ export default function PagesItem({
                             >
                                 <img
                                     src={pencilIcon}
-                                    alt="Edit Slug"
                                     className=" w-full h-full"
                                 />
                             </button>
@@ -199,28 +199,26 @@ export default function PagesItem({
                 }
             >
                 {/* Real edit button  */}
-                {page.slug != null && (
-                    <Link
-                        className="flex items-center justify-center w-full h-full md:text-amber-50 md:bg-(--primary) md:w-30 md:rounded md:px-2 md:py-0.5 text-center"
-                        to={"/games/" + gameSlug + "/" + page.slug}
-                    >
-                        View Page
-                    </Link>
-                )}
-
-                {/* Fake edit button to warn user */}
-                {page.slug == null && (
+                {page.slug ? (
+                    null && (
+                        <Link
+                            className="flex items-center justify-center w-full h-full md:text-amber-50 md:bg-(--primary) md:w-30 md:rounded md:px-2 md:py-0.5 text-center"
+                            to={"/games/" + gameSlug + "/" + page.slug}
+                        >
+                            View Page
+                        </Link>
+                    )
+                ) : (
                     <button
-                        className={`${
-                            !editMode && "ml-auto"
-                        } mr-2 text-amber-50 bg-(--primary) w-22 rounded px-2 py-0.5`}
+                        className="flex items-center justify-center w-full h-full md:text-amber-50 md:bg-(--primary) md:w-30 md:rounded md:px-2 md:py-0.5 text-center"
                         onClick={() =>
                             alert("Page must have url before it can be edited")
                         }
                     >
-                        Edit
+                        View Page
                     </button>
                 )}
+
                 <button
                     onClick={async () => {
                         await deletePage(page.id);
@@ -233,6 +231,21 @@ export default function PagesItem({
                     Delete Page
                 </button>
             </div>
+
+            {/* <button className="ml-2 text-xs text-amber-50 bg-(--primary) w-40 rounded px-2 py-0.5 hover: cursor-pointer"
+                onClick={
+                    async()=>{
+                        console.log(currentAPI + "/navbar/" , 'is the currentAPI');
+                        // await fetch(currentAPI)
+                        fetch(currentAPI + "/navbar/", {
+                            "Content-Type" : "application/json",
+                            "X-Admin-Secret" : import.meta.env.VITE_SECRET,
+                        })
+                    }
+                }
+            >
+                Add to navigation panel 
+            </button> */}
         </li>
     );
 }
