@@ -1,4 +1,3 @@
-import "../tailwind.css";
 import "../css/tables.css";
 import { Outlet, useLoaderData } from "react-router";
 import Navbar from "./navbar/Navbar.jsx";

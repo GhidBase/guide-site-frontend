@@ -1,4 +1,3 @@
-import "../tailwind.css";
 import { Link, Outlet } from "react-router";
 import { Fragment } from "react";
 

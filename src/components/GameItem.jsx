@@ -1,5 +1,4 @@
 import { useState, Fragment } from "react";
-import { usePage } from "../contexts/PageProvider";
 
 export default function GameItem({ title, slug, id }) {
     const { currentAPI } = usePage();

@@ -1,4 +1,3 @@
-import "../tailwind.css";
 import { currentAPI } from "../config/api";
 import { Fragment, useEffect, useState } from "react";
 import PagesItem from "./PagesItem";

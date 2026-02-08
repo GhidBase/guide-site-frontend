@@ -1,5 +1,3 @@
-import { Fragment } from "react";
-import "../tailwind.css";
 import { useState } from "react";
 
 function ChecklistItem({
