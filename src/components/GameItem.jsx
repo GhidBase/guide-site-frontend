@@ -1,7 +1,7 @@
 import { useState, Fragment } from "react";
+import { currentAPI } from "../config/api.js";
 
 export default function GameItem({ title, slug, id }) {
-    const { currentAPI } = usePage();
     const [slugInput, setSlugInput] = useState(slug);
     const [editMode, setEditMode] = useState(false);
     function toggleEditMode() {

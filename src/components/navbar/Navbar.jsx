@@ -15,6 +15,7 @@ export default function Navbar({
 }) {
     const { gameData } = useLoaderData();
     const gameSlug = isLDG ? "" : "/games/" + gameData?.slug;
+    console.log(gameSlug + "/navigation-panel");
     const [, forceRender] = useState(0);
     const navbarMap = getNavbarMap();
     // Convert map to array and flatten sections with their pages
@@ -275,13 +276,13 @@ export default function Navbar({
             },
             {
                 id: "nav-panel",
-                slug: "/navigation-panel",
+                slug: gameSlug + "/navigation-panel",
                 navbarTitle: "Navigation Panel",
                 type: "page",
             },
             {
                 id: "page-mgr",
-                slug: "/page-manager",
+                slug: gameSlug + "/page-manager",
                 navbarTitle: "Page Manager",
                 type: "page",
             },
@@ -376,4 +377,3 @@ export default function Navbar({
         </Fragment>
     );
 }
-

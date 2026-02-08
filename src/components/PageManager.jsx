@@ -165,7 +165,7 @@ export default function PageManager() {
                     />
 
                     <select
-                        className="bg-gray-900 text-white px-2 py-1 rounded"
+                        className="bg-(--red-brown) text-white px-2 py-1 rounded"
                         value={selectedSection}
                         onChange={(e) => setSelectedSection(e.target.value)}
                     >

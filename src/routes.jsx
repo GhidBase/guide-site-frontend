@@ -124,6 +124,10 @@ if (env == "DEV") {
                     element: <GameManager isAdmin={true} />,
                     handle: { title: "Game Manager" },
                 },
+                {
+                    path: "navigation-panel/",
+                    element: <NavigationPanel isAdmin={true} />,
+                },
             );
 
         mainRoute.children.push(
@@ -136,6 +140,10 @@ if (env == "DEV") {
                 path: "game-manager/",
                 element: <GameManager isAdmin={true} />,
                 handle: { title: "Game Manager" },
+            },
+            {
+                path: "navigation-panel/",
+                element: <NavigationPanel isAdmin={true} />,
             },
         );
     }

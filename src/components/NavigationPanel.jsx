@@ -236,11 +236,11 @@ export default function NavigationPanel({ isAdmin }) {
                     value={newSectionName}
                     onChange={(e) => setNewSectionName(e.target.value)}
                     placeholder="New section name"
-                    className="bg-gray-900 text-white px-3 py-2 rounded flex-1"
+                    className="bg-(--red-brown) text-white px-3 py-2 rounded flex-1"
                 />
                 <button
                     onClick={createSection}
-                    className="bg-green-600 px-4 py-2 rounded hover: cursor-pointer"
+                    className="bg-(--red-brown) text-white px-4 py-2 rounded hover: cursor-pointer"
                 >
                     Add Section
                 </button>

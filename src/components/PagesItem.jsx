@@ -199,7 +199,6 @@ export default function PagesItem({
                 }
             >
                 {/* Real edit button  */}
-                {console.log(!!page.slug)}
                 {page.slug ? (
                     <Link
                         className="flex items-center justify-center w-full h-full md:text-amber-50 md:bg-(--primary) md:w-30 md:rounded md:px-2 md:py-0.5 text-center"
