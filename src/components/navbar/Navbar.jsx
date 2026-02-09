@@ -15,7 +15,6 @@ export default function Navbar({
 }) {
     const { gameData } = useLoaderData();
     const gameSlug = isLDG ? "" : "/games/" + gameData?.slug;
-    console.log(gameSlug + "/navigation-panel");
     const [, forceRender] = useState(0);
     const navbarMap = getNavbarMap();
     // Convert map to array and flatten sections with their pages
@@ -289,21 +288,25 @@ export default function Navbar({
         );
     }
 
-    const dynamicNav = false;
+    const dynamicNav = true;
     // Manual navbar
     if (!dynamicNav) {
         switch (gameData.slug) {
             case "silksong":
                 navbarItems.push(navbarSilksong);
+                console.log("SK");
                 break;
             case "lucky-defense":
                 navbarItems.push(navbar);
+                console.log("LDG");
                 break;
             case "coop-td":
                 navbarItems.push(navbarCoopTD);
+                console.log("coopTD");
                 break;
             default:
                 navbarItems.push(navbar);
+                console.log("LDG");
                 break;
         }
     } else {
@@ -330,6 +333,8 @@ export default function Navbar({
                 });
             });
     }
+
+    console.log(navbarItems);
 
     return (
         <Fragment>
