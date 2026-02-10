@@ -1,16 +1,14 @@
 import { useEffect, useState } from "react";
-import { getNavbarMap, onHydrateNavbar } from "@/stores/navbarStore";
 import { currentAPI } from "../config/api.js";
 import { useRouteLoaderData } from "react-router";
 
 const secret = import.meta.env.VITE_SECRET;
 
-export default function NavigationPanel({ isAdmin }) {
+export default function NavigationPanel() {
     const [, forceRender] = useState(0);
-    const { gameData } = useRouteLoaderData("main");
+    const { gameData, sectionsMap } = useRouteLoaderData("main");
     const gameId = gameData?.id;
 
-    const sectionsMap = getNavbarMap();
     // console.log(sectionsMap, 'is the map');
     // console.log(Array.from(sectionsMap.values()),'is the values');
     const [editingSection, setEditingSection] = useState(null);
@@ -23,14 +21,6 @@ export default function NavigationPanel({ isAdmin }) {
 
     const [draggedSection, setDraggedSection] = useState(null);
     const [dragOverSection, setDragOverSection] = useState(null);
-
-    useEffect(() => {
-        const unsubscribe = onHydrateNavbar(() => {
-            forceRender((x) => x + 1); // forcing render with redundant x+1 state change
-        });
-
-        return unsubscribe; // unsubscribe is the cleanup fn which is returned.
-    }, []);
 
     const getSortedSections = () => {
         return Array.from(sectionsMap.values()).sort(

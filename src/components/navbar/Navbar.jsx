@@ -1,8 +1,8 @@
 import NavbarButton from "./NavbarButton";
 import { useLoaderData } from "react-router";
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useState } from "react";
 import NavbarSection from "./NavbarSection";
-import { getNavbarMap, onHydrateNavbar } from "@/stores/navbarStore";
+import NavbarEditButton from "./NavbarEditButton";
 
 const env = import.meta.env.VITE_ENV;
 const isLDG = import.meta.env.VITE_LDG == "True";
@@ -13,12 +13,14 @@ export default function Navbar({
     toggleNav,
     closeClassName,
 }) {
-    const { gameData } = useLoaderData();
+    const { gameData, sectionsMap } = useLoaderData();
+    const [editMode, setEditMode] = useState(false);
     const gameSlug = isLDG ? "" : "/games/" + gameData?.slug;
-    const [, forceRender] = useState(0);
-    const navbarMap = getNavbarMap();
-    // Convert map to array and flatten sections with their pages
     const navbarItems = [];
+
+    function toggleEditMode() {
+        setEditMode(!editMode);
+    }
 
     const navbar = [
         {
@@ -257,13 +259,6 @@ export default function Navbar({
         },
     ];
 
-    useEffect(() => {
-        const unsubscribe = onHydrateNavbar(() => {
-            forceRender((x) => x + 1);
-        });
-        return unsubscribe;
-    }, []);
-
     // Add dev-only pages at the start
     if (env === "DEV") {
         navbarItems.push(
@@ -272,18 +267,27 @@ export default function Navbar({
                 slug: gameSlug + "/game-manager",
                 navbarTitle: "Game Manager",
                 type: "page",
+                nonEditable: true,
             },
             {
                 id: "nav-panel",
                 slug: gameSlug + "/navigation-panel",
                 navbarTitle: "Navigation Panel",
                 type: "page",
+                nonEditable: true,
             },
             {
                 id: "page-mgr",
                 slug: gameSlug + "/page-manager",
                 navbarTitle: "Page Manager",
                 type: "page",
+                nonEditable: true,
+            },
+            {
+                id: "edit-nav",
+                type: "edit-button",
+                navbarTitle: "Edit Navbar",
+                nonEditable: true,
             },
         );
     }
@@ -312,7 +316,7 @@ export default function Navbar({
     } else {
         // dynamic navbar
         // Add sections and their pages from the map
-        Array.from(navbarMap.values())
+        Array.from(sectionsMap.values())
             .sort((a, b) => a.order - b.order)
             .forEach((section) => {
                 // Add section header
@@ -334,18 +338,20 @@ export default function Navbar({
             });
     }
 
-    console.log(navbarItems);
-
     return (
         <Fragment>
             <div id="nav-bar" className={className}>
+                {console.log(navbarItems)}
                 {navbarItems.map((item, index, arr) => {
                     if (item.type === "page") {
                         return (
                             <NavbarButton
                                 slug={item.slug}
+                                navbarEditMode={editMode}
+                                nonEditable={item.nonEditable}
                                 navbarTitle={item.navbarTitle}
                                 key={item.id}
+                                buttonData={item}
                                 className={`
                                     w-full h-20
                                     flex items-center justify-center
@@ -359,12 +365,33 @@ export default function Navbar({
                         return (
                             <NavbarSection
                                 navbarTitle={item.navbarTitle}
+                                navbarEditMode={editMode}
                                 key={item.id}
+                                id={item.id}
+                                nonEditable={item.nonEditable}
                                 className={`
                                     w-full h-15
                                     text-2xl font-bold underline
                                     flex items-center justify-center
                                     bg-(--surface-background) text-(--text-color) lg:border-b-4 border-(--outline)
+                                    ${index < arr.length - 1 && "border-b-4"}`}
+                            />
+                        );
+                    }
+                    if (item.type === "edit-button") {
+                        return (
+                            <NavbarEditButton
+                                toggleEditMode={toggleEditMode}
+                                navbarEditMode={editMode}
+                                navbarTitle={item.navbarTitle}
+                                key={item.id}
+                                nonEditable={item.nonEditable}
+                                buttonData={item}
+                                className={`
+                                    w-full h-20
+                                    cursor-pointer
+                                    flex items-center justify-center
+                                    lg:h-15 lg:border-b-4 border-(--outline)
                                     ${index < arr.length - 1 && "border-b-4"}`}
                             />
                         );

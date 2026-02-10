@@ -63,7 +63,7 @@ export default function Main() {
                 {gameData && (
                     <Navbar
                         className={`
-                            w-70 max-w-100 z-2 lg:h-full lg:w-fit lg:min-w-60
+                            w-60 max-w-60 min-w-60 z-3 lg:h-full
                             ${navOpen ? "fixed" : "hidden"} right-[50%] top-4 bottom-20 translate-x-1/2 lg:static lg:translate-0
                             border-4 border-(--outline) lg:border-t-0 lg:border-b-0 lg:border-l-0 lg:border-r-4
                             bg-(--primary)   

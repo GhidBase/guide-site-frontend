@@ -1,11 +1,59 @@
 import { Link } from "react-router";
+import { PencilIcon, Check, X } from "lucide-react";
+import { useState } from "react";
 
 export default function NavbarButton({
     slug,
     navbarTitle,
     className,
     toggleNav,
+    navbarEditMode,
+    nonEditable,
+    buttonData,
 }) {
+    const [editMode, setEditMode] = useState(false);
+    const [inputText, setInputText] = useState(navbarTitle);
+    console.log(buttonData);
+
+    function toggleEditMode() {
+        setEditMode(!editMode);
+        setInputText(navbarTitle);
+    }
+
+    if (navbarEditMode && !nonEditable) {
+        return (
+            <div className={className}>
+                {!editMode ? (
+                    <div className="flex w-full px-2 mb-0.5 ">
+                        <p className="flex-1">{navbarTitle}</p>
+                        <PencilIcon
+                            className=" cursor-pointer"
+                            onClick={() => toggleEditMode()}
+                        />
+                    </div>
+                ) : (
+                    <div className="flex w-full h-full items-center ">
+                        <input
+                            value={inputText}
+                            onChange={(e) => setInputText(e.target.value)}
+                            className="min-w-0 flex-1 h-full py-1 px-2 "
+                        />
+                        {inputText != navbarTitle && (
+                            <Check
+                                onClick={() => toggleEditMode()}
+                                className="h-10 w-10 cursor-pointer "
+                            />
+                        )}{" "}
+                        <X
+                            onClick={() => toggleEditMode()}
+                            className="h-10 w-10 cursor-pointer "
+                        />
+                    </div>
+                )}
+            </div>
+        );
+    }
+
     return (
         <Link className={className} to={slug} onClick={() => toggleNav(false)}>
             {navbarTitle}

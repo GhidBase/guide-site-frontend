@@ -3,19 +3,17 @@ import { Fragment, useEffect, useState } from "react";
 import PagesItem from "./PagesItem";
 import { useRouteLoaderData } from "react-router";
 const secret = import.meta.env.VITE_SECRET;
-import { getNavbarMap, onHydrateNavbar } from "@/stores/navbarStore";
 
 // title refers to the title input field
 // setTitleInput updates that field
 
 export default function PageManager() {
     const [pages, setPages] = useState([]);
-    const { gameData } = useRouteLoaderData("main");
+    const { gameData, sectionsMap } = useRouteLoaderData("main");
     const gameId = gameData?.id;
     const [title, setTitleInput] = useState("");
     const [selectedSection, setSelectedSection] = useState("");
     const [, forceRender] = useState(0);
-    const navbarMap = getNavbarMap();
 
     // Get Pages
     useEffect(() => {
@@ -31,14 +29,6 @@ export default function PageManager() {
             return;
         }
     }, [currentAPI, gameId]);
-
-    // Rerender navbar - can probably adjust this
-    useEffect(() => {
-        const unsubscribe = onHydrateNavbar(() => {
-            forceRender((x) => x + 1);
-        });
-        return unsubscribe;
-    }, []);
 
     async function createPage() {
         if (!title?.trim()) {
@@ -170,7 +160,7 @@ export default function PageManager() {
                         onChange={(e) => setSelectedSection(e.target.value)}
                     >
                         <option value="">Select section</option>
-                        {Array.from(navbarMap.values()).map((section) => (
+                        {Array.from(sectionsMap.values()).map((section) => (
                             <option key={section.id} value={section.id}>
                                 {section.title}
                             </option>
@@ -220,7 +210,7 @@ export default function PageManager() {
                     </thead>
 
                     <tbody>
-                        {Array.from(navbarMap.values()).map((section) => (
+                        {Array.from(sectionsMap.values()).map((section) => (
                             <tr
                                 key={section.id}
                                 className="border-t border-gray-700"
@@ -252,7 +242,9 @@ export default function PageManager() {
                                                 <option value="">
                                                     Move to...
                                                 </option>
-                                                {Array.from(navbarMap.values())
+                                                {Array.from(
+                                                    sectionsMap.values(),
+                                                )
                                                     .filter(
                                                         (s) =>
                                                             s.id !== section.id,

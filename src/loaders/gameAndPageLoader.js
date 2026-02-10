@@ -4,6 +4,7 @@ const isLDG = import.meta.env.VITE_LDG == "True";
 
 export default async function gameAndPageLoader({ params, request }) {
     const { gameSlug, pageSlug } = params;
+    let navbarMap;
 
     async function safeFetch(url) {
         const response = await fetch(url);
@@ -57,6 +58,24 @@ export default async function gameAndPageLoader({ params, request }) {
         return result;
     }
 
+    async function fetchNavbar() {
+        if (!gameData) {
+            return;
+        }
+        const res = await fetch(
+            currentAPI + "/sections/navbar?gameId=" + gameData.id,
+        );
+        const data = await res.json();
+
+        const navbarMap = new Map();
+        data.forEach((section) => {
+            navbarMap.set(section.id, section);
+        });
+
+        console.log(navbarMap);
+        return navbarMap;
+    }
+
     // End of the function declarations
 
     let gameData;
@@ -103,5 +122,8 @@ export default async function gameAndPageLoader({ params, request }) {
     if (!pageData) {
         throw redirect("/");
     }
-    return { gameData, pageData, gameSlug, pageSlug };
+
+    const sectionsMap = await fetchNavbar();
+
+    return { gameData, pageData, gameSlug, pageSlug, sectionsMap };
 }
