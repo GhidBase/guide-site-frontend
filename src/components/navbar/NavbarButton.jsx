@@ -13,7 +13,6 @@ export default function NavbarButton({
 }) {
     const [editMode, setEditMode] = useState(false);
     const [inputText, setInputText] = useState(navbarTitle);
-    console.log(buttonData);
 
     function toggleEditMode() {
         setEditMode(!editMode);

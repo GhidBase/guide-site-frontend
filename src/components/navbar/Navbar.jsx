@@ -341,7 +341,6 @@ export default function Navbar({
     return (
         <Fragment>
             <div id="nav-bar" className={className}>
-                {console.log(navbarItems)}
                 {navbarItems.map((item, index, arr) => {
                     if (item.type === "page") {
                         return (

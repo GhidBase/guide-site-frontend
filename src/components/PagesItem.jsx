@@ -13,6 +13,7 @@ export default function PagesItem({
     updatePageTitle,
     updatePageSlug,
 }) {
+    console.log(page);
     const [inputText, setInputText] = useState("");
     const [slugInputText, setSlugInputText] = useState("");
     const [editMode, setEditMode] = useState(false);
@@ -43,6 +44,10 @@ export default function PagesItem({
         await updatePageTitle(pageId, inputText, pageIndex);
         await updatePageSlug(pageId, slugInputText, pageIndex);
         toggleEditMode();
+    }
+
+    async function updatePageSort() {
+        await updatePageSlug(pageId, slugInputText, pageIndex);
     }
 
     return (
@@ -195,7 +200,7 @@ export default function PagesItem({
             <div
                 id={"button-container-" + pageIndex}
                 className={
-                    "my-2 divide-x divide-x-reverse divide-(--outline-brown)/25 md:border-t-0 flex flex-row-reverse md:flex-col w-full justify-between md:items-end h-7 md:h-full md:gap-4 "
+                    "my-2 divide-x divide-x-reverse divide-(--outline-brown)/25 md:border-t-0 flex flex-row-reverse md:flex-col justify-between md:items-end h-7 md:h-full md:gap-4 "
                 }
             >
                 {/* Real edit button  */}
@@ -227,6 +232,21 @@ export default function PagesItem({
                     className="text-red-700/70 flex items-center justify-center w-full h-full md:text-amber-50 md:bg-(--primary) md:w-30 md:rounded md:px-2 md:py-0.5 text-center"
                 >
                     Delete Page
+                </button>
+            </div>
+
+            <div
+                id={"sort-button-container-" + pageIndex}
+                className={
+                    "my-2 divide-x divide-x-reverse divide-(--outline-brown)/25 md:border-t-0 flex flex-row-reverse md:flex-col justify-between md:items-end h-7 md:h-full md:gap-4 "
+                }
+            >
+                <button className="text-red-700/70 flex items-center justify-center w-full h-full md:text-amber-50 md:bg-(--primary) md:w-30 md:rounded md:px-2 md:py-0.5 text-center">
+                    Move Up
+                </button>
+
+                <button className="text-red-700/70 flex items-center justify-center w-full h-full md:text-amber-50 md:bg-(--primary) md:w-30 md:rounded md:px-2 md:py-0.5 text-center">
+                    Move Down
                 </button>
             </div>
 

@@ -72,7 +72,6 @@ export default async function gameAndPageLoader({ params, request }) {
             navbarMap.set(section.id, section);
         });
 
-        console.log(navbarMap);
         return navbarMap;
     }
 

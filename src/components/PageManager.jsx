@@ -41,9 +41,6 @@ export default function PageManager() {
             return;
         }
 
-        console.log(title, "is the title");
-        console.log(Number(selectedSection), "is the sectionID");
-
         let response;
         try {
             response = await fetch(currentAPI + "/games/" + gameId + "/pages", {
@@ -98,6 +95,23 @@ export default function PageManager() {
     }
 
     async function updatePageSlug(id, slug, index) {
+        if (!+id) return;
+
+        await fetch(currentAPI + "/games/" + gameId + "/pages/by-id/" + id, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "X-Admin-Secret": import.meta.env.VITE_SECRET,
+            },
+            body: JSON.stringify({ slug }),
+        });
+
+        const newPages = [...pages];
+        newPages[index].slug = slug;
+        setPages(newPages);
+    }
+
+    async function updatePageSort(id, sort, index) {
         if (!+id) return;
 
         await fetch(currentAPI + "/games/" + gameId + "/pages/by-id/" + id, {
@@ -192,6 +206,7 @@ export default function PageManager() {
                             deletePage={deletePage}
                             updatePageTitle={updatePageTitle}
                             updatePageSlug={updatePageSlug}
+                            updatePageSort={updatePageSort}
                         />
                     );
                 })}
