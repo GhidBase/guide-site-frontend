@@ -13,7 +13,6 @@ export default function PageManager() {
     const gameId = gameData?.id;
     const [title, setTitleInput] = useState("");
     const [selectedSection, setSelectedSection] = useState("");
-    const [, forceRender] = useState(0);
 
     // Get Pages
     useEffect(() => {
@@ -36,32 +35,30 @@ export default function PageManager() {
             return;
         }
 
-        if (!selectedSection || isNaN(Number(selectedSection))) {
-            console.log("Error - invalid section");
-            return;
-        }
-
-        let response;
         try {
-            response = await fetch(currentAPI + "/games/" + gameId + "/pages", {
+            const body = { title };
+            
+            // Only add sectionId if a section is selected (not "none" and not empty string)
+            if (selectedSection && selectedSection !== "none" && selectedSection !== "" && !isNaN(Number(selectedSection))) {
+                body.sectionId = Number(selectedSection);
+            }
+
+            const response = await fetch(currentAPI + "/games/" + gameId + "/pages", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     "X-Admin-Secret": import.meta.env.VITE_SECRET,
                 },
-                body: JSON.stringify({
-                    title,
-                    sectionId: Number(selectedSection),
-                }),
+                body: JSON.stringify(body),
             });
+
+            const newPage = await response.json();
+            setPages([...pages, newPage]);
+            setTitleInput("");
+            setSelectedSection("");
         } catch (err) {
             console.error("Error", err);
-            return;
         }
-
-        const newPage = await response.json();
-        setPages([...pages, newPage]);
-        setTitleInput("");
     }
 
     function deletePage(id) {
@@ -128,32 +125,6 @@ export default function PageManager() {
         setPages(newPages);
     }
 
-    async function changePageSection(pageId, newSectionId) {
-        if (!pageId || !newSectionId) return;
-
-        try {
-            await fetch(currentAPI + "/sections/" + pageId, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-Admin-Secret": secret,
-                },
-                body: JSON.stringify({ sectionId: Number(newSectionId) }),
-            });
-
-            const pageIndex = pages.findIndex((p) => p.id === pageId);
-            if (pageIndex !== -1) {
-                const newPages = [...pages];
-                newPages[pageIndex].sectionId = Number(newSectionId);
-                setPages(newPages);
-            }
-
-            forceRender((x) => x + 1);
-        } catch (err) {
-            console.error("Failed to change page section:", err);
-        }
-    }
-
     return (
         <Fragment>
             <div className="mt-4 flex justify-between items-center mx-auto gap-2">
@@ -173,7 +144,7 @@ export default function PageManager() {
                         value={selectedSection}
                         onChange={(e) => setSelectedSection(e.target.value)}
                     >
-                        <option value="">Select section</option>
+                        <option value="">Select section (optional)</option>
                         {Array.from(sectionsMap.values()).map((section) => (
                             <option key={section.id} value={section.id}>
                                 {section.title}
@@ -211,76 +182,6 @@ export default function PageManager() {
                     );
                 })}
             </ul>
-
-            <div className="mt-4">
-                <h2 className="text-lg font-bold mb-2">Sections</h2>
-
-                <table className="w-full border border-gray-700">
-                    <thead>
-                        <tr className="bg-gray-800">
-                            <th className="p-2 text-left">Section</th>
-                            <th className="p-2 text-left">Pages</th>
-                            <th className="p-2 text-left">Move Page</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        {Array.from(sectionsMap.values()).map((section) => (
-                            <tr
-                                key={section.id}
-                                className="border-t border-gray-700"
-                            >
-                                <td className="p-2">{section.title}</td>
-                                <td className="p-2">
-                                    {section.pages.map((page) => (
-                                        <div key={page.id} className="mb-1">
-                                            {page.title}
-                                        </div>
-                                    ))}
-                                </td>
-                                <td className="p-2">
-                                    {section.pages.map((page) => (
-                                        <div
-                                            key={page.id}
-                                            className="mb-1 flex gap-2 items-center"
-                                        >
-                                            <select
-                                                className="bg-gray-900 text-white px-2 py-1 rounded"
-                                                onChange={(e) =>
-                                                    changePageSection(
-                                                        page.id,
-                                                        e.target.value,
-                                                    )
-                                                }
-                                                defaultValue=""
-                                            >
-                                                <option value="">
-                                                    Move to...
-                                                </option>
-                                                {Array.from(
-                                                    sectionsMap.values(),
-                                                )
-                                                    .filter(
-                                                        (s) =>
-                                                            s.id !== section.id,
-                                                    )
-                                                    .map((s) => (
-                                                        <option
-                                                            key={s.id}
-                                                            value={s.id}
-                                                        >
-                                                            {s.title}
-                                                        </option>
-                                                    ))}
-                                            </select>
-                                        </div>
-                                    ))}
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
         </Fragment>
     );
 }
