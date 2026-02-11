@@ -216,6 +216,25 @@ export default function NavigationPanel() {
         }
     }
 
+    async function changePageSection(pageId, newSectionId) {
+        if (!pageId || !newSectionId) return;
+
+        try {
+            await fetch(currentAPI + "/sections/" + pageId, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Admin-Secret": secret,
+                },
+                body: JSON.stringify({ sectionId: Number(newSectionId) }),
+            });
+
+            forceRender((x) => x + 1);
+        } catch (err) {
+            console.error("Failed to change page section:", err);
+        }
+    }
+
     return (
         <>
             <h2 className="text-lg font-bold mb-3">Navigation</h2>
@@ -375,6 +394,77 @@ export default function NavigationPanel() {
                                             </button>
                                         </>
                                     )}
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+
+            {/* Sections with pages and move functionality */}
+            <div className="mt-6">
+                <h2 className="text-lg font-bold mb-2">Section Pages</h2>
+
+                <table className="w-full border border-gray-700">
+                    <thead>
+                        <tr className="bg-gray-800">
+                            <th className="p-2 text-left">Section</th>
+                            <th className="p-2 text-left">Pages</th>
+                            <th className="p-2 text-left">Move Page</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {Array.from(sectionsMap.values()).map((section) => (
+                            <tr
+                                key={section.id}
+                                className="border-t border-gray-700"
+                            >
+                                <td className="p-2">{section.title}</td>
+                                <td className="p-2">
+                                    {section.pages.map((page) => (
+                                        <div key={page.id} className="mb-1">
+                                            {page.title}
+                                        </div>
+                                    ))}
+                                </td>
+                                <td className="p-2">
+                                    {section.pages.map((page) => (
+                                        <div
+                                            key={page.id}
+                                            className="mb-1 flex gap-2 items-center"
+                                        >
+                                            <select
+                                                className="bg-gray-900 text-white px-2 py-1 rounded"
+                                                onChange={(e) =>
+                                                    changePageSection(
+                                                        page.id,
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                defaultValue=""
+                                            >
+                                                <option value="">
+                                                    Move to...
+                                                </option>
+                                                {Array.from(
+                                                    sectionsMap.values(),
+                                                )
+                                                    .filter(
+                                                        (s) =>
+                                                            s.id !== section.id,
+                                                    )
+                                                    .map((s) => (
+                                                        <option
+                                                            key={s.id}
+                                                            value={s.id}
+                                                        >
+                                                            {s.title}
+                                                        </option>
+                                                    ))}
+                                            </select>
+                                        </div>
+                                    ))}
                                 </td>
                             </tr>
                         ))}
