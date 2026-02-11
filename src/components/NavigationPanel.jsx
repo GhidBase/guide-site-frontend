@@ -8,6 +8,14 @@ export default function NavigationPanel() {
     const [, forceRender] = useState(0);
     const { gameData, sectionsMap } = useRouteLoaderData("main");
     const gameId = gameData?.id;
+    const [unsectionedPages, setUnsectionedPages] = useState([]);
+
+    useEffect(() => {
+        if (!gameId) return;
+        fetch(currentAPI + "/games/" + gameId + "/pages")
+            .then((res) => res.json())
+            .then((pages) => setUnsectionedPages(pages.filter((p) => !p.sectionId)));
+    }, [gameId]);
 
     // console.log(sectionsMap, 'is the map');
     // console.log(Array.from(sectionsMap.values()),'is the values');
@@ -217,7 +225,7 @@ export default function NavigationPanel() {
     }
 
     async function changePageSection(pageId, newSectionId) {
-        if (!pageId || !newSectionId) return;
+        if (!pageId) return;
 
         try {
             await fetch(currentAPI + "/sections/" + pageId, {
@@ -226,8 +234,15 @@ export default function NavigationPanel() {
                     "Content-Type": "application/json",
                     "X-Admin-Secret": secret,
                 },
-                body: JSON.stringify({ sectionId: Number(newSectionId) }),
+                body: JSON.stringify({
+                    sectionId: newSectionId === "none" ? null : Number(newSectionId),
+                }),
             });
+
+            // Remove from unsectioned list if it's being assigned a section
+            if (newSectionId !== "none") {
+                setUnsectionedPages((prev) => prev.filter((p) => p.id !== pageId));
+            }
 
             forceRender((x) => x + 1);
         } catch (err) {
@@ -447,6 +462,9 @@ export default function NavigationPanel() {
                                                 <option value="">
                                                     Move to...
                                                 </option>
+                                                <option value="none">
+                                                    No Section
+                                                </option>
                                                 {Array.from(
                                                     sectionsMap.values(),
                                                 )
@@ -471,6 +489,46 @@ export default function NavigationPanel() {
                     </tbody>
                 </table>
             </div>
+
+            {/* Unsectioned pages */}
+            {unsectionedPages.length > 0 && (
+                <div className="mt-6">
+                    <h2 className="text-lg font-bold mb-2">Unsectioned Pages</h2>
+
+                    <table className="w-full border border-gray-700">
+                        <thead>
+                            <tr className="bg-gray-800">
+                                <th className="p-2 text-left">Page</th>
+                                <th className="p-2 text-left">Assign to Section</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {unsectionedPages.map((page) => (
+                                <tr key={page.id} className="border-t border-gray-700">
+                                    <td className="p-2">{page.title}</td>
+                                    <td className="p-2">
+                                        <select
+                                            className="bg-gray-900 text-white px-2 py-1 rounded"
+                                            onChange={(e) =>
+                                                changePageSection(page.id, e.target.value)
+                                            }
+                                            defaultValue=""
+                                        >
+                                            <option value="">Assign to...</option>
+                                            {Array.from(sectionsMap.values()).map((s) => (
+                                                <option key={s.id} value={s.id}>
+                                                    {s.title}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
 
             {/* Page edit popup */}
             {editingPage && (
