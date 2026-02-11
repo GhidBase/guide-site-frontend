@@ -224,7 +224,7 @@ export default function NavigationPanel() {
         }
     }
 
-    async function changePageSection(pageId, newSectionId) {
+    async function changePageSection(pageId, newSectionId, page = null) {
         if (!pageId) return;
 
         try {
@@ -239,8 +239,27 @@ export default function NavigationPanel() {
                 }),
             });
 
-            // Remove from unsectioned list if it's being assigned a section
-            if (newSectionId !== "none") {
+            if (newSectionId === "none") {
+                // Moving to no section — remove from old section, add to unsectioned list
+                if (page?.sectionId) {
+                    const oldSection = sectionsMap.get(page.sectionId);
+                    if (oldSection) {
+                        oldSection.pages = oldSection.pages.filter((p) => p.id !== pageId);
+                    }
+                }
+                if (page) setUnsectionedPages((prev) => [...prev, { ...page, sectionId: null }]);
+            } else {
+                // Moving to a section — remove from old section or unsectioned, add to new section
+                if (page?.sectionId) {
+                    const oldSection = sectionsMap.get(page.sectionId);
+                    if (oldSection) {
+                        oldSection.pages = oldSection.pages.filter((p) => p.id !== pageId);
+                    }
+                }
+                const section = sectionsMap.get(Number(newSectionId));
+                if (section && page) {
+                    section.pages.push({ ...page, sectionId: Number(newSectionId) });
+                }
                 setUnsectionedPages((prev) => prev.filter((p) => p.id !== pageId));
             }
 
@@ -455,6 +474,7 @@ export default function NavigationPanel() {
                                                     changePageSection(
                                                         page.id,
                                                         e.target.value,
+                                                        page,
                                                     )
                                                 }
                                                 defaultValue=""
@@ -511,7 +531,7 @@ export default function NavigationPanel() {
                                         <select
                                             className="bg-gray-900 text-white px-2 py-1 rounded"
                                             onChange={(e) =>
-                                                changePageSection(page.id, e.target.value)
+                                                changePageSection(page.id, e.target.value, page)
                                             }
                                             defaultValue=""
                                         >
