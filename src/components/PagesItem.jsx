@@ -200,7 +200,8 @@ export default function PagesItem({
             <div
                 id={"button-container-" + pageIndex}
                 className={
-                    "my-2 divide-x divide-x-reverse divide-(--outline-brown)/25 md:border-t-0 flex flex-row-reverse md:flex-col justify-between md:items-end h-7 md:h-full md:gap-4 "
+                    //"my-2 divide-x divide-x-reverse divide-(--outline-brown)/25 md:border-t-0 flex flex-row-reverse md:flex-col justify-between md:items-end h-7 md:h-full md:gap-4 "
+                    "my-2 divide-x divide-x-reverse divide-(--outline-brown)/25 md:border-t-0 flex flex-row-reverse md:flex-col w-full justify-between md:items-end h-7 md:h-full md:gap-4 "
                 }
             >
                 {/* Real edit button  */}
@@ -234,35 +235,6 @@ export default function PagesItem({
                     Delete Page
                 </button>
             </div>
-            <div
-                id={"sort-button-container-" + pageIndex}
-                className={
-                    "my-2 divide-x divide-x-reverse divide-(--outline-brown)/25 md:border-t-0 flex flex-row-reverse md:flex-col justify-between md:items-end h-7 md:h-full md:gap-4 "
-                }
-            >
-                {/* <button className="text-red-700/70 flex items-center justify-center w-full h-full md:text-amber-50 md:bg-(--primary) md:w-30 md:rounded md:px-2 md:py-0.5 text-center">
-                    Move Up
-                </button> */}
-
-                {/* <button className="text-red-700/70 flex items-center justify-center w-full h-full md:text-amber-50 md:bg-(--primary) md:w-30 md:rounded md:px-2 md:py-0.5 text-center">
-                    Move Down
-                </button> */}
-            </div>
-
-            {/* <button className="ml-2 text-xs text-amber-50 bg-(--primary) w-40 rounded px-2 py-0.5 hover: cursor-pointer"
-                onClick={
-                    async()=>{
-                        console.log(currentAPI + "/navbar/" , 'is the currentAPI');
-                        // await fetch(currentAPI)
-                        fetch(currentAPI + "/navbar/", {
-                            "Content-Type" : "application/json",
-                            "X-Admin-Secret" : import.meta.env.VITE_SECRET,
-                        })
-                    }
-                }
-            >
-                Add to navigation panel 
-            </button> */}
         </li>
     );
 }

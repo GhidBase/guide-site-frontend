@@ -136,7 +136,7 @@ export default function PageManager() {
     return (
         <Fragment>
             <div className="mt-4 flex justify-between items-center mx-auto gap-2">
-                <form className="flex gap-2 items-center">
+                <form className="flex gap-2 items-center flex-col md:flex-row ">
                     <h1>Pages:</h1>
 
                     <input
@@ -193,4 +193,3 @@ export default function PageManager() {
         </Fragment>
     );
 }
-
