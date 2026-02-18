@@ -14,7 +14,6 @@ export default function NavbarButton({
 }) {
     const { gameData } = useLoaderData();
     const actualSlug = "/games/" + gameData.slug + "/" + slug;
-    console.log(actualSlug);
     const [editMode, setEditMode] = useState(false);
     const [inputText, setInputText] = useState(navbarTitle);
 

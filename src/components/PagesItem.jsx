@@ -13,7 +13,6 @@ export default function PagesItem({
     updatePageTitle,
     updatePageSlug,
 }) {
-    console.log(page);
     const [inputText, setInputText] = useState("");
     const [slugInputText, setSlugInputText] = useState("");
     const [editMode, setEditMode] = useState(false);
