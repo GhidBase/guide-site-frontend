@@ -74,7 +74,7 @@ export default function Main() {
                         navOpen={navOpen}
                         closeClassName={`
                             ${navOpen ? "fixed" : "hidden"}
-                            w-70 max-w-100 bottom-4 h-16 z-2 right-[50%] translate-x-1/2
+                            w-60 max-w-100 bottom-4 h-16 z-2 right-[50%] translate-x-1/2
                             bg-(--primary) border-4 border-t-0 border-(--outline)`}
                     ></Navbar>
                 )}

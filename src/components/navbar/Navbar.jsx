@@ -264,21 +264,21 @@ export default function Navbar({
         navbarItems.push(
             {
                 id: "game-manager",
-                slug: gameSlug + "/game-manager",
+                slug: "game-manager",
                 navbarTitle: "Game Manager",
                 type: "page",
                 nonEditable: true,
             },
             {
                 id: "nav-panel",
-                slug: gameSlug + "/navigation-panel",
+                slug: "navigation-panel",
                 navbarTitle: "Navigation Panel",
                 type: "page",
                 nonEditable: true,
             },
             {
                 id: "page-mgr",
-                slug: gameSlug + "/page-manager",
+                slug: "page-manager",
                 navbarTitle: "Page Manager",
                 type: "page",
                 nonEditable: true,
@@ -355,7 +355,9 @@ export default function Navbar({
                                     w-full h-20
                                     flex items-center justify-center
                                     lg:h-15 lg:border-b-4 border-(--outline)
-                                    ${index < arr.length - 1 && "border-b-4"}`}
+                                    ${index < arr.length - 1 && "border-b-4"}
+                                    text-center
+                                    `}
                                 toggleNav={toggleNav}
                             />
                         );

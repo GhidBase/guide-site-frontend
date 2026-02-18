@@ -1,4 +1,5 @@
 import { Link } from "react-router";
+import { useLoaderData } from "react-router";
 import { PencilIcon, Check, X } from "lucide-react";
 import { useState } from "react";
 
@@ -11,6 +12,9 @@ export default function NavbarButton({
     nonEditable,
     buttonData,
 }) {
+    const { gameData } = useLoaderData();
+    const actualSlug = "/games/" + gameData.slug + "/" + slug;
+    console.log(actualSlug);
     const [editMode, setEditMode] = useState(false);
     const [inputText, setInputText] = useState(navbarTitle);
 
@@ -54,7 +58,11 @@ export default function NavbarButton({
     }
 
     return (
-        <Link className={className} to={slug} onClick={() => toggleNav(false)}>
+        <Link
+            className={className}
+            to={actualSlug}
+            onClick={() => toggleNav(false)}
+        >
             {navbarTitle}
         </Link>
     );

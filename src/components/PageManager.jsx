@@ -37,20 +37,28 @@ export default function PageManager() {
 
         try {
             const body = { title };
-            
+
             // Only add sectionId if a section is selected (not "none" and not empty string)
-            if (selectedSection && selectedSection !== "none" && selectedSection !== "" && !isNaN(Number(selectedSection))) {
+            if (
+                selectedSection &&
+                selectedSection !== "none" &&
+                selectedSection !== "" &&
+                !isNaN(Number(selectedSection))
+            ) {
                 body.sectionId = Number(selectedSection);
             }
 
-            const response = await fetch(currentAPI + "/games/" + gameId + "/pages", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-Admin-Secret": import.meta.env.VITE_SECRET,
+            const response = await fetch(
+                currentAPI + "/games/" + gameId + "/pages",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-Admin-Secret": import.meta.env.VITE_SECRET,
+                    },
+                    body: JSON.stringify(body),
                 },
-                body: JSON.stringify(body),
-            });
+            );
 
             const newPage = await response.json();
             setPages([...pages, newPage]);
@@ -185,3 +193,4 @@ export default function PageManager() {
         </Fragment>
     );
 }
+
