@@ -292,6 +292,15 @@ export default function Navbar({
         );
     }
 
+    if (gameData.title == "Lucky Defense") {
+        navbarItems.push({
+            id: 32,
+            slug: gameSlug + "/immortal-guardians",
+            navbarTitle: "Immortal Guardians",
+            type: "page",
+        });
+    }
+
     const dynamicNav = true;
     // Manual navbar
     if (!dynamicNav) {
@@ -318,13 +327,20 @@ export default function Navbar({
         // Add sections and their pages from the map
         Array.from(sectionsMap.values())
             .sort((a, b) => a.order - b.order)
-            .forEach((section) => {
+            .forEach((section, index) => {
+                console.log(index);
+                //
                 // Add section header
-                navbarItems.push({
-                    id: section.id,
-                    navbarTitle: section.title,
-                    type: "section",
-                });
+                if (
+                    (index != 0 && gameData.title == "Lucky Defense") ||
+                    gameData.title != "Lucky Defense"
+                ) {
+                    navbarItems.push({
+                        id: section.id,
+                        navbarTitle: section.title,
+                        type: "section",
+                    });
+                }
 
                 // Add pages under this section
                 section.pages.forEach((page) => {
