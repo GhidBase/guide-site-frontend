@@ -4,11 +4,14 @@ import "./index.css";
 import "./tailwind.css";
 import { createBrowserRouter, RouterProvider } from "react-router";
 import routes from "./routes.jsx";
+import { AuthProvider } from "./contexts/AuthProvider";
 
 const router = createBrowserRouter(routes);
 
 createRoot(document.getElementById("root")).render(
     <StrictMode>
-        <RouterProvider router={router}></RouterProvider>
+        <AuthProvider>
+            <RouterProvider router={router}></RouterProvider>
+        </AuthProvider>
     </StrictMode>,
 );
