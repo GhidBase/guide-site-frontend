@@ -56,6 +56,7 @@ export default function NavbarButton({
         );
     }
 
+    //console.log(actualSlug);
     return (
         <Link
             className={className}

@@ -295,7 +295,7 @@ export default function Navbar({
     if (gameData.title == "Lucky Defense") {
         navbarItems.push({
             id: 32,
-            slug: gameSlug + "/immortal-guardians",
+            slug: "immortal-guardians",
             navbarTitle: "Immortal Guardians",
             type: "page",
         });
@@ -328,8 +328,6 @@ export default function Navbar({
         Array.from(sectionsMap.values())
             .sort((a, b) => a.order - b.order)
             .forEach((section, index) => {
-                console.log(index);
-                //
                 // Add section header
                 if (
                     (index != 0 && gameData.title == "Lucky Defense") ||
