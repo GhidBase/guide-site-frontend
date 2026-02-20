@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 import { AuthContext } from "./AuthContext";
+import { currentAPI } from "@/config/api";
 
 export function AuthProvider({ children }) {
-    const currentAPI = import.meta.env.VITE_SERVER;
     const [user, setUser] = useState(null);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
