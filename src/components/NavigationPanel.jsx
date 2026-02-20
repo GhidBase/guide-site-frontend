@@ -28,12 +28,23 @@ export default function NavigationPanel() {
 
     const [newSectionName, setNewSectionName] = useState("");
 
+    // Section drag state
     const [draggedSection, setDraggedSection] = useState(null);
     const [dragOverSection, setDragOverSection] = useState(null);
+
+    // Page drag state
+    const [draggedPage, setDraggedPage] = useState(null);
+    const [dragOverPage, setDragOverPage] = useState(null);
 
     const getSortedSections = () => {
         return Array.from(sectionsMap.values()).sort(
             (a, b) => a.order - b.order,
+        );
+    };
+
+    const getSortedPages = (section) => {
+        return [...section.pages].sort(
+            (a, b) => (a.sort ?? 0) - (b.sort ?? 0),
         );
     };
 
@@ -134,29 +145,58 @@ export default function NavigationPanel() {
         }
     }
 
-    function handleDragStart(e, section) {
+    async function reorderPages(sectionId, newOrder) {
+        try {
+            await fetch(currentAPI + "/games/" + gameId + "/pages/reorder", {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "x-admin-secret": secret,
+                },
+                body: JSON.stringify({
+                    sectionId,
+                    pageOrder: newOrder,
+                }),
+            });
+
+            const section = sectionsMap.get(sectionId);
+            if (section) {
+                newOrder.forEach((id, index) => {
+                    const page = section.pages.find((p) => p.id === id);
+                    if (page) page.sort = index;
+                });
+            }
+
+            forceRender((x) => x + 1);
+        } catch (err) {
+            console.error("Failed to reorder pages:", err);
+        }
+    }
+
+    // Section drag handlers
+    function handleSectionDragStart(e, section) {
         setDraggedSection(section);
         e.dataTransfer.effectAllowed = "move";
         e.currentTarget.style.opacity = "0.4";
     }
 
-    function handleDragEnd(e) {
+    function handleSectionDragEnd(e) {
         e.currentTarget.style.opacity = "1";
         setDraggedSection(null);
         setDragOverSection(null);
     }
 
-    function handleDragOver(e) {
+    function handleSectionDragOver(e) {
         e.preventDefault();
         e.dataTransfer.dropEffect = "move";
         return false;
     }
 
-    function handleDragEnter(e, section) {
+    function handleSectionDragEnter(e, section) {
         setDragOverSection(section);
     }
 
-    function handleDrop(e, targetSection) {
+    function handleSectionDrop(e, targetSection) {
         e.preventDefault();
         e.stopPropagation();
 
@@ -182,6 +222,61 @@ export default function NavigationPanel() {
 
         setDraggedSection(null);
         setDragOverSection(null);
+    }
+
+    // Page drag handlers
+    function handlePageDragStart(e, page) {
+        e.stopPropagation();
+        setDraggedPage(page);
+        e.dataTransfer.effectAllowed = "move";
+        e.currentTarget.style.opacity = "0.4";
+    }
+
+    function handlePageDragEnd(e) {
+        e.currentTarget.style.opacity = "1";
+        setDraggedPage(null);
+        setDragOverPage(null);
+    }
+
+    function handlePageDragOver(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.dataTransfer.dropEffect = "move";
+        return false;
+    }
+
+    function handlePageDragEnter(e, page) {
+        e.stopPropagation();
+        setDragOverPage(page);
+    }
+
+    function handlePageDrop(e, targetPage, section) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (!draggedPage || draggedPage.id === targetPage.id) {
+            return;
+        }
+
+        // Only reorder within the same section
+        if (draggedPage.sectionId !== targetPage.sectionId) {
+            return;
+        }
+
+        const pages = getSortedPages(section);
+        const draggedIndex = pages.findIndex((p) => p.id === draggedPage.id);
+        const targetIndex = pages.findIndex((p) => p.id === targetPage.id);
+
+        const reordered = [...pages];
+        const [removed] = reordered.splice(draggedIndex, 1);
+        reordered.splice(targetIndex, 0, removed);
+
+        const newOrder = reordered.map((p) => p.id);
+
+        reorderPages(section.id, newOrder);
+
+        setDraggedPage(null);
+        setDragOverPage(null);
     }
 
     async function renamePage(id, sectionId) {
@@ -242,7 +337,6 @@ export default function NavigationPanel() {
             });
 
             if (newSectionId === "none") {
-                // Moving to no section — remove from old section, add to unsectioned list
                 if (page?.sectionId) {
                     const oldSection = sectionsMap.get(page.sectionId);
                     if (oldSection) {
@@ -257,7 +351,6 @@ export default function NavigationPanel() {
                         { ...page, sectionId: null },
                     ]);
             } else {
-                // Moving to a section — remove from old section or unsectioned, add to new section
                 if (page?.sectionId) {
                     const oldSection = sectionsMap.get(page.sectionId);
                     if (oldSection) {
@@ -286,7 +379,9 @@ export default function NavigationPanel() {
 
     return (
         <>
-            <div className="mt-8 max-w-4xl mb-4 flex gap-2">
+            <h2 className="text-lg font-bold mb-3">Navigation</h2>
+
+            <div className="max-w-4xl mb-4 flex gap-2">
                 <input
                     type="text"
                     value={newSectionName}
@@ -302,7 +397,6 @@ export default function NavigationPanel() {
                 </button>
             </div>
 
-            {/* Combined sections table with drag-and-drop, rename/delete, and pages */}
             <div className="max-w-4xl">
                 <table className="m-0 w-full border border-gray-700">
                     <thead>
@@ -323,12 +417,12 @@ export default function NavigationPanel() {
                                         ? "bg-gray-700"
                                         : ""
                                 } ${editingSection === section.id ? "" : "cursor-move hover:bg-gray-800"}`}
-                                draggable={editingSection !== section.id}
-                                onDragStart={(e) => handleDragStart(e, section)}
-                                onDragEnd={handleDragEnd}
-                                onDragOver={handleDragOver}
-                                onDragEnter={(e) => handleDragEnter(e, section)}
-                                onDrop={(e) => handleDrop(e, section)}
+                                draggable={editingSection !== section.id && !draggedPage}
+                                onDragStart={(e) => handleSectionDragStart(e, section)}
+                                onDragEnd={handleSectionDragEnd}
+                                onDragOver={handleSectionDragOver}
+                                onDragEnter={(e) => handleSectionDragEnter(e, section)}
+                                onDrop={(e) => handleSectionDrop(e, section)}
                             >
                                 <td className="p-2 text-center text-gray-500">
                                     <span className="text-xl">⋮⋮</span>
@@ -397,11 +491,23 @@ export default function NavigationPanel() {
                                 </td>
 
                                 <td className="p-2 align-top">
-                                    {section.pages.map((page) => (
+                                    {getSortedPages(section).map((page) => (
                                         <div
                                             key={page.id}
-                                            className="mb-1 flex"
+                                            className={`mb-1 flex items-center gap-1 rounded px-1 transition-colors ${
+                                                dragOverPage?.id === page.id &&
+                                                draggedPage?.id !== page.id
+                                                    ? "bg-gray-600"
+                                                    : ""
+                                            }`}
+                                            draggable
+                                            onDragStart={(e) => handlePageDragStart(e, page)}
+                                            onDragEnd={handlePageDragEnd}
+                                            onDragOver={handlePageDragOver}
+                                            onDragEnter={(e) => handlePageDragEnter(e, page)}
+                                            onDrop={(e) => handlePageDrop(e, page, section)}
                                         >
+                                            <span className="text-gray-500 cursor-move select-none mr-1">⋮⋮</span>
                                             {page.title}
                                             <select
                                                 className="bg-gray-900 text-white px-2 py-1 rounded ml-auto"
