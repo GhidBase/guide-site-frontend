@@ -20,8 +20,6 @@ export default function NavigationPanel() {
             );
     }, [gameId]);
 
-    // console.log(sectionsMap, 'is the map');
-    // console.log(Array.from(sectionsMap.values()),'is the values');
     const [editingSection, setEditingSection] = useState(null);
     const [sectionName, setSectionName] = useState("");
 
@@ -306,12 +304,14 @@ export default function NavigationPanel() {
                 </button>
             </div>
 
+            {/* Combined sections table with drag-and-drop, rename/delete, and pages */}
             <div className="max-w-4xl">
                 <table className="m-0 w-full border border-gray-700">
                     <thead>
                         <tr className="bg-gray-800">
                             <th className="p-2 text-left w-8"></th>
                             <th className="p-2 text-left">Section</th>
+                            <th className="p-2 text-left">Pages</th>
                         </tr>
                     </thead>
 
@@ -336,34 +336,7 @@ export default function NavigationPanel() {
                                     <span className="text-xl">⋮⋮</span>
                                 </td>
 
-                                <td id="top-sections" className="p-2">
-                                    {section.title}
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-
-            {/* Sections with pages and move functionality */}
-            <div className="mt-6">
-                <h2 className="text-lg font-bold mb-2">Section Pages</h2>
-
-                <table className="w-full border border-gray-700">
-                    <thead>
-                        <tr className="bg-gray-800">
-                            <th className="p-2 text-left">Section</th>
-                            <th className="p-2 text-left">Pages</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        {Array.from(sectionsMap.values()).map((section) => (
-                            <tr
-                                key={section.id}
-                                className="border-t border-gray-700"
-                            >
-                                <td className="p-2">
+                                <td className="p-2 align-top">
                                     <div className="flex gap-2">
                                         {editingSection === section.id ? (
                                             <div className="flex gap-2 items-center">
@@ -376,7 +349,6 @@ export default function NavigationPanel() {
                                                     }
                                                     className="bg-gray-900 text-white px-2 py-1 rounded"
                                                 />
-
                                                 <Check
                                                     className="cursor-pointer ml-auto"
                                                     onClick={() =>
@@ -384,7 +356,7 @@ export default function NavigationPanel() {
                                                             section.id,
                                                         )
                                                     }
-                                                ></Check>
+                                                />
                                                 <X
                                                     className="cursor-pointer ml-auto"
                                                     onClick={() =>
@@ -425,7 +397,8 @@ export default function NavigationPanel() {
                                         )}
                                     </div>
                                 </td>
-                                <td className="p-2">
+
+                                <td className="p-2 align-top">
                                     {section.pages.map((page) => (
                                         <div
                                             key={page.id}
@@ -584,4 +557,3 @@ export default function NavigationPanel() {
         </>
     );
 }
-
