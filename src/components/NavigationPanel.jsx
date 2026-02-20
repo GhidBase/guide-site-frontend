@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { currentAPI } from "../config/api.js";
 import { useRouteLoaderData } from "react-router";
+import { PencilIcon, Check, X, Trash } from "lucide-react";
 
 const secret = import.meta.env.VITE_SECRET;
 
@@ -14,7 +15,9 @@ export default function NavigationPanel() {
         if (!gameId) return;
         fetch(currentAPI + "/games/" + gameId + "/pages")
             .then((res) => res.json())
-            .then((pages) => setUnsectionedPages(pages.filter((p) => !p.sectionId)));
+            .then((pages) =>
+                setUnsectionedPages(pages.filter((p) => !p.sectionId)),
+            );
     }, [gameId]);
 
     // console.log(sectionsMap, 'is the map');
@@ -235,7 +238,8 @@ export default function NavigationPanel() {
                     "X-Admin-Secret": secret,
                 },
                 body: JSON.stringify({
-                    sectionId: newSectionId === "none" ? null : Number(newSectionId),
+                    sectionId:
+                        newSectionId === "none" ? null : Number(newSectionId),
                 }),
             });
 
@@ -244,23 +248,36 @@ export default function NavigationPanel() {
                 if (page?.sectionId) {
                     const oldSection = sectionsMap.get(page.sectionId);
                     if (oldSection) {
-                        oldSection.pages = oldSection.pages.filter((p) => p.id !== pageId);
+                        oldSection.pages = oldSection.pages.filter(
+                            (p) => p.id !== pageId,
+                        );
                     }
                 }
-                if (page) setUnsectionedPages((prev) => [...prev, { ...page, sectionId: null }]);
+                if (page)
+                    setUnsectionedPages((prev) => [
+                        ...prev,
+                        { ...page, sectionId: null },
+                    ]);
             } else {
                 // Moving to a section — remove from old section or unsectioned, add to new section
                 if (page?.sectionId) {
                     const oldSection = sectionsMap.get(page.sectionId);
                     if (oldSection) {
-                        oldSection.pages = oldSection.pages.filter((p) => p.id !== pageId);
+                        oldSection.pages = oldSection.pages.filter(
+                            (p) => p.id !== pageId,
+                        );
                     }
                 }
                 const section = sectionsMap.get(Number(newSectionId));
                 if (section && page) {
-                    section.pages.push({ ...page, sectionId: Number(newSectionId) });
+                    section.pages.push({
+                        ...page,
+                        sectionId: Number(newSectionId),
+                    });
                 }
-                setUnsectionedPages((prev) => prev.filter((p) => p.id !== pageId));
+                setUnsectionedPages((prev) =>
+                    prev.filter((p) => p.id !== pageId),
+                );
             }
 
             forceRender((x) => x + 1);
@@ -295,8 +312,6 @@ export default function NavigationPanel() {
                         <tr className="bg-gray-800">
                             <th className="p-2 text-left w-8"></th>
                             <th className="p-2 text-left">Section</th>
-                            <th className="p-2 text-left">Pages</th>
-                            <th className="p-2 text-left">Actions</th>
                         </tr>
                     </thead>
 
@@ -321,113 +336,8 @@ export default function NavigationPanel() {
                                     <span className="text-xl">⋮⋮</span>
                                 </td>
 
-                                <td className="p-2">
-                                    {editingSection === section.id ? (
-                                        <div className="flex gap-2 items-center">
-                                            <input
-                                                value={sectionName}
-                                                onChange={(e) =>
-                                                    setSectionName(
-                                                        e.target.value,
-                                                    )
-                                                }
-                                                className="bg-gray-900 text-white px-2 py-1 rounded"
-                                            />
-                                            <button
-                                                onClick={() =>
-                                                    renameSection(section.id)
-                                                }
-                                                className="bg-green-600 px-3 py-1 rounded"
-                                            >
-                                                Save
-                                            </button>
-                                            <button
-                                                onClick={() =>
-                                                    setEditingSection(null)
-                                                }
-                                                className="bg-gray-600 px-3 py-1 rounded"
-                                            >
-                                                Cancel
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        section.title
-                                    )}
-                                </td>
-
-                                <td className="p-2">
-                                    <select
-                                        onChange={(e) => {
-                                            const pageId = Number(
-                                                e.target.value,
-                                            );
-                                            if (!pageId) return;
-
-                                            const page = section.pages.find(
-                                                (p) => p.id === pageId,
-                                            );
-                                            setEditingPage({
-                                                id: page.id,
-                                                sectionId: section.id,
-                                            });
-                                            setPageName(page.title);
-                                        }}
-                                        className="bg-gray-900 text-white px-2 py-1 rounded w-full"
-                                        value=""
-                                    >
-                                        <option value="">
-                                            Select page to edit...
-                                        </option>
-                                        {section.pages.map((page) => (
-                                            <option
-                                                key={page.id}
-                                                value={page.id}
-                                            >
-                                                {page.title}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </td>
-
-                                <td className="p-2 space-x-2">
-                                    {editingSection !== section.id && (
-                                        <>
-                                            <button
-                                                onClick={() => {
-                                                    setEditingSection(
-                                                        section.id,
-                                                    );
-                                                    setSectionName(
-                                                        section.title,
-                                                    );
-                                                }}
-                                                className="bg-blue-600 px-3 py-1 rounded"
-                                            >
-                                                Rename
-                                            </button>
-
-                                            <button
-                                                onClick={() => {
-                                                    if (
-                                                        confirm(
-                                                            `Delete section "${section.title}"?`,
-                                                        )
-                                                    ) {
-                                                        console.log(
-                                                            section.id,
-                                                            "is the section id :)",
-                                                        );
-                                                        deleteSection(
-                                                            Number(section.id),
-                                                        );
-                                                    }
-                                                }}
-                                                className="bg-red-600 px-3 py-1 rounded"
-                                            >
-                                                Delete
-                                            </button>
-                                        </>
-                                    )}
+                                <td id="top-sections" className="p-2">
+                                    {section.title}
                                 </td>
                             </tr>
                         ))}
@@ -444,7 +354,6 @@ export default function NavigationPanel() {
                         <tr className="bg-gray-800">
                             <th className="p-2 text-left">Section</th>
                             <th className="p-2 text-left">Pages</th>
-                            <th className="p-2 text-left">Move Page</th>
                         </tr>
                     </thead>
 
@@ -454,22 +363,77 @@ export default function NavigationPanel() {
                                 key={section.id}
                                 className="border-t border-gray-700"
                             >
-                                <td className="p-2">{section.title}</td>
                                 <td className="p-2">
-                                    {section.pages.map((page) => (
-                                        <div key={page.id} className="mb-1">
-                                            {page.title}
-                                        </div>
-                                    ))}
+                                    <div className="flex gap-2">
+                                        {editingSection === section.id ? (
+                                            <div className="flex gap-2 items-center">
+                                                <input
+                                                    value={sectionName}
+                                                    onChange={(e) =>
+                                                        setSectionName(
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                    className="bg-gray-900 text-white px-2 py-1 rounded"
+                                                />
+
+                                                <Check
+                                                    className="cursor-pointer ml-auto"
+                                                    onClick={() =>
+                                                        renameSection(
+                                                            section.id,
+                                                        )
+                                                    }
+                                                ></Check>
+                                                <X
+                                                    className="cursor-pointer ml-auto"
+                                                    onClick={() =>
+                                                        setEditingSection(null)
+                                                    }
+                                                />
+                                            </div>
+                                        ) : (
+                                            <div className="flex gap-2 items-center">
+                                                {section.title}
+                                                <PencilIcon
+                                                    className="cursor-pointer ml-auto"
+                                                    onClick={() => {
+                                                        setEditingSection(
+                                                            section.id,
+                                                        );
+                                                        setSectionName(
+                                                            section.title,
+                                                        );
+                                                    }}
+                                                />
+                                                <Trash
+                                                    className="cursor-pointer ml-auto"
+                                                    onClick={() => {
+                                                        if (
+                                                            confirm(
+                                                                `Delete page "${pageName}"?`,
+                                                            )
+                                                        ) {
+                                                            deletePage(
+                                                                editingPage.id,
+                                                                editingPage.sectionId,
+                                                            );
+                                                        }
+                                                    }}
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
                                 </td>
                                 <td className="p-2">
                                     {section.pages.map((page) => (
                                         <div
                                             key={page.id}
-                                            className="mb-1 flex gap-2 items-center"
+                                            className="mb-1 flex"
                                         >
+                                            {page.title}
                                             <select
-                                                className="bg-gray-900 text-white px-2 py-1 rounded"
+                                                className="bg-gray-900 text-white px-2 py-1 rounded ml-auto"
                                                 onChange={(e) =>
                                                     changePageSection(
                                                         page.id,
@@ -513,30 +477,45 @@ export default function NavigationPanel() {
             {/* Unsectioned pages */}
             {unsectionedPages.length > 0 && (
                 <div className="mt-6">
-                    <h2 className="text-lg font-bold mb-2">Unsectioned Pages</h2>
+                    <h2 className="text-lg font-bold mb-2">
+                        Unsectioned Pages
+                    </h2>
 
                     <table className="w-full border border-gray-700">
                         <thead>
                             <tr className="bg-gray-800">
                                 <th className="p-2 text-left">Page</th>
-                                <th className="p-2 text-left">Assign to Section</th>
+                                <th className="p-2 text-left">
+                                    Assign to Section
+                                </th>
                             </tr>
                         </thead>
 
                         <tbody>
                             {unsectionedPages.map((page) => (
-                                <tr key={page.id} className="border-t border-gray-700">
+                                <tr
+                                    key={page.id}
+                                    className="border-t border-gray-700"
+                                >
                                     <td className="p-2">{page.title}</td>
                                     <td className="p-2">
                                         <select
                                             className="bg-gray-900 text-white px-2 py-1 rounded"
                                             onChange={(e) =>
-                                                changePageSection(page.id, e.target.value, page)
+                                                changePageSection(
+                                                    page.id,
+                                                    e.target.value,
+                                                    page,
+                                                )
                                             }
                                             defaultValue=""
                                         >
-                                            <option value="">Assign to...</option>
-                                            {Array.from(sectionsMap.values()).map((s) => (
+                                            <option value="">
+                                                Assign to...
+                                            </option>
+                                            {Array.from(
+                                                sectionsMap.values(),
+                                            ).map((s) => (
                                                 <option key={s.id} value={s.id}>
                                                     {s.title}
                                                 </option>
@@ -605,3 +584,4 @@ export default function NavigationPanel() {
         </>
     );
 }
+
