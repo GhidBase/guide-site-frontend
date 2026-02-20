@@ -379,9 +379,7 @@ export default function NavigationPanel() {
 
     return (
         <>
-            <h2 className="text-lg font-bold mb-3">Navigation</h2>
-
-            <div className="max-w-4xl mb-4 flex gap-2">
+            <div className="mt-8 max-w-4xl mb-4 flex gap-2">
                 <input
                     type="text"
                     value={newSectionName}
