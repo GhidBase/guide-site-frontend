@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { currentAPI } from "../config/api.js";
 import { useRouteLoaderData } from "react-router";
 import { PencilIcon, Check, X, Trash } from "lucide-react";
@@ -35,6 +35,22 @@ export default function NavigationPanel() {
     // Page drag state
     const [draggedPage, setDraggedPage] = useState(null);
     const [dragOverPage, setDragOverPage] = useState(null);
+
+    // Quick-add dropdown open state per section (stores section id or null)
+    const [openQuickAdd, setOpenQuickAdd] = useState(null);
+    const quickAddRef = useRef(null);
+
+    // Close quick-add dropdown when clicking outside
+    useEffect(() => {
+        if (!openQuickAdd) return;
+        function handleClickOutside(e) {
+            if (quickAddRef.current && !quickAddRef.current.contains(e.target)) {
+                setOpenQuickAdd(null);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, [openQuickAdd]);
 
     const getSortedSections = () => {
         return Array.from(sectionsMap.values()).sort(
@@ -258,7 +274,6 @@ export default function NavigationPanel() {
             return;
         }
 
-        // Only reorder within the same section
         if (draggedPage.sectionId !== targetPage.sectionId) {
             return;
         }
@@ -542,6 +557,48 @@ export default function NavigationPanel() {
                                             </select>
                                         </div>
                                     ))}
+
+                                    {/* Quick-add unsectioned pages */}
+                                    {unsectionedPages.length > 0 && (
+                                        <div
+                                            className="relative mt-2"
+                                            ref={openQuickAdd === section.id ? quickAddRef : null}
+                                        >
+                                            <button
+                                                className="w-full text-sm font-semibold text-white bg-black hover:bg-gray-800 px-3 py-1.5 rounded cursor-pointer transition-colors"
+                                                onClick={() =>
+                                                    setOpenQuickAdd(
+                                                        openQuickAdd === section.id
+                                                            ? null
+                                                            : section.id,
+                                                    )
+                                                }
+                                            >
+                                                + Add page
+                                            </button>
+
+                                            {openQuickAdd === section.id && (
+                                                <div className="absolute left-0 top-9 z-10 bg-gray-800 border border-gray-500 rounded shadow-xl min-w-48">
+                                                    {unsectionedPages.map((page) => (
+                                                        <button
+                                                            key={page.id}
+                                                            className="block w-full text-left px-4 py-2 text-sm text-white hover:bg-gray-700 cursor-pointer"
+                                                            onClick={() => {
+                                                                changePageSection(
+                                                                    page.id,
+                                                                    String(section.id),
+                                                                    page,
+                                                                );
+                                                                setOpenQuickAdd(null);
+                                                            }}
+                                                        >
+                                                            {page.title}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </td>
                             </tr>
                         ))}
