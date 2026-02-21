@@ -284,10 +284,10 @@ export default function Navbar({
                 nonEditable: true,
             },
             {
-                id: "edit-nav",
-                type: "edit-button",
-                navbarTitle: "Edit Navbar",
-                nonEditable: true,
+                //id: "edit-nav",
+                //type: "edit-button",
+                //navbarTitle: "Edit Navbar",
+                //nonEditable: true,
             },
         );
     }

@@ -13,7 +13,13 @@ export default function NavbarButton({
     buttonData,
 }) {
     const { gameData } = useLoaderData();
-    const actualSlug = "/games/" + gameData.slug + "/" + slug;
+    const isLDG = import.meta.env.VITE_LDG == "True";
+    var actualSlug;
+    if (isLDG) {
+        actualSlug = "/" + slug;
+    } else {
+        actualSlug = "/games/" + gameData.slug + "/" + slug;
+    }
     const [editMode, setEditMode] = useState(false);
     const [inputText, setInputText] = useState(navbarTitle);
 
