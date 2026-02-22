@@ -6,7 +6,6 @@ import SingleImageBlock from "./blocks/SingleImageBlock";
 import { useAuth } from "@/hooks/useAuth";
 import { Pencil } from "lucide-react";
 import PendingReviewNotification from "./notifications/PendingReviewNotification";
-const env = import.meta.env.VITE_ENV;
 
 export default function PageBuilder() {
     const { pageData, gameData } = useRouteLoaderData("main");
@@ -112,7 +111,12 @@ export default function PageBuilder() {
         }
 
         const response = await fetch(
-            currentAPI + "/games/" + gameId + "/pages/by-id/" + pageId + "/blocks",
+            currentAPI +
+                "/games/" +
+                gameId +
+                "/pages/by-id/" +
+                pageId +
+                "/blocks",
             {
                 method: "POST",
                 headers: {
@@ -372,7 +376,7 @@ export default function PageBuilder() {
                     }
                     return blockType;
                 })}
-            {user?.role === "ADMIN" && env == "DEV" && (
+            {user?.role === "ADMIN" && (
                 <div className="flex flex-col items-center mt-2 gap-2">
                     <Link
                         className="text-amber-50 bg-(--primary) w-50 rounded px-2 py-0.5 cursor-pointer hover:opacity-90"

@@ -5,7 +5,6 @@ import NavbarSection from "./NavbarSection";
 import NavbarEditButton from "./NavbarEditButton";
 import { useAuth } from "@/hooks/useAuth";
 
-const env = import.meta.env.VITE_ENV;
 const isLDG = import.meta.env.VITE_LDG == "True";
 
 export default function Navbar({
@@ -269,7 +268,7 @@ export default function Navbar({
     ];
 
     // Add dev-only pages at the start
-    if (env === "DEV") {
+    if (isAuthenticated && user?.role === "ADMIN") {
         navbarItems.push(
             {
                 id: "game-manager",
