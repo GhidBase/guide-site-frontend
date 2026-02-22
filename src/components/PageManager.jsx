@@ -2,10 +2,6 @@ import { currentAPI } from "../config/api";
 import { Fragment, useEffect, useState } from "react";
 import PagesItem from "./PagesItem";
 import { useRouteLoaderData } from "react-router";
-const secret = import.meta.env.VITE_SECRET;
-
-// title refers to the title input field
-// setTitleInput updates that field
 
 export default function PageManager() {
     const [pages, setPages] = useState([]);
@@ -14,20 +10,23 @@ export default function PageManager() {
     const [title, setTitleInput] = useState("");
     const [selectedSection, setSelectedSection] = useState("");
 
-    // Get Pages
     useEffect(() => {
         if (!gameId) {
-            fetch(currentAPI + "/games/" + gameId + "/pages")
+            fetch(currentAPI + "/pages", {
+                credentials: "include",
+            })
                 .then((response) => response.json())
                 .then((result) => setPages(result));
             return;
         } else {
-            fetch(currentAPI + "/games/" + gameId + "/pages")
+            fetch(currentAPI + "/games/" + gameId + "/pages", {
+                credentials: "include",
+            })
                 .then((response) => response.json())
                 .then((result) => setPages(result));
             return;
         }
-    }, [currentAPI, gameId]);
+    }, [gameId]);
 
     async function createPage() {
         if (!title?.trim()) {
@@ -38,7 +37,6 @@ export default function PageManager() {
         try {
             const body = { title };
 
-            // Only add sectionId if a section is selected (not "none" and not empty string)
             if (
                 selectedSection &&
                 selectedSection !== "none" &&
@@ -54,8 +52,8 @@ export default function PageManager() {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
-                        "X-Admin-Secret": import.meta.env.VITE_SECRET,
                     },
+                    credentials: "include",
                     body: JSON.stringify(body),
                 },
             );
@@ -76,8 +74,8 @@ export default function PageManager() {
             method: "DELETE",
             headers: {
                 "Content-Type": "application/json",
-                "X-Admin-Secret": import.meta.env.VITE_SECRET,
             },
+            credentials: "include",
             body: JSON.stringify(),
         });
     }
@@ -89,8 +87,8 @@ export default function PageManager() {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
-                "X-Admin-Secret": import.meta.env.VITE_SECRET,
             },
+            credentials: "include",
             body: JSON.stringify({ title }),
         });
 
@@ -106,8 +104,8 @@ export default function PageManager() {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
-                "X-Admin-Secret": import.meta.env.VITE_SECRET,
             },
+            credentials: "include",
             body: JSON.stringify({ slug }),
         });
 
@@ -123,13 +121,13 @@ export default function PageManager() {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
-                "X-Admin-Secret": import.meta.env.VITE_SECRET,
             },
-            body: JSON.stringify({ slug }),
+            credentials: "include",
+            body: JSON.stringify({ sort }),
         });
 
         const newPages = [...pages];
-        newPages[index].slug = slug;
+        newPages[index].sort = sort;
         setPages(newPages);
     }
 
@@ -153,7 +151,7 @@ export default function PageManager() {
                         onChange={(e) => setSelectedSection(e.target.value)}
                     >
                         <option value="">Select section (optional)</option>
-                        {Array.from(sectionsMap.values()).map((section) => (
+                        {Array.from(sectionsMap?.values?.() || []).map((section) => (
                             <option key={section.id} value={section.id}>
                                 {section.title}
                             </option>
