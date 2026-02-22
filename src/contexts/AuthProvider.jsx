@@ -135,10 +135,12 @@ export function AuthProvider({ children }) {
             setUser(null);
             setIsAuthenticated(false);
             setError(null);
+            return true;
         } catch (err) {
             console.error("Logout Error: ", err);
         } finally {
             setIsLoading(false);
+            return true;
         }
     }
 

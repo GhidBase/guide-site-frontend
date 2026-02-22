@@ -11,7 +11,6 @@ export default function PageBuilder() {
     const gameSlug = gameData?.slug;
     const gameId = gameData?.id;
     const { user, isAuthenticated } = useAuth();
-    console.log(user);
     const [blocks, setBlocks] = useState(pageData?.blocks ?? []);
     const admin = user?.role == "ADMIN";
     const [adminMode, setAdminMode] = useState(false);

@@ -16,6 +16,8 @@ export default function Navbar({
 }) {
     const { gameData, sectionsMap } = useLoaderData();
     const { isAuthenticated, user, logout, isLoading } = useAuth();
+    console.log("navbar user");
+    console.log(user);
     const navigate = useNavigate();
     const [editMode, setEditMode] = useState(false);
     const gameSlug = isLDG ? "" : "/games/" + gameData?.slug;
@@ -26,7 +28,10 @@ export default function Navbar({
     }
 
     async function handleLogout() {
-        await logout();
+        console.log("handleLogout() called");
+        const res = await logout();
+        console.log("logged out result: " + res);
+        console.log(user);
         navigate("/");
         toggleNav(false);
     }
