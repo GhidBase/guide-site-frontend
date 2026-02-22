@@ -1,8 +1,9 @@
 import NavbarButton from "./NavbarButton";
-import { useLoaderData } from "react-router";
+import { useLoaderData, Link, useNavigate } from "react-router";
 import { Fragment, useState } from "react";
 import NavbarSection from "./NavbarSection";
 import NavbarEditButton from "./NavbarEditButton";
+import { useAuth } from "@/hooks/useAuth";
 
 const env = import.meta.env.VITE_ENV;
 const isLDG = import.meta.env.VITE_LDG == "True";
@@ -14,12 +15,20 @@ export default function Navbar({
     closeClassName,
 }) {
     const { gameData, sectionsMap } = useLoaderData();
+    const { isAuthenticated, user, logout, isLoading } = useAuth();
+    const navigate = useNavigate();
     const [editMode, setEditMode] = useState(false);
     const gameSlug = isLDG ? "" : "/games/" + gameData?.slug;
     const navbarItems = [];
 
     function toggleEditMode() {
         setEditMode(!editMode);
+    }
+
+    async function handleLogout() {
+        await logout();
+        navigate("/");
+        toggleNav(false);
     }
 
     const navbar = [
@@ -341,6 +350,54 @@ export default function Navbar({
     return (
         <Fragment>
             <div id="nav-bar" className={className}>
+                <div className="w-full flex flex-col">
+                    {!isLoading && (
+                        <div className="w-full border-b-4 border-(--outline)">
+                            {isAuthenticated ? (
+                                <div className="w-full flex flex-col p-4 bg-(--surface-background)">
+                                    <p className="text-xl text-(--text-color) text-center font-semibold mb-3">
+                                        {user?.username}
+                                    </p>
+                                    {(user?.role === "ADMIN" ||
+                                        user?.role === "EDITOR") && (
+                                        <button
+                                            onClick={() => {
+                                                navigate("/dashboard");
+                                                toggleNav(false);
+                                            }}
+                                            className="w-full text-amber-50 bg-(--primary) rounded px-2 py-1 font-semibold cursor-pointer hover:opacity-90 text-sm mb-2"
+                                        >
+                                            Dashboard
+                                        </button>
+                                    )}
+                                    <button
+                                        onClick={handleLogout}
+                                        className="w-full text-amber-50 bg-(--primary) rounded px-2 py-1 font-semibold cursor-pointer hover:opacity-90 text-sm"
+                                    >
+                                        Logout
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="w-full flex gap-2 p-4 bg-(--surface-background)">
+                                    <Link
+                                        to="/login"
+                                        onClick={() => toggleNav(false)}
+                                        className="flex-1 text-center text-amber-50 bg-(--primary) rounded px-2 py-1 font-semibold cursor-pointer hover:opacity-90 text-sm"
+                                    >
+                                        Log In
+                                    </Link>
+                                    <Link
+                                        to="/signup"
+                                        onClick={() => toggleNav(false)}
+                                        className="flex-1 text-center text-amber-50 bg-(--primary) rounded px-2 py-1 font-semibold cursor-pointer hover:opacity-90 text-sm"
+                                    >
+                                        Sign Up
+                                    </Link>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
                 {navbarItems.map((item, index, arr) => {
                     if (item.type === "page") {
                         return (

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { AuthContext } from "./AuthContext";
 import { currentAPI } from "@/config/api";
 
@@ -54,9 +54,19 @@ export function AuthProvider({ children }) {
                 credentials: "include",
             });
 
-            if (res.ok) {
+            if (!res.ok) {
                 const data = await res.json();
-                setUser(data);
+                setError(data.errors?.[0]?.msg || "Signup Failed");
+                return false;
+            }
+
+            const userRes = await fetch(`${currentAPI}/user`, {
+                credentials: "include",
+            });
+
+            if (userRes.ok) {
+                const userData = await userRes.json();
+                setUser(userData);
                 setIsAuthenticated(true);
             }
 
