@@ -1,131 +1,126 @@
 import TextEditor from "../TextEditor.jsx";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState } from "react";
+import { currentAPI } from "@/config/api";
+import { useRouteLoaderData } from "react-router";
+import PendingReviewNotification from "../notifications/PendingReviewNotification";
 
 export default function TextBlock({
     deleteBlock,
     block,
     updateBlockWithEditorData,
-    adminMode,
-    addBlock,
+    saveUnsavedBlock,
+    editMode,
 }) {
+    const { gameData } = useRouteLoaderData("main");
+    const gameId = gameData?.id;
     const editorRef = useRef(null);
-    const [editMode, setEditMode] = useState(false);
-    const contentRef = useRef(null);
-    const [height, setHeight] = useState(0);
+    const [isEditingContent, setIsEditingContent] = useState(false);
+    const [showNotification, setShowNotification] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     let content;
-
     if (block && block.content && block.content.content) {
         content = block.content.content;
     }
 
-    useEffect(() => {
-        if (contentRef.current) {
-            setHeight(contentRef.current.offsetHeight);
-        }
-    }, [content, adminMode]);
+    async function handleSaveChanges() {
+        try {
+            setLoading(true);
+            const contentData = editorRef.current.getContent();
 
-    function toggleEditorMode() {
-        setEditMode(!editMode);
-    }
+            if (block.isUnsaved) {
+                await saveUnsavedBlock(block, contentData);
+            } else {
+                const content2 = block.content2;
 
-    function checkDeletion() {
-        const confirmedDelete = window.confirm(
-            "Are you sure you want to delete this block?",
-        );
-        if (confirmedDelete) {
-            deleteBlock();
+                const response = await fetch(
+                    currentAPI + "/games/" + gameId + "/blocks/" + block.id,
+                    {
+                        method: "PUT",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        credentials: "include",
+                        body: JSON.stringify({
+                            content: contentData,
+                            content2,
+                        }),
+                    },
+                );
+
+                if (response.status === 202) {
+                    setShowNotification(true);
+                }
+
+                await updateBlockWithEditorData(block, editorRef);
+            }
+            setIsEditingContent(false);
+        } catch (err) {
+            console.error("Error saving changes:", err);
+        } finally {
+            setLoading(false);
         }
     }
 
     return (
         <div
-            id={"text-block-" + block.id}
-            className={`relative content-block bg-(--surface-background) w-full text-(--text-color) ${
-                adminMode &&
-                "border-b border-(--primary) mb-0 bg-black/3 md:rounded "
+            className={`content-block bg-(--surface-background) w-full text-(--text-color) ${
+                editMode &&
+                "border-b border-(--primary) mb-0 pt-4 bg-black/10"
             }`}
         >
-            {adminMode && (
-                <div
-                    id={"text-block-header-" + block.id}
-                    className="sticky top-7
-                h-10
-                bg-(--accent)
-                border-b border-t sm:border border-(--outline-brown)/50 rounded-t
-                flex justify-center items-center
-                text-xl z-1 "
-                >
-                    Text Block
-                </div>
+            {(isEditingContent || block.isUnsaved) && editMode && (
+                <TextEditor editorRef={editorRef} content={content}></TextEditor>
             )}
-            {editMode && (
-                <TextEditor
-                    height={height}
-                    editorRef={editorRef}
-                    content={content}
-                ></TextEditor>
-            )}
-            {!editMode && (
+            {!isEditingContent && !block.isUnsaved && (
                 <div
-                    id={"text-content-" + block.id}
-                    ref={contentRef}
-                    className={
-                        `text-left px-8 py-1` +
-                        (adminMode &&
-                            ` bg-(--accent) border-x border-(--outline-brown)/50 `)
-                    }
+                    className="text-left mx-8"
                     dangerouslySetInnerHTML={{ __html: content }}
                 />
             )}
-            {adminMode && (
+            {editMode && (
                 <div
                     id="lower-buttons"
-                    //className="flex flex-row-reverse sticky bottom-15 md:bottom-2 divide-x divide-x-reverse divide-(--outline-brown)/25 m-2 gap-2 justify-center"
-                    className=" py-1.5
-                    sticky bottom-14 lg:bottom-0
-                    divide-x divide-x-reverse divide-(--outline-brown)/25
-                    border-t border-(--outline-brown)/50 sm:border-x
-                    flex flex-row-reverse
-                    w-full justify-between
-                    h-10
-                    rounded-b
-                    bg-(--accent)"
+                    className="flex gap-2 m-2 justify-center"
                 >
-                    {editMode && (
+                    {(isEditingContent || block.isUnsaved) && (
                         <button
-                            onClick={async () => {
-                                await updateBlockWithEditorData(
-                                    block,
-                                    editorRef,
-                                );
-                                toggleEditorMode();
-                            }}
-                            //className="text-amber-50 bg-(--primary) w-25 rounded px-2 py-0.5"
-                            className="flex items-center justify-center w-full h-full text-center"
+                            onClick={handleSaveChanges}
+                            disabled={loading}
+                            className="text-amber-50 bg-green-700 rounded px-3 py-1 font-semibold cursor-pointer hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            Save
+                            {loading
+                                ? "Saving..."
+                                : block.isUnsaved
+                                  ? "Create Block"
+                                  : "Save Changes"}
+                        </button>
+                    )}
+                    {!block.isUnsaved && (
+                        <button
+                            onClick={() =>
+                                setIsEditingContent(!isEditingContent)
+                            }
+                            disabled={loading}
+                            className="text-amber-50 bg-(--primary) rounded px-3 py-1 font-semibold cursor-pointer hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {!isEditingContent && "Edit"}
+                            {isEditingContent && "Cancel"}
                         </button>
                     )}
                     <button
-                        onClick={() => toggleEditorMode()}
-                        className="flex items-center justify-center w-full h-full text-center"
-                        //className="text-amber-50 bg-(--primary) w-25 rounded px-2 py-0.5"
+                        onClick={() => deleteBlock(block)}
+                        disabled={loading}
+                        className="text-amber-50 bg-red-700 rounded px-3 py-1 font-semibold cursor-pointer hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        {!editMode && "Edit"}
-                        {editMode && "Cancel"}
-                    </button>
-                    <button
-                        onClick={checkDeletion}
-                        //className="text-amber-50 bg-(--primary) w-25 rounded px-2 py-0.5"
-                        className="text-red-700/70
-                        flex items-center justify-center text-center 
-                        w-full h-full "
-                    >
-                        Delete
+                        {block.isUnsaved ? "Cancel" : "Delete"}
                     </button>
                 </div>
             )}
+            <PendingReviewNotification
+                visible={showNotification}
+                onDismiss={() => setShowNotification(false)}
+            />
         </div>
     );
 }
