@@ -2,8 +2,6 @@ import { useEffect, useState } from "react";
 import { currentAPI } from "../config/api.js";
 import { useRouteLoaderData } from "react-router";
 
-const secret = import.meta.env.VITE_SECRET;
-
 export default function NavigationPanel() {
     const [, forceRender] = useState(0);
     const { gameData, sectionsMap } = useRouteLoaderData("main");
@@ -14,7 +12,9 @@ export default function NavigationPanel() {
         if (!gameId) return;
         fetch(currentAPI + "/games/" + gameId + "/pages")
             .then((res) => res.json())
-            .then((pages) => setUnsectionedPages(pages.filter((p) => !p.sectionId)));
+            .then((pages) =>
+                setUnsectionedPages(pages.filter((p) => !p.sectionId)),
+            );
     }, [gameId]);
 
     // console.log(sectionsMap, 'is the map');
@@ -53,8 +53,8 @@ export default function NavigationPanel() {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "x-admin-secret": secret,
                 },
+                credentials: "include",
                 body: JSON.stringify({
                     title: newSectionName,
                     gameId,
@@ -77,8 +77,8 @@ export default function NavigationPanel() {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
-                    "x-admin-secret": secret,
                 },
+                credentials: "include",
                 body: JSON.stringify({ title: sectionName }),
             });
 
@@ -94,9 +94,7 @@ export default function NavigationPanel() {
         try {
             await fetch(currentAPI + "/sections/delete/" + id, {
                 method: "DELETE",
-                headers: {
-                    "x-admin-secret": secret,
-                },
+                credentials: "include",
             });
 
             sectionsMap.delete(id);
@@ -112,8 +110,8 @@ export default function NavigationPanel() {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
-                    "x-admin-secret": secret,
                 },
+                credentials: "include",
                 body: JSON.stringify({
                     gameId,
                     sectionOrder: newOrder,
@@ -189,8 +187,8 @@ export default function NavigationPanel() {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
-                    "x-admin-secret": secret,
                 },
+                credentials: "include",
                 body: JSON.stringify({ title: pageName }),
             });
 
@@ -209,9 +207,7 @@ export default function NavigationPanel() {
         try {
             await fetch(currentAPI + "/pages/" + id, {
                 method: "DELETE",
-                headers: {
-                    "x-admin-secret": secret,
-                },
+                credentials: "include",
             });
 
             const section = sectionsMap.get(sectionId);
@@ -232,10 +228,11 @@ export default function NavigationPanel() {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
-                    "X-Admin-Secret": secret,
                 },
+                credentials: "include",
                 body: JSON.stringify({
-                    sectionId: newSectionId === "none" ? null : Number(newSectionId),
+                    sectionId:
+                        newSectionId === "none" ? null : Number(newSectionId),
                 }),
             });
 
@@ -244,23 +241,36 @@ export default function NavigationPanel() {
                 if (page?.sectionId) {
                     const oldSection = sectionsMap.get(page.sectionId);
                     if (oldSection) {
-                        oldSection.pages = oldSection.pages.filter((p) => p.id !== pageId);
+                        oldSection.pages = oldSection.pages.filter(
+                            (p) => p.id !== pageId,
+                        );
                     }
                 }
-                if (page) setUnsectionedPages((prev) => [...prev, { ...page, sectionId: null }]);
+                if (page)
+                    setUnsectionedPages((prev) => [
+                        ...prev,
+                        { ...page, sectionId: null },
+                    ]);
             } else {
                 // Moving to a section — remove from old section or unsectioned, add to new section
                 if (page?.sectionId) {
                     const oldSection = sectionsMap.get(page.sectionId);
                     if (oldSection) {
-                        oldSection.pages = oldSection.pages.filter((p) => p.id !== pageId);
+                        oldSection.pages = oldSection.pages.filter(
+                            (p) => p.id !== pageId,
+                        );
                     }
                 }
                 const section = sectionsMap.get(Number(newSectionId));
                 if (section && page) {
-                    section.pages.push({ ...page, sectionId: Number(newSectionId) });
+                    section.pages.push({
+                        ...page,
+                        sectionId: Number(newSectionId),
+                    });
                 }
-                setUnsectionedPages((prev) => prev.filter((p) => p.id !== pageId));
+                setUnsectionedPages((prev) =>
+                    prev.filter((p) => p.id !== pageId),
+                );
             }
 
             forceRender((x) => x + 1);
@@ -513,30 +523,45 @@ export default function NavigationPanel() {
             {/* Unsectioned pages */}
             {unsectionedPages.length > 0 && (
                 <div className="mt-6">
-                    <h2 className="text-lg font-bold mb-2">Unsectioned Pages</h2>
+                    <h2 className="text-lg font-bold mb-2">
+                        Unsectioned Pages
+                    </h2>
 
                     <table className="w-full border border-gray-700">
                         <thead>
                             <tr className="bg-gray-800">
                                 <th className="p-2 text-left">Page</th>
-                                <th className="p-2 text-left">Assign to Section</th>
+                                <th className="p-2 text-left">
+                                    Assign to Section
+                                </th>
                             </tr>
                         </thead>
 
                         <tbody>
                             {unsectionedPages.map((page) => (
-                                <tr key={page.id} className="border-t border-gray-700">
+                                <tr
+                                    key={page.id}
+                                    className="border-t border-gray-700"
+                                >
                                     <td className="p-2">{page.title}</td>
                                     <td className="p-2">
                                         <select
                                             className="bg-gray-900 text-white px-2 py-1 rounded"
                                             onChange={(e) =>
-                                                changePageSection(page.id, e.target.value, page)
+                                                changePageSection(
+                                                    page.id,
+                                                    e.target.value,
+                                                    page,
+                                                )
                                             }
                                             defaultValue=""
                                         >
-                                            <option value="">Assign to...</option>
-                                            {Array.from(sectionsMap.values()).map((s) => (
+                                            <option value="">
+                                                Assign to...
+                                            </option>
+                                            {Array.from(
+                                                sectionsMap.values(),
+                                            ).map((s) => (
                                                 <option key={s.id} value={s.id}>
                                                     {s.title}
                                                 </option>
@@ -605,3 +630,4 @@ export default function NavigationPanel() {
         </>
     );
 }
+

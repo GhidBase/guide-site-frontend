@@ -24,8 +24,8 @@ export default function GameManager() {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "X-Admin-Secret": import.meta.env.VITE_SECRET,
                 },
+                credentials: "include",
                 body: JSON.stringify({ title }),
             });
         } catch (err) {

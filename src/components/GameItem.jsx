@@ -15,8 +15,8 @@ export default function GameItem({ title, slug, id }) {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
-                "X-Admin-Secret": import.meta.env.VITE_SECRET,
             },
+            credentials: "include",
             body: JSON.stringify({ slug: slugInput, title }),
         });
     }
