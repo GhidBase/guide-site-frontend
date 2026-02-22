@@ -9,6 +9,11 @@ import ImmortalGuardians from "./components/mini-apps/ImmortalGuardians.jsx";
 import GameManager from "./components/GameManager.jsx";
 import gameAndPageLoader from "./loaders/gameAndPageLoader.js";
 import NavigationPanel from "./components/NavigationPanel.jsx";
+import LoginPage from "./components/LoginPage.jsx";
+import SignupPage from "./components/SignupPage.jsx";
+import DashboardContent from "./components/pages/Dashboard.jsx";
+import AccessDeniedPage from "./components/AccessDeniedPage.jsx";
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
 const env = import.meta.env.VITE_ENV;
 const isLDG = import.meta.env.VITE_LDG == "True";
 // Clean up routes, then decide how to use "useGameSlug"
@@ -57,6 +62,18 @@ const mainRoute = {
                 },
             ],
         },
+        { path: "login", element: <LoginPage /> },
+        { path: "signup", element: <SignupPage /> },
+        {
+            path: "dashboard",
+            element: (
+                <ProtectedRoute requiredRole="EDITOR">
+                    <DashboardContent />
+                </ProtectedRoute>
+            ),
+            handle: { title: "Dashboard" },
+        },
+        { path: "access-denied", element: <AccessDeniedPage /> },
         { path: "404/", element: <NotFound />, handle: { title: "404" } },
         { path: "*", element: <NotFound />, handle: { title: "404" } },
     ],
@@ -85,6 +102,18 @@ const luckyDefenseRoute = {
             element: <ImmortalGuardians />,
             handle: { title: "Immortal Guardians" },
         },
+        { path: "login", element: <LoginPage /> },
+        { path: "signup", element: <SignupPage /> },
+        {
+            path: "dashboard",
+            element: (
+                <ProtectedRoute requiredRole="EDITOR">
+                    <DashboardContent />
+                </ProtectedRoute>
+            ),
+            handle: { title: "Dashboard" },
+        },
+        { path: "access-denied", element: <AccessDeniedPage /> },
         { path: "404/", element: <NotFound /> },
     ],
 };
