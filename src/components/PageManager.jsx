@@ -151,11 +151,13 @@ export default function PageManager() {
                         onChange={(e) => setSelectedSection(e.target.value)}
                     >
                         <option value="">Select section (optional)</option>
-                        {Array.from(sectionsMap?.values?.() || []).map((section) => (
-                            <option key={section.id} value={section.id}>
-                                {section.title}
-                            </option>
-                        ))}
+                        {Array.from(sectionsMap?.values?.() || []).map(
+                            (section) => (
+                                <option key={section.id} value={section.id}>
+                                    {section.title}
+                                </option>
+                            ),
+                        )}
                     </select>
 
                     <button

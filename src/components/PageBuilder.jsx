@@ -100,6 +100,7 @@ export default function PageBuilder() {
                 headers: {
                     "X-Admin-Secret": import.meta.env.VITE_SECRET,
                 },
+                credentials: "include",
             },
         );
 
