@@ -1,5 +1,5 @@
 import { useAuth } from "@/hooks/useAuth";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
 
 export default function LoginPage() {
@@ -15,7 +15,7 @@ export default function LoginPage() {
     }, [isAuthenticated]);
 
     async function handleSubmit(e) {
-        e.PreventDefault();
+        e.preventDefault();
         const success = await login(username, password);
         if (success) {
             navigate("/");
