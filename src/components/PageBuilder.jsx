@@ -3,13 +3,17 @@ import { currentAPI } from "../config/api";
 import TextBlock from "./blocks/TextBlock";
 import { Link, useRouteLoaderData } from "react-router";
 import SingleImageBlock from "./blocks/SingleImageBlock";
+import { useAuth } from "../hooks/useAuth.js";
 const env = import.meta.env.VITE_ENV;
 
 export default function PageBuilder() {
     const { pageData, gameData } = useRouteLoaderData("main");
     const gameSlug = gameData?.slug;
     const gameId = gameData?.id;
+    const { user, isAuthenticated } = useAuth();
+    console.log(user);
     const [blocks, setBlocks] = useState(pageData?.blocks ?? []);
+    const admin = user?.role == "ADMIN";
     const [adminMode, setAdminMode] = useState(false);
     const pageId = pageData?.page?.id;
     useEffect(() => {
@@ -55,6 +59,7 @@ export default function PageBuilder() {
                     "X-Admin-Secret": import.meta.env.VITE_SECRET,
                 },
                 body: JSON.stringify({ order: nextOrder, type }),
+                credentials: "include",
             },
         );
         const newBlock = await response.json();
@@ -153,7 +158,7 @@ export default function PageBuilder() {
 
     return (
         <Fragment>
-            {env == "DEV" && (
+            {admin && (
                 <div
                     id="dev-toolbar"
                     className=" self-stretch flex justify-center sticky top-0 bg-(--primary) sm:rounded-b max-w-full z-2 "
