@@ -16,6 +16,7 @@ export default function Navbar({
 }) {
     const { gameData, sectionsMap } = useLoaderData();
     const { isAuthenticated, user, logout, isLoading } = useAuth();
+    const isAdmin = user?.role == "ADMIN";
     console.log("navbar user");
     console.log(user);
     const navigate = useNavigate();
@@ -32,7 +33,7 @@ export default function Navbar({
         const res = await logout();
         console.log("logged out result: " + res);
         console.log(user);
-        navigate("/");
+        //navigate("/");
         toggleNav(false);
     }
 
@@ -274,15 +275,8 @@ export default function Navbar({
     ];
 
     // Add dev-only pages at the start
-    if (env === "DEV") {
+    if (isAdmin) {
         navbarItems.push(
-            {
-                id: "game-manager",
-                slug: "game-manager",
-                navbarTitle: "Game Manager",
-                type: "page",
-                nonEditable: true,
-            },
             {
                 id: "nav-panel",
                 slug: "navigation-panel",
@@ -377,8 +371,7 @@ export default function Navbar({
                                     <p className="text-xl text-(--text-color) text-center font-semibold mb-3">
                                         {user?.username}
                                     </p>
-                                    {(user?.role === "ADMIN" ||
-                                        user?.role === "EDITOR") && (
+                                    {isAdmin && (
                                         <button
                                             onClick={() => {
                                                 navigate("/dashboard");

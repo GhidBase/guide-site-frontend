@@ -12,7 +12,7 @@ export default function PageBuilder() {
     const gameId = gameData?.id;
     const { user, isAuthenticated } = useAuth();
     const [blocks, setBlocks] = useState(pageData?.blocks ?? []);
-    const admin = user?.role == "ADMIN";
+    const isAdmin = user?.role == "ADMIN";
     const [adminMode, setAdminMode] = useState(false);
     const pageId = pageData?.page?.id;
     useEffect(() => {
@@ -157,7 +157,7 @@ export default function PageBuilder() {
 
     return (
         <Fragment>
-            {admin && (
+            {isAdmin && (
                 <div
                     id="dev-toolbar"
                     className=" self-stretch flex justify-center sticky top-0 bg-(--primary) sm:rounded-b max-w-full z-2 "

@@ -122,64 +122,75 @@ const curRoute = isLDG ? luckyDefenseRoute : mainRoute;
 
 const routes = [...oldRoutes, curRoute];
 
-if (env == "DEV") {
-    const found = isLDG
-        ? luckyDefenseRoute
-        : mainRoute.children.find((child) => child.path == "games/:gameSlug");
-    if (isLDG) {
-        luckyDefenseRoute.children.push(
+if (isLDG) {
+    luckyDefenseRoute.children.push(
+        {
+            path: "page-manager/",
+            element: (
+                <ProtectedRoute requiredRole="ADMIN">
+                    <PageManager isAdmin={true} />
+                </ProtectedRoute>
+            ),
+            handle: { title: "Page Manager" },
+        },
+        {
+            path: "game-manager/",
+            element: <GameManager isAdmin={true} />,
+            handle: { title: "Game Manager" },
+        },
+        {
+            path: "navigation-panel/",
+            element: (
+                <ProtectedRoute requiredRole="ADMIN">
+                    <NavigationPanel isAdmin={true} />
+                </ProtectedRoute>
+            ),
+            handle: { title: "Navbar Manager" },
+        },
+    );
+} else {
+    mainRoute.children
+        .find((child) => child.path == "games/:gameSlug")
+        .children.push(
             {
                 path: "page-manager/",
-                element: <PageManager isAdmin={true} />,
+                element: (
+                    <ProtectedRoute requiredRole="ADMIN">
+                        <PageManager isAdmin={true} />
+                    </ProtectedRoute>
+                ),
                 handle: { title: "Page Manager" },
             },
             {
                 path: "game-manager/",
-                element: <GameManager isAdmin={true} />,
-                handle: { title: "Game Manager" },
-            },
-        );
-    } else {
-        mainRoute.children
-            .find((child) => child.path == "games/:gameSlug")
-            .children.push(
-                {
-                    path: "page-manager/",
-                    element: <PageManager isAdmin={true} />,
-                    handle: { title: "Page Manager" },
-                },
-                {
-                    path: "game-manager/",
-                    element: <GameManager isAdmin={true} />,
-                    handle: { title: "Game Manager" },
-                },
-                {
-                    path: "navigation-panel/",
-                    element: <NavigationPanel isAdmin={true} />,
-                },
-            );
-
-        mainRoute.children.push(
-            {
-                path: "page-manager/",
-                element: <PageManager isAdmin={true} />,
-                handle: { title: "Page Manager" },
-            },
-            {
-                path: "game-manager/",
-                element: <GameManager isAdmin={true} />,
+                element: (
+                    <ProtectedRoute requiredRole="ADMIN">
+                        <GameManager isAdmin={true} />
+                    </ProtectedRoute>
+                ),
                 handle: { title: "Game Manager" },
             },
             {
                 path: "navigation-panel/",
-                element: <NavigationPanel isAdmin={true} />,
+                element: (
+                    <ProtectedRoute requiredRole="ADMIN">
+                        <NavigationPanel isAdmin={true} />
+                    </ProtectedRoute>
+                ),
+                handle: { title: "Navbar Manager" },
             },
         );
-    }
-    routes[routes.length - 1].children.unshift(
+
+    mainRoute.children.push(
         {
             path: "page-manager/",
             element: <PageManager isAdmin={true} />,
+            handle: { title: "Page Manager" },
+        },
+        {
+            path: "game-manager/",
+            element: <GameManager isAdmin={true} />,
+            handle: { title: "Game Manager" },
         },
         {
             path: "navigation-panel/",
@@ -187,5 +198,15 @@ if (env == "DEV") {
         },
     );
 }
+routes[routes.length - 1].children.unshift(
+    {
+        path: "page-manager/",
+        element: <PageManager isAdmin={true} />,
+    },
+    {
+        path: "navigation-panel/",
+        element: <NavigationPanel isAdmin={true} />,
+    },
+);
 
 export default routes;
