@@ -394,24 +394,27 @@ export default function NavigationPanel() {
 
     return (
         <>
-            <div className="mt-8 max-w-4xl mb-4 flex gap-2">
+            {/* Add Section bar — stacks vertically on mobile, row on sm+ */}
+            <div className="mt-8 max-w-4xl mb-4 flex flex-col sm:flex-row gap-2">
                 <input
                     type="text"
                     value={newSectionName}
                     onChange={(e) => setNewSectionName(e.target.value)}
                     placeholder="New section name"
-                    className="bg-(--red-brown) text-white px-3 py-2 rounded flex-1"
+                    className="bg-(--red-brown) text-white px-3 py-2 rounded w-full sm:flex-1"
                 />
                 <button
                     onClick={createSection}
-                    className="bg-(--red-brown) text-white px-4 py-2 rounded hover: cursor-pointer"
+                    className="bg-(--red-brown) text-white px-4 py-2 rounded hover: cursor-pointer w-full sm:w-auto"
                 >
                     Add Section
                 </button>
             </div>
 
-            <div className="max-w-4xl">
-                <table className="m-0 w-full border border-gray-700">
+            {/* Sections — desktop: table, mobile: card list */}
+            <div className="max-w-4xl w-full overflow-x-auto">
+                {/* Desktop table (hidden on mobile) */}
+                <table className="m-0 w-full border border-gray-700 hidden sm:table">
                     <thead>
                         <tr className="bg-gray-800">
                             <th className="p-2 text-left w-8"></th>
@@ -604,16 +607,165 @@ export default function NavigationPanel() {
                         ))}
                     </tbody>
                 </table>
+
+                {/* Mobile card list (hidden on sm+) */}
+                <div className="flex flex-col gap-3 sm:hidden">
+                    {getSortedSections().map((section) => (
+                        <div
+                            key={section.id}
+                            className={`border border-gray-700 rounded-lg transition-colors ${
+                                dragOverSection?.id === section.id &&
+                                draggedSection?.id !== section.id
+                                    ? "bg-gray-700"
+                                    : ""
+                            }`}
+                            draggable={editingSection !== section.id && !draggedPage}
+                            onDragStart={(e) => handleSectionDragStart(e, section)}
+                            onDragEnd={handleSectionDragEnd}
+                            onDragOver={handleSectionDragOver}
+                            onDragEnter={(e) => handleSectionDragEnter(e, section)}
+                            onDrop={(e) => handleSectionDrop(e, section)}
+                        >
+                            {/* Section header */}
+                            <div className="flex items-center gap-2 px-3 py-2 bg-blue-500 rounded-t-lg">
+                                <span className="text-white text-lg select-none">⋮⋮</span>
+
+                                {editingSection === section.id ? (
+                                    <>
+                                        <input
+                                            value={sectionName}
+                                            onChange={(e) => setSectionName(e.target.value)}
+                                            className="bg-gray-900 text-white px-2 py-1 rounded flex-1 min-w-0"
+                                        />
+                                        <Check
+                                            size={18}
+                                            className="cursor-pointer shrink-0"
+                                            onClick={() => renameSection(section.id)}
+                                        />
+                                        <X
+                                            size={18}
+                                            className="cursor-pointer shrink-0"
+                                            onClick={() => setEditingSection(null)}
+                                        />
+                                    </>
+                                ) : (
+                                    <>
+                                        <span className="font-semibold flex-1 truncate">{section.title}</span>
+                                        <PencilIcon
+                                            size={16}
+                                            className="cursor-pointer shrink-0"
+                                            onClick={() => {
+                                                setEditingSection(section.id);
+                                                setSectionName(section.title);
+                                            }}
+                                        />
+                                        <Trash
+                                            size={16}
+                                            className="cursor-pointer shrink-0"
+                                            onClick={() => {
+                                                if (confirm(`Delete page "${pageName}"?`)) {
+                                                    deletePage(editingPage.id, editingPage.sectionId);
+                                                }
+                                            }}
+                                        />
+                                    </>
+                                )}
+                            </div>
+
+                            {/* Pages list */}
+                            <div className="px-3 py-2 flex flex-col gap-1">
+                                {getSortedPages(section).map((page) => (
+                                    <div
+                                        key={page.id}
+                                        className={`flex items-center gap-2 rounded px-1 py-1 transition-colors ${
+                                            dragOverPage?.id === page.id &&
+                                            draggedPage?.id !== page.id
+                                                ? "bg-gray-600"
+                                                : ""
+                                        }`}
+                                        draggable
+                                        onDragStart={(e) => handlePageDragStart(e, page)}
+                                        onDragEnd={handlePageDragEnd}
+                                        onDragOver={handlePageDragOver}
+                                        onDragEnter={(e) => handlePageDragEnter(e, page)}
+                                        onDrop={(e) => handlePageDrop(e, page, section)}
+                                    >
+                                        <span className="text-gray-500 cursor-move select-none shrink-0">⋮⋮</span>
+                                        <span className="flex-1 truncate text-sm">{page.title}</span>
+                                        <select
+                                            className="bg-gray-900 text-white px-1 py-1 rounded text-xs max-w-[120px] shrink-0"
+                                            onChange={(e) =>
+                                                changePageSection(page.id, e.target.value, page)
+                                            }
+                                            defaultValue=""
+                                        >
+                                            <option value="">Move to...</option>
+                                            <option value="none">No Section</option>
+                                            {Array.from(sectionsMap.values())
+                                                .filter((s) => s.id !== section.id)
+                                                .map((s) => (
+                                                    <option key={s.id} value={s.id}>
+                                                        {s.title}
+                                                    </option>
+                                                ))}
+                                        </select>
+                                    </div>
+                                ))}
+
+                                {/* Quick-add unsectioned pages */}
+                                {unsectionedPages.length > 0 && (
+                                    <div
+                                        className="relative mt-1"
+                                        ref={openQuickAdd === section.id ? quickAddRef : null}
+                                    >
+                                        <button
+                                            className="w-full text-sm font-semibold text-white bg-black hover:bg-gray-800 px-3 py-1.5 rounded cursor-pointer transition-colors"
+                                            onClick={() =>
+                                                setOpenQuickAdd(
+                                                    openQuickAdd === section.id ? null : section.id,
+                                                )
+                                            }
+                                        >
+                                            + Add page
+                                        </button>
+
+                                        {openQuickAdd === section.id && (
+                                            <div className="absolute left-0 top-9 z-10 bg-gray-800 border border-gray-500 rounded shadow-xl min-w-48 w-full">
+                                                {unsectionedPages.map((page) => (
+                                                    <button
+                                                        key={page.id}
+                                                        className="block w-full text-left px-4 py-2 text-sm text-white hover:bg-gray-700 cursor-pointer"
+                                                        onClick={() => {
+                                                            changePageSection(
+                                                                page.id,
+                                                                String(section.id),
+                                                                page,
+                                                            );
+                                                            setOpenQuickAdd(null);
+                                                        }}
+                                                    >
+                                                        {page.title}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
 
             {/* Unsectioned pages */}
             {unsectionedPages.length > 0 && (
-                <div className="mt-6">
+                <div className="mt-6 max-w-4xl w-full">
                     <h2 className="text-lg font-bold mb-2">
                         Unsectioned Pages
                     </h2>
 
-                    <table className="w-full border border-gray-700">
+                    {/* Desktop table */}
+                    <table className="w-full border border-gray-700 hidden sm:table">
                         <thead>
                             <tr className="bg-gray-800">
                                 <th className="p-2 text-left">Page</th>
@@ -658,13 +810,39 @@ export default function NavigationPanel() {
                             ))}
                         </tbody>
                     </table>
+
+                    {/* Mobile card list for unsectioned pages */}
+                    <div className="flex flex-col sm:hidden border border-gray-700 rounded-lg overflow-hidden">
+                        {unsectionedPages.map((page) => (
+                            <div
+                                key={page.id}
+                                className="flex items-center gap-2 border-t border-gray-700 first:border-t-0 px-3 py-2 hover:bg-gray-800 transition-colors"
+                            >
+                                <span className="flex-1 truncate text-sm">{page.title}</span>
+                                <select
+                                    className="bg-gray-900 text-white px-1 py-1 rounded text-xs max-w-[140px] shrink-0"
+                                    onChange={(e) =>
+                                        changePageSection(page.id, e.target.value, page)
+                                    }
+                                    defaultValue=""
+                                >
+                                    <option value="">Assign to...</option>
+                                    {Array.from(sectionsMap.values()).map((s) => (
+                                        <option key={s.id} value={s.id}>
+                                            {s.title}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             )}
 
             {/* Page edit popup */}
             {editingPage && (
-                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-                    <div className="bg-gray-900 p-6 rounded-lg space-y-4 min-w-96">
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4">
+                    <div className="bg-gray-900 p-6 rounded-lg space-y-4 w-full max-w-md">
                         <h3 className="text-xl font-bold">Edit Page</h3>
 
                         <div>
@@ -676,7 +854,7 @@ export default function NavigationPanel() {
                             />
                         </div>
 
-                        <div className="flex gap-2 justify-end">
+                        <div className="flex flex-wrap gap-2 justify-end">
                             <button
                                 onClick={() =>
                                     renamePage(
@@ -684,7 +862,7 @@ export default function NavigationPanel() {
                                         editingPage.sectionId,
                                     )
                                 }
-                                className="bg-green-600 px-4 py-2 rounded"
+                                className="bg-green-600 px-4 py-2 rounded flex-1 sm:flex-none"
                             >
                                 Save
                             </button>
@@ -698,14 +876,14 @@ export default function NavigationPanel() {
                                         );
                                     }
                                 }}
-                                className="bg-red-600 px-4 py-2 rounded"
+                                className="bg-red-600 px-4 py-2 rounded flex-1 sm:flex-none"
                             >
                                 Delete
                             </button>
 
                             <button
                                 onClick={() => setEditingPage(null)}
-                                className="bg-gray-600 px-4 py-2 rounded"
+                                className="bg-gray-600 px-4 py-2 rounded flex-1 sm:flex-none"
                             >
                                 Cancel
                             </button>
