@@ -35,7 +35,7 @@ export default function SignupPage() {
     }
 
     return (
-        <div className="w-full max-w-md mx-auto mt-8 px-4">
+        <div className="w-full max-w-md mx-auto mt-8 px-4 flex flex-col">
             <div className="bg-(--surface-background) border-2 border-(--primary) rounded p-6">
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                     {(error || localError) && (
@@ -148,6 +148,9 @@ export default function SignupPage() {
                     </Link>
                 </div>
             </div>
+            <Link className="text-center mt-2 self-center" to="/">
+                Back to GuideCodex
+            </Link>
         </div>
     );
 }
