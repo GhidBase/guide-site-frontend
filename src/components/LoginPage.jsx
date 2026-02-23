@@ -23,7 +23,7 @@ export default function LoginPage() {
     }
 
     return (
-        <div className="max-w-md w-full mx-auto mt-8 px-4">
+        <div className="max-w-md w-full mx-auto mt-8 px-4 flex flex-col">
             <div className="bg-(--surface-background) border-2 border-(--primary) rounded-lg p-6">
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                     {error && (
@@ -91,6 +91,9 @@ export default function LoginPage() {
                     </p>
                 </div>
             </div>
+            <Link className="text-center mt-2 self-center" to="/">
+                Back to GuideCodex
+            </Link>
         </div>
     );
 }

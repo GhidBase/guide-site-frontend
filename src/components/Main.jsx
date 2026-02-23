@@ -45,6 +45,7 @@ export default function Main() {
         }
     }, [navOpen]);
 
+    console.log(gameData);
     return (
         <div
             id="main-page-sections"
@@ -52,7 +53,7 @@ export default function Main() {
         >
             <Title></Title>
             {
-                // title is partially styled in tailwind.css
+                // title is partially styled in the file tailwind.css
             }
             <div
                 id="side-bar-and-content"

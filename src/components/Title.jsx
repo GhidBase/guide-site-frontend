@@ -14,15 +14,6 @@ export default function Title() {
     }, [pageSlug]);
 
     title = !!hardCodedTitle ? hardCodedTitle : pageData?.page?.title;
-    /*
-    useEffect(() => {
-        if (!pageData?.notFound) {
-            setTitle(!!hardCodedTitle ? hardCodedTitle : pageData?.page.title);
-        } else {
-            navigate("/404", { replace: true });
-        }
-    });
-    */
 
     return (
         <div
