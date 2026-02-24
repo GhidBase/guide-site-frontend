@@ -491,12 +491,11 @@ export default function NavigationPanel() {
                                                     onClick={() => {
                                                         if (
                                                             confirm(
-                                                                `Delete page "${pageName}"?`,
+                                                                `Delete section "${section.title}"?`,
                                                             )
                                                         ) {
-                                                            deletePage(
-                                                                editingPage.id,
-                                                                editingPage.sectionId,
+                                                            deleteSection(
+                                                                section.id,
                                                             );
                                                         }
                                                     }}
@@ -663,8 +662,8 @@ export default function NavigationPanel() {
                                             size={16}
                                             className="cursor-pointer shrink-0"
                                             onClick={() => {
-                                                if (confirm(`Delete page "${pageName}"?`)) {
-                                                    deletePage(editingPage.id, editingPage.sectionId);
+                                                if (confirm(`Delete section "${section.title}"?`)) {
+                                                    deleteSection(section.id);
                                                 }
                                             }}
                                         />
