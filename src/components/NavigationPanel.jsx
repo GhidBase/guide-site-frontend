@@ -23,9 +23,6 @@ export default function NavigationPanel() {
     const [editingSection, setEditingSection] = useState(null);
     const [sectionName, setSectionName] = useState("");
 
-    const [editingPage, setEditingPage] = useState(null);
-    const [pageName, setPageName] = useState("");
-
     const [newSectionName, setNewSectionName] = useState("");
 
     // Section drag state
@@ -292,47 +289,6 @@ export default function NavigationPanel() {
 
         setDraggedPage(null);
         setDragOverPage(null);
-    }
-
-    async function renamePage(id, sectionId) {
-        try {
-            await fetch(currentAPI + "/pages/" + id, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    "x-admin-secret": secret,
-                },
-                body: JSON.stringify({ title: pageName }),
-            });
-
-            const section = sectionsMap.get(sectionId);
-            const page = section.pages.find((p) => p.id === id);
-            page.title = pageName;
-
-            setEditingPage(null);
-            forceRender((x) => x + 1);
-        } catch (err) {
-            console.error("Failed to rename page:", err);
-        }
-    }
-
-    async function deletePage(id, sectionId) {
-        try {
-            await fetch(currentAPI + "/pages/" + id, {
-                method: "DELETE",
-                headers: {
-                    "x-admin-secret": secret,
-                },
-            });
-
-            const section = sectionsMap.get(sectionId);
-            section.pages = section.pages.filter((p) => p.id !== id);
-
-            setEditingPage(null);
-            forceRender((x) => x + 1);
-        } catch (err) {
-            console.error("Failed to delete page:", err);
-        }
     }
 
     async function changePageSection(pageId, newSectionId, page = null) {
@@ -838,58 +794,6 @@ export default function NavigationPanel() {
                 </div>
             )}
 
-            {/* Page edit popup */}
-            {editingPage && (
-                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4">
-                    <div className="bg-gray-900 p-6 rounded-lg space-y-4 w-full max-w-md">
-                        <h3 className="text-xl font-bold">Edit Page</h3>
-
-                        <div>
-                            <label className="block mb-2">Page Title:</label>
-                            <input
-                                value={pageName}
-                                onChange={(e) => setPageName(e.target.value)}
-                                className="bg-gray-800 text-white px-3 py-2 rounded w-full"
-                            />
-                        </div>
-
-                        <div className="flex flex-wrap gap-2 justify-end">
-                            <button
-                                onClick={() =>
-                                    renamePage(
-                                        editingPage.id,
-                                        editingPage.sectionId,
-                                    )
-                                }
-                                className="bg-green-600 px-4 py-2 rounded flex-1 sm:flex-none"
-                            >
-                                Save
-                            </button>
-
-                            <button
-                                onClick={() => {
-                                    if (confirm(`Delete page "${pageName}"?`)) {
-                                        deletePage(
-                                            editingPage.id,
-                                            editingPage.sectionId,
-                                        );
-                                    }
-                                }}
-                                className="bg-red-600 px-4 py-2 rounded flex-1 sm:flex-none"
-                            >
-                                Delete
-                            </button>
-
-                            <button
-                                onClick={() => setEditingPage(null)}
-                                className="bg-gray-600 px-4 py-2 rounded flex-1 sm:flex-none"
-                            >
-                                Cancel
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
         </>
     );
 }
