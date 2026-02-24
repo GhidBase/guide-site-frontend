@@ -581,7 +581,7 @@ export default function NavigationPanel() {
                                             </button>
 
                                             {openQuickAdd === section.id && (
-                                                <div className="absolute left-0 top-9 z-10 bg-gray-800 border border-gray-500 rounded shadow-xl min-w-48">
+                                                <div className="absolute left-0 bottom-full mb-1 z-10 bg-gray-800 border border-gray-500 rounded shadow-xl min-w-48">
                                                     {unsectionedPages.map((page) => (
                                                         <button
                                                             key={page.id}
@@ -628,7 +628,7 @@ export default function NavigationPanel() {
                         >
                             {/* Section header */}
                             <div className="flex items-center gap-2 px-3 py-2 bg-blue-500 rounded-t-lg">
-                                <span className="text-white text-lg select-none">⋮⋮</span>
+                                <span className="text-gray-500 text-lg select-none">⋮⋮</span>
 
                                 {editingSection === section.id ? (
                                     <>
@@ -730,7 +730,7 @@ export default function NavigationPanel() {
                                         </button>
 
                                         {openQuickAdd === section.id && (
-                                            <div className="absolute left-0 top-9 z-10 bg-gray-800 border border-gray-500 rounded shadow-xl min-w-48 w-full">
+                                            <div className="absolute left-0 bottom-full mb-1 z-10 bg-gray-800 border border-gray-500 rounded shadow-xl min-w-48 w-full">
                                                 {unsectionedPages.map((page) => (
                                                     <button
                                                         key={page.id}
