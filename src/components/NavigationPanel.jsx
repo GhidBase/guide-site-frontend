@@ -69,11 +69,13 @@ export default function NavigationPanel() {
 
         try {
             const sections = getSortedSections();
-            const maxOrder =
-                sections.length > 0
-                    ? Math.max(...sections.map((s) => s.order || 0))
-                    : -1;
+            // 
+            // const maxOrder =
+            //     sections.length > 0
+            //         ? Math.max(...sections.map((s) => s.order || 0))
+            //         : -1;
 
+            
             const response = await fetch(currentAPI + "/sections", {
                 method: "POST",
                 headers: {
@@ -83,7 +85,7 @@ export default function NavigationPanel() {
                 body: JSON.stringify({
                     title: newSectionName,
                     gameId,
-                    order: maxOrder + 1,
+                    order: sections.length,
                 }),
             });
 
