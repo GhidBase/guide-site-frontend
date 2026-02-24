@@ -291,6 +291,150 @@ export default function NavigationPanel() {
         setDragOverPage(null);
     }
 
+    // Touch drag refs
+    const touchDraggedSection = useRef(null);
+    const touchDraggedPage = useRef(null);
+    const touchDraggedPageSection = useRef(null);
+    const touchClone = useRef(null);
+
+    function createTouchClone(el, touch) {
+        const clone = el.cloneNode(true);
+        const rect = el.getBoundingClientRect();
+        clone.style.position = "fixed";
+        clone.style.left = rect.left + "px";
+        clone.style.top = rect.top + "px";
+        clone.style.width = rect.width + "px";
+        clone.style.opacity = "0.7";
+        clone.style.pointerEvents = "none";
+        clone.style.zIndex = "9999";
+        clone.style.transform = "scale(1.02)";
+        document.body.appendChild(clone);
+        touchClone.current = clone;
+    }
+
+    function removeTouchClone() {
+        if (touchClone.current) {
+            touchClone.current.remove();
+            touchClone.current = null;
+        }
+    }
+
+    function getElementFromPoint(x, y, excludeEl) {
+        if (excludeEl) excludeEl.style.display = "none";
+        const el = document.elementFromPoint(x, y);
+        if (excludeEl) excludeEl.style.display = "";
+        return el;
+    }
+
+    // Section touch handlers
+    function handleSectionTouchStart(e, section) {
+        if (editingSection) return;
+        touchDraggedSection.current = section;
+        const card = e.currentTarget.closest("[data-section-id]");
+        createTouchClone(card || e.currentTarget, e.touches[0]);
+        if (card) card.style.opacity = "0.4";
+    }
+
+    function handleSectionTouchMove(e) {
+        if (!touchDraggedSection.current) return;
+        e.preventDefault();
+        const touch = e.touches[0];
+        if (touchClone.current) {
+            touchClone.current.style.left = touch.clientX - touchClone.current.offsetWidth / 2 + "px";
+            touchClone.current.style.top = touch.clientY - 20 + "px";
+        }
+        const el = getElementFromPoint(touch.clientX, touch.clientY, touchClone.current);
+        const sectionEl = el?.closest("[data-section-id]");
+        if (sectionEl) {
+            const id = Number(sectionEl.dataset.sectionId);
+            const over = sectionsMap.get(id);
+            if (over) setDragOverSection(over);
+        }
+    }
+
+    function handleSectionTouchEnd(e, currentSection) {
+        if (!touchDraggedSection.current) return;
+        const card = e.currentTarget.closest("[data-section-id]");
+        if (card) card.style.opacity = "1";
+        removeTouchClone();
+
+        const touch = e.changedTouches[0];
+        const el = getElementFromPoint(touch.clientX, touch.clientY, null);
+        const sectionEl = el?.closest("[data-section-id]");
+        if (sectionEl) {
+            const targetId = Number(sectionEl.dataset.sectionId);
+            if (targetId !== touchDraggedSection.current.id) {
+                const sections = getSortedSections();
+                const draggedIndex = sections.findIndex(s => s.id === touchDraggedSection.current.id);
+                const targetIndex = sections.findIndex(s => s.id === targetId);
+                const reordered = [...sections];
+                const [removed] = reordered.splice(draggedIndex, 1);
+                reordered.splice(targetIndex, 0, removed);
+                reorderSections(reordered.map(s => s.id));
+            }
+        }
+
+        touchDraggedSection.current = null;
+        setDragOverSection(null);
+    }
+
+    // Page touch handlers
+    function handlePageTouchStart(e, page, section) {
+        touchDraggedPage.current = page;
+        touchDraggedPageSection.current = section;
+        const row = e.currentTarget.closest("[data-page-id]");
+        createTouchClone(row || e.currentTarget, e.touches[0]);
+        if (row) row.style.opacity = "0.4";
+    }
+
+    function handlePageTouchMove(e) {
+        if (!touchDraggedPage.current) return;
+        e.preventDefault();
+        const touch = e.touches[0];
+        if (touchClone.current) {
+            touchClone.current.style.left = touch.clientX - touchClone.current.offsetWidth / 2 + "px";
+            touchClone.current.style.top = touch.clientY - 20 + "px";
+        }
+        const el = getElementFromPoint(touch.clientX, touch.clientY, touchClone.current);
+        const pageEl = el?.closest("[data-page-id]");
+        if (pageEl) {
+            const id = Number(pageEl.dataset.pageId);
+            const section = touchDraggedPageSection.current;
+            const over = section?.pages.find(p => p.id === id);
+            if (over) setDragOverPage(over);
+        }
+    }
+
+    function handlePageTouchEnd(e) {
+        if (!touchDraggedPage.current) return;
+        const row = e.currentTarget.closest("[data-page-id]");
+        if (row) row.style.opacity = "1";
+        removeTouchClone();
+
+        const touch = e.changedTouches[0];
+        const el = getElementFromPoint(touch.clientX, touch.clientY, null);
+        const pageEl = el?.closest("[data-page-id]");
+        if (pageEl) {
+            const targetId = Number(pageEl.dataset.pageId);
+            const section = touchDraggedPageSection.current;
+            if (section && targetId !== touchDraggedPage.current.id) {
+                const pages = getSortedPages(section);
+                const draggedIndex = pages.findIndex(p => p.id === touchDraggedPage.current.id);
+                const targetIndex = pages.findIndex(p => p.id === targetId);
+                if (draggedIndex !== -1 && targetIndex !== -1) {
+                    const reordered = [...pages];
+                    const [removed] = reordered.splice(draggedIndex, 1);
+                    reordered.splice(targetIndex, 0, removed);
+                    reorderPages(section.id, reordered.map(p => p.id));
+                }
+            }
+        }
+
+        touchDraggedPage.current = null;
+        touchDraggedPageSection.current = null;
+        setDragOverPage(null);
+    }
+
     async function changePageSection(pageId, newSectionId, page = null) {
         if (!pageId) return;
 
@@ -568,6 +712,7 @@ export default function NavigationPanel() {
                     {getSortedSections().map((section) => (
                         <div
                             key={section.id}
+                            data-section-id={section.id}
                             className={`border border-gray-700 rounded-lg transition-colors ${
                                 dragOverSection?.id === section.id &&
                                 draggedSection?.id !== section.id
@@ -583,7 +728,12 @@ export default function NavigationPanel() {
                         >
                             {/* Section header */}
                             <div className="flex items-center gap-2 px-3 py-2 bg-blue-500 rounded-t-lg">
-                                <span className="text-gray-500 text-lg select-none">⋮⋮</span>
+                                <span
+                                    className="text-gray-500 text-lg select-none touch-none"
+                                    onTouchStart={(e) => handleSectionTouchStart(e, section)}
+                                    onTouchMove={handleSectionTouchMove}
+                                    onTouchEnd={(e) => handleSectionTouchEnd(e, section)}
+                                >⋮⋮</span>
 
                                 {editingSection === section.id ? (
                                     <>
@@ -632,6 +782,7 @@ export default function NavigationPanel() {
                                 {getSortedPages(section).map((page) => (
                                     <div
                                         key={page.id}
+                                        data-page-id={page.id}
                                         className={`flex items-center gap-2 rounded px-1 py-1 transition-colors ${
                                             dragOverPage?.id === page.id &&
                                             draggedPage?.id !== page.id
@@ -645,7 +796,12 @@ export default function NavigationPanel() {
                                         onDragEnter={(e) => handlePageDragEnter(e, page)}
                                         onDrop={(e) => handlePageDrop(e, page, section)}
                                     >
-                                        <span className="text-gray-500 cursor-move select-none shrink-0">⋮⋮</span>
+                                        <span
+                                            className="text-gray-500 cursor-move select-none shrink-0 touch-none"
+                                            onTouchStart={(e) => handlePageTouchStart(e, page, section)}
+                                            onTouchMove={handlePageTouchMove}
+                                            onTouchEnd={handlePageTouchEnd}
+                                        >⋮⋮</span>
                                         <span className="flex-1 truncate text-sm">{page.title}</span>
                                         <select
                                             className="bg-gray-900 text-white px-1 py-1 rounded text-xs max-w-[120px] shrink-0"
