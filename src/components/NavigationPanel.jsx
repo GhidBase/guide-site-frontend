@@ -532,7 +532,7 @@ export default function NavigationPanel() {
             </div>
 
             {/* Sections — desktop: table, mobile: card list */}
-            <div className="max-w-4xl w-full overflow-x-auto">
+            <div className="max-w-4xl w-full ">
                 {/* Desktop table (hidden on mobile) */}
                 <table className="m-0 w-full border border-gray-700 hidden sm:table">
                     <thead>
@@ -720,7 +720,7 @@ export default function NavigationPanel() {
                                             </button>
 
                                             {openQuickAdd === section.id && (
-                                                <div className="absolute left-0 bottom-full mb-1 z-10 bg-gray-800 border border-gray-500 rounded shadow-xl min-w-48">
+                                                <div className="absolute left-0 mb-1 z-10 bg-gray-800 border border-gray-500 rounded shadow-xl min-w-48">
                                                     {unsectionedPages.map(
                                                         (page) => (
                                                             <button
@@ -944,7 +944,7 @@ export default function NavigationPanel() {
                                         </button>
 
                                         {openQuickAdd === section.id && (
-                                            <div className="absolute left-0 bottom-full mb-1 z-10 bg-gray-800 border border-gray-500 rounded shadow-xl min-w-48 w-full">
+                                            <div className="absolute left-0 mb-1 z-10 bg-gray-800 border border-gray-500 rounded shadow-xl min-w-48 w-full">
                                                 {unsectionedPages.map(
                                                     (page) => (
                                                         <button
@@ -1032,7 +1032,7 @@ export default function NavigationPanel() {
                     </table>
 
                     {/* Mobile card list for unsectioned pages */}
-                    <div className="flex flex-col sm:hidden border border-gray-700 rounded-lg overflow-hidden">
+                    <div className="flex flex-col sm:hidden border border-gray-700 rounded-lg ">
                         {unsectionedPages.map((page) => (
                             <div
                                 key={page.id}
