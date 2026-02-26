@@ -3,8 +3,6 @@ import { currentAPI } from "../config/api.js";
 import { useRouteLoaderData } from "react-router";
 import { PencilIcon, Check, X, Trash } from "lucide-react";
 
-const secret = import.meta.env.VITE_SECRET;
-
 export default function NavigationPanel() {
     const [, forceRender] = useState(0);
     const { gameData, sectionsMap } = useRouteLoaderData("main");
@@ -81,8 +79,8 @@ export default function NavigationPanel() {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "x-admin-secret": secret,
                 },
+                credentials: "include",
                 body: JSON.stringify({
                     title: newSectionName,
                     gameId,
@@ -105,8 +103,8 @@ export default function NavigationPanel() {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
-                    "x-admin-secret": secret,
                 },
+                credentials: "include",
                 body: JSON.stringify({ title: sectionName }),
             });
 
@@ -122,9 +120,7 @@ export default function NavigationPanel() {
         try {
             await fetch(currentAPI + "/sections/delete/" + id, {
                 method: "DELETE",
-                headers: {
-                    "x-admin-secret": secret,
-                },
+                credentials: "include",
             });
 
             sectionsMap.delete(id);
@@ -140,8 +136,8 @@ export default function NavigationPanel() {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
-                    "x-admin-secret": secret,
                 },
+                credentials: "include",
                 body: JSON.stringify({
                     gameId,
                     sectionOrder: newOrder,
@@ -300,8 +296,8 @@ export default function NavigationPanel() {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
-                    "x-admin-secret": secret,
                 },
+                credentials: "include",
                 body: JSON.stringify({ title: pageName }),
             });
 
@@ -320,9 +316,7 @@ export default function NavigationPanel() {
         try {
             await fetch(currentAPI + "/pages/" + id, {
                 method: "DELETE",
-                headers: {
-                    "x-admin-secret": secret,
-                },
+                credentials: "include",
             });
 
             const section = sectionsMap.get(sectionId);
@@ -343,8 +337,8 @@ export default function NavigationPanel() {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
-                    "X-Admin-Secret": secret,
                 },
+                credentials: "include",
                 body: JSON.stringify({
                     sectionId:
                         newSectionId === "none" ? null : Number(newSectionId),
@@ -716,3 +710,4 @@ export default function NavigationPanel() {
         </>
     );
 }
+

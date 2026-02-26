@@ -4,7 +4,8 @@ import TextBlock from "./blocks/TextBlock";
 import { Link, useRouteLoaderData } from "react-router";
 import SingleImageBlock from "./blocks/SingleImageBlock";
 import { useAuth } from "../hooks/useAuth.js";
-const env = import.meta.env.VITE_ENV;
+import { Pencil } from "lucide-react";
+import PendingReviewNotification from "./notifications/PendingReviewNotification";
 
 export default function PageBuilder() {
     const { pageData, gameData } = useRouteLoaderData("main");
@@ -55,7 +56,6 @@ export default function PageBuilder() {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "X-Admin-Secret": import.meta.env.VITE_SECRET,
                 },
                 body: JSON.stringify({ order: nextOrder, type }),
                 credentials: "include",
@@ -78,8 +78,8 @@ export default function PageBuilder() {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
-                    "X-Admin-Secret": import.meta.env.VITE_SECRET,
                 },
+                credentials: "include",
                 body: JSON.stringify({ type: "offset", order }),
             },
         );
@@ -101,9 +101,6 @@ export default function PageBuilder() {
             currentAPI + "/games/" + gameId + "/blocks/" + block.id,
             {
                 method: "DELETE",
-                headers: {
-                    "X-Admin-Secret": import.meta.env.VITE_SECRET,
-                },
                 credentials: "include",
             },
         );
@@ -125,7 +122,6 @@ export default function PageBuilder() {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
-                    "X-Admin-Secret": import.meta.env.VITE_SECRET,
                 },
                 credentials: "include",
                 body: JSON.stringify({ content, content2 }),
@@ -264,6 +260,16 @@ export default function PageBuilder() {
                     }
                     return blockType;
                 })}
+            {user?.role === "ADMIN" && (
+                <div className="flex flex-col items-center mt-2 gap-2">
+                    <Link
+                        className="text-amber-50 bg-(--primary) w-50 rounded px-2 py-0.5 cursor-pointer hover:opacity-90"
+                        to={"/games/" + gameSlug + "/page-manager"}
+                    >
+                        Back to Page Manager
+                    </Link>
+                </div>
+            )}
         </Fragment>
     );
 }
