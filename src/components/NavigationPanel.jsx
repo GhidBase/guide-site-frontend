@@ -42,12 +42,16 @@ export default function NavigationPanel() {
     useEffect(() => {
         if (!openQuickAdd) return;
         function handleClickOutside(e) {
-            if (quickAddRef.current && !quickAddRef.current.contains(e.target)) {
+            if (
+                quickAddRef.current &&
+                !quickAddRef.current.contains(e.target)
+            ) {
                 setOpenQuickAdd(null);
             }
         }
         document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
+        return () =>
+            document.removeEventListener("mousedown", handleClickOutside);
     }, [openQuickAdd]);
 
     const getSortedSections = () => {
@@ -57,9 +61,7 @@ export default function NavigationPanel() {
     };
 
     const getSortedPages = (section) => {
-        return [...section.pages].sort(
-            (a, b) => (a.sort ?? 0) - (b.sort ?? 0),
-        );
+        return [...section.pages].sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0));
     };
 
     async function createSection() {
@@ -163,8 +165,8 @@ export default function NavigationPanel() {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
-                    "x-admin-secret": secret,
                 },
+                credentials: "include",
                 body: JSON.stringify({
                     sectionId,
                     pageOrder: newOrder,
@@ -424,11 +426,18 @@ export default function NavigationPanel() {
                                         ? "bg-gray-700"
                                         : ""
                                 } ${editingSection === section.id ? "" : "cursor-move hover:bg-gray-800"}`}
-                                draggable={editingSection !== section.id && !draggedPage}
-                                onDragStart={(e) => handleSectionDragStart(e, section)}
+                                draggable={
+                                    editingSection !== section.id &&
+                                    !draggedPage
+                                }
+                                onDragStart={(e) =>
+                                    handleSectionDragStart(e, section)
+                                }
                                 onDragEnd={handleSectionDragEnd}
                                 onDragOver={handleSectionDragOver}
-                                onDragEnter={(e) => handleSectionDragEnter(e, section)}
+                                onDragEnter={(e) =>
+                                    handleSectionDragEnter(e, section)
+                                }
                                 onDrop={(e) => handleSectionDrop(e, section)}
                             >
                                 <td className="p-2 text-center text-gray-500">
@@ -508,13 +517,21 @@ export default function NavigationPanel() {
                                                     : ""
                                             }`}
                                             draggable
-                                            onDragStart={(e) => handlePageDragStart(e, page)}
+                                            onDragStart={(e) =>
+                                                handlePageDragStart(e, page)
+                                            }
                                             onDragEnd={handlePageDragEnd}
                                             onDragOver={handlePageDragOver}
-                                            onDragEnter={(e) => handlePageDragEnter(e, page)}
-                                            onDrop={(e) => handlePageDrop(e, page, section)}
+                                            onDragEnter={(e) =>
+                                                handlePageDragEnter(e, page)
+                                            }
+                                            onDrop={(e) =>
+                                                handlePageDrop(e, page, section)
+                                            }
                                         >
-                                            <span className="text-gray-500 cursor-move select-none mr-1">⋮⋮</span>
+                                            <span className="text-gray-500 cursor-move select-none mr-1">
+                                                ⋮⋮
+                                            </span>
                                             {page.title}
                                             <select
                                                 className="bg-gray-900 text-white px-2 py-1 rounded ml-auto"
@@ -556,13 +573,18 @@ export default function NavigationPanel() {
                                     {unsectionedPages.length > 0 && (
                                         <div
                                             className="relative mt-2"
-                                            ref={openQuickAdd === section.id ? quickAddRef : null}
+                                            ref={
+                                                openQuickAdd === section.id
+                                                    ? quickAddRef
+                                                    : null
+                                            }
                                         >
                                             <button
                                                 className="w-full text-sm font-semibold text-white bg-black hover:bg-gray-800 px-3 py-1.5 rounded cursor-pointer transition-colors"
                                                 onClick={() =>
                                                     setOpenQuickAdd(
-                                                        openQuickAdd === section.id
+                                                        openQuickAdd ===
+                                                            section.id
                                                             ? null
                                                             : section.id,
                                                     )
@@ -573,22 +595,28 @@ export default function NavigationPanel() {
 
                                             {openQuickAdd === section.id && (
                                                 <div className="absolute left-0 top-9 z-10 bg-gray-800 border border-gray-500 rounded shadow-xl min-w-48">
-                                                    {unsectionedPages.map((page) => (
-                                                        <button
-                                                            key={page.id}
-                                                            className="block w-full text-left px-4 py-2 text-sm text-white hover:bg-gray-700 cursor-pointer"
-                                                            onClick={() => {
-                                                                changePageSection(
-                                                                    page.id,
-                                                                    String(section.id),
-                                                                    page,
-                                                                );
-                                                                setOpenQuickAdd(null);
-                                                            }}
-                                                        >
-                                                            {page.title}
-                                                        </button>
-                                                    ))}
+                                                    {unsectionedPages.map(
+                                                        (page) => (
+                                                            <button
+                                                                key={page.id}
+                                                                className="block w-full text-left px-4 py-2 text-sm text-white hover:bg-gray-700 cursor-pointer"
+                                                                onClick={() => {
+                                                                    changePageSection(
+                                                                        page.id,
+                                                                        String(
+                                                                            section.id,
+                                                                        ),
+                                                                        page,
+                                                                    );
+                                                                    setOpenQuickAdd(
+                                                                        null,
+                                                                    );
+                                                                }}
+                                                            >
+                                                                {page.title}
+                                                            </button>
+                                                        ),
+                                                    )}
                                                 </div>
                                             )}
                                         </div>
@@ -710,4 +738,3 @@ export default function NavigationPanel() {
         </>
     );
 }
-
