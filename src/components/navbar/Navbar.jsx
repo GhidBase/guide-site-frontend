@@ -16,8 +16,6 @@ export default function Navbar({
     const { gameData, sectionsMap } = useLoaderData();
     const { isAuthenticated, user, logout, isLoading } = useAuth();
     const isAdmin = user?.role == "ADMIN";
-    console.log("navbar user");
-    console.log(user);
     const navigate = useNavigate();
     const [editMode, setEditMode] = useState(false);
     const gameSlug = isLDG ? "" : "/games/" + gameData?.slug;

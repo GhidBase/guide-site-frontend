@@ -45,7 +45,6 @@ export default function Main() {
         }
     }, [navOpen]);
 
-    console.log(gameData);
     return (
         <div
             id="main-page-sections"

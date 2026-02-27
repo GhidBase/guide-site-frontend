@@ -28,7 +28,7 @@ export default function LoginPage() {
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                     {error && (
                         <div className="p-3 bg-red-900/30 border border-red-700 rounded text-(--text-color) text-sm">
-                            {error}
+                            Login Failed
                         </div>
                     )}
 

@@ -3,6 +3,8 @@ import { currentAPI } from "../config/api.js";
 import { useRouteLoaderData } from "react-router";
 import { PencilIcon, Check, X, Trash } from "lucide-react";
 
+const secret = import.meta.env.VITE_SECRET;
+
 export default function NavigationPanel() {
     const [, forceRender] = useState(0);
     const { gameData, sectionsMap } = useRouteLoaderData("main");
@@ -20,9 +22,6 @@ export default function NavigationPanel() {
 
     const [editingSection, setEditingSection] = useState(null);
     const [sectionName, setSectionName] = useState("");
-
-    const [editingPage, setEditingPage] = useState(null);
-    const [pageName, setPageName] = useState("");
 
     const [newSectionName, setNewSectionName] = useState("");
 
@@ -72,21 +71,22 @@ export default function NavigationPanel() {
 
         try {
             const sections = getSortedSections();
-            const maxOrder =
-                sections.length > 0
-                    ? Math.max(...sections.map((s) => s.order || 0))
-                    : -1;
+            //
+            // const maxOrder =
+            //     sections.length > 0
+            //         ? Math.max(...sections.map((s) => s.order || 0))
+            //         : -1;
 
             const response = await fetch(currentAPI + "/sections", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
+                    "x-admin-secret": secret,
                 },
-                credentials: "include",
                 body: JSON.stringify({
                     title: newSectionName,
                     gameId,
-                    order: maxOrder + 1,
+                    order: sections.length,
                 }),
             });
 
@@ -105,8 +105,8 @@ export default function NavigationPanel() {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
+                    "x-admin-secret": secret,
                 },
-                credentials: "include",
                 body: JSON.stringify({ title: sectionName }),
             });
 
@@ -122,7 +122,9 @@ export default function NavigationPanel() {
         try {
             await fetch(currentAPI + "/sections/delete/" + id, {
                 method: "DELETE",
-                credentials: "include",
+                headers: {
+                    "x-admin-secret": secret,
+                },
             });
 
             sectionsMap.delete(id);
@@ -138,8 +140,8 @@ export default function NavigationPanel() {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
+                    "x-admin-secret": secret,
                 },
-                credentials: "include",
                 body: JSON.stringify({
                     gameId,
                     sectionOrder: newOrder,
@@ -165,8 +167,8 @@ export default function NavigationPanel() {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
+                    "x-admin-secret": secret,
                 },
-                credentials: "include",
                 body: JSON.stringify({
                     sectionId,
                     pageOrder: newOrder,
@@ -292,43 +294,165 @@ export default function NavigationPanel() {
         setDragOverPage(null);
     }
 
-    async function renamePage(id, sectionId) {
-        try {
-            await fetch(currentAPI + "/pages/" + id, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                credentials: "include",
-                body: JSON.stringify({ title: pageName }),
-            });
+    // Touch drag refs
+    const touchDraggedSection = useRef(null);
+    const touchDraggedPage = useRef(null);
+    const touchDraggedPageSection = useRef(null);
+    const touchClone = useRef(null);
 
-            const section = sectionsMap.get(sectionId);
-            const page = section.pages.find((p) => p.id === id);
-            page.title = pageName;
+    function createTouchClone(el, touch) {
+        const clone = el.cloneNode(true);
+        const rect = el.getBoundingClientRect();
+        clone.style.position = "fixed";
+        clone.style.left = rect.left + "px";
+        clone.style.top = rect.top + "px";
+        clone.style.width = rect.width + "px";
+        clone.style.opacity = "0.7";
+        clone.style.pointerEvents = "none";
+        clone.style.zIndex = "9999";
+        clone.style.transform = "scale(1.02)";
+        document.body.appendChild(clone);
+        touchClone.current = clone;
+    }
 
-            setEditingPage(null);
-            forceRender((x) => x + 1);
-        } catch (err) {
-            console.error("Failed to rename page:", err);
+    function removeTouchClone() {
+        if (touchClone.current) {
+            touchClone.current.remove();
+            touchClone.current = null;
         }
     }
 
-    async function deletePage(id, sectionId) {
-        try {
-            await fetch(currentAPI + "/pages/" + id, {
-                method: "DELETE",
-                credentials: "include",
-            });
+    function getElementFromPoint(x, y, excludeEl) {
+        if (excludeEl) excludeEl.style.display = "none";
+        const el = document.elementFromPoint(x, y);
+        if (excludeEl) excludeEl.style.display = "";
+        return el;
+    }
 
-            const section = sectionsMap.get(sectionId);
-            section.pages = section.pages.filter((p) => p.id !== id);
+    // Section touch handlers
+    function handleSectionTouchStart(e, section) {
+        if (editingSection) return;
+        touchDraggedSection.current = section;
+        const card = e.currentTarget.closest("[data-section-id]");
+        createTouchClone(card || e.currentTarget, e.touches[0]);
+        if (card) card.style.opacity = "0.4";
+    }
 
-            setEditingPage(null);
-            forceRender((x) => x + 1);
-        } catch (err) {
-            console.error("Failed to delete page:", err);
+    function handleSectionTouchMove(e) {
+        if (!touchDraggedSection.current) return;
+        const touch = e.touches[0];
+        if (touchClone.current) {
+            touchClone.current.style.left =
+                touch.clientX - touchClone.current.offsetWidth / 2 + "px";
+            touchClone.current.style.top = touch.clientY - 20 + "px";
         }
+        const el = getElementFromPoint(
+            touch.clientX,
+            touch.clientY,
+            touchClone.current,
+        );
+        const sectionEl = el?.closest("[data-section-id]");
+        if (sectionEl) {
+            const id = Number(sectionEl.dataset.sectionId);
+            const over = sectionsMap.get(id);
+            if (over) setDragOverSection(over);
+        }
+    }
+
+    function handleSectionTouchEnd(e, currentSection) {
+        if (!touchDraggedSection.current) return;
+        const card = e.currentTarget.closest("[data-section-id]");
+        if (card) card.style.opacity = "1";
+        removeTouchClone();
+
+        const touch = e.changedTouches[0];
+        const el = getElementFromPoint(touch.clientX, touch.clientY, null);
+        const sectionEl = el?.closest("[data-section-id]");
+        if (sectionEl) {
+            const targetId = Number(sectionEl.dataset.sectionId);
+            if (targetId !== touchDraggedSection.current.id) {
+                const sections = getSortedSections();
+                const draggedIndex = sections.findIndex(
+                    (s) => s.id === touchDraggedSection.current.id,
+                );
+                const targetIndex = sections.findIndex(
+                    (s) => s.id === targetId,
+                );
+                const reordered = [...sections];
+                const [removed] = reordered.splice(draggedIndex, 1);
+                reordered.splice(targetIndex, 0, removed);
+                reorderSections(reordered.map((s) => s.id));
+            }
+        }
+
+        touchDraggedSection.current = null;
+        setDragOverSection(null);
+    }
+
+    // Page touch handlers
+    function handlePageTouchStart(e, page, section) {
+        touchDraggedPage.current = page;
+        touchDraggedPageSection.current = section;
+        const row = e.currentTarget.closest("[data-page-id]");
+        createTouchClone(row || e.currentTarget, e.touches[0]);
+        if (row) row.style.opacity = "0.4";
+    }
+
+    function handlePageTouchMove(e) {
+        if (!touchDraggedPage.current) return;
+        const touch = e.touches[0];
+        if (touchClone.current) {
+            touchClone.current.style.left =
+                touch.clientX - touchClone.current.offsetWidth / 2 + "px";
+            touchClone.current.style.top = touch.clientY - 20 + "px";
+        }
+        const el = getElementFromPoint(
+            touch.clientX,
+            touch.clientY,
+            touchClone.current,
+        );
+        const pageEl = el?.closest("[data-page-id]");
+        if (pageEl) {
+            const id = Number(pageEl.dataset.pageId);
+            const section = touchDraggedPageSection.current;
+            const over = section?.pages.find((p) => p.id === id);
+            if (over) setDragOverPage(over);
+        }
+    }
+
+    function handlePageTouchEnd(e) {
+        if (!touchDraggedPage.current) return;
+        const row = e.currentTarget.closest("[data-page-id]");
+        if (row) row.style.opacity = "1";
+        removeTouchClone();
+
+        const touch = e.changedTouches[0];
+        const el = getElementFromPoint(touch.clientX, touch.clientY, null);
+        const pageEl = el?.closest("[data-page-id]");
+        if (pageEl) {
+            const targetId = Number(pageEl.dataset.pageId);
+            const section = touchDraggedPageSection.current;
+            if (section && targetId !== touchDraggedPage.current.id) {
+                const pages = getSortedPages(section);
+                const draggedIndex = pages.findIndex(
+                    (p) => p.id === touchDraggedPage.current.id,
+                );
+                const targetIndex = pages.findIndex((p) => p.id === targetId);
+                if (draggedIndex !== -1 && targetIndex !== -1) {
+                    const reordered = [...pages];
+                    const [removed] = reordered.splice(draggedIndex, 1);
+                    reordered.splice(targetIndex, 0, removed);
+                    reorderPages(
+                        section.id,
+                        reordered.map((p) => p.id),
+                    );
+                }
+            }
+        }
+
+        touchDraggedPage.current = null;
+        touchDraggedPageSection.current = null;
+        setDragOverPage(null);
     }
 
     async function changePageSection(pageId, newSectionId, page = null) {
@@ -339,8 +463,8 @@ export default function NavigationPanel() {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
+                    "X-Admin-Secret": secret,
                 },
-                credentials: "include",
                 body: JSON.stringify({
                     sectionId:
                         newSectionId === "none" ? null : Number(newSectionId),
@@ -390,24 +514,27 @@ export default function NavigationPanel() {
 
     return (
         <>
-            <div className="mt-8 max-w-4xl mb-4 flex gap-2">
+            {/* Add Section bar — stacks vertically on mobile, row on sm+ */}
+            <div className="mt-8 max-w-4xl mb-4 flex flex-col sm:flex-row gap-2">
                 <input
                     type="text"
                     value={newSectionName}
                     onChange={(e) => setNewSectionName(e.target.value)}
                     placeholder="New section name"
-                    className="bg-(--red-brown) text-white px-3 py-2 rounded flex-1"
+                    className="bg-(--red-brown) text-white px-3 py-2 rounded w-full sm:flex-1"
                 />
                 <button
                     onClick={createSection}
-                    className="bg-(--red-brown) text-white px-4 py-2 rounded hover: cursor-pointer"
+                    className="bg-(--red-brown) text-white px-4 py-2 rounded hover: cursor-pointer w-full sm:w-auto"
                 >
                     Add Section
                 </button>
             </div>
 
-            <div className="max-w-4xl">
-                <table className="m-0 w-full border border-gray-700">
+            {/* Sections — desktop: table, mobile: card list */}
+            <div className="max-w-4xl w-full ">
+                {/* Desktop table (hidden on mobile) */}
+                <table className="m-0 w-full border border-gray-700 hidden sm:table">
                     <thead>
                         <tr className="bg-gray-800">
                             <th className="p-2 text-left w-8"></th>
@@ -491,12 +618,11 @@ export default function NavigationPanel() {
                                                     onClick={() => {
                                                         if (
                                                             confirm(
-                                                                `Delete page "${pageName}"?`,
+                                                                `Delete section "${section.title}"?`,
                                                             )
                                                         ) {
-                                                            deletePage(
-                                                                editingPage.id,
-                                                                editingPage.sectionId,
+                                                            deleteSection(
+                                                                section.id,
                                                             );
                                                         }
                                                     }}
@@ -594,7 +720,7 @@ export default function NavigationPanel() {
                                             </button>
 
                                             {openQuickAdd === section.id && (
-                                                <div className="absolute left-0 top-9 z-10 bg-gray-800 border border-gray-500 rounded shadow-xl min-w-48">
+                                                <div className="absolute left-0 mb-1 z-10 bg-gray-800 border border-gray-500 rounded shadow-xl min-w-48">
                                                     {unsectionedPages.map(
                                                         (page) => (
                                                             <button
@@ -626,16 +752,240 @@ export default function NavigationPanel() {
                         ))}
                     </tbody>
                 </table>
+
+                {/* Mobile card list (hidden on sm+) */}
+                <div className="flex flex-col gap-3 sm:hidden">
+                    {getSortedSections().map((section) => (
+                        <div
+                            key={section.id}
+                            data-section-id={section.id}
+                            className={`border border-gray-700 rounded-lg transition-colors ${
+                                dragOverSection?.id === section.id &&
+                                draggedSection?.id !== section.id
+                                    ? "bg-gray-700"
+                                    : ""
+                            }`}
+                            draggable={
+                                editingSection !== section.id && !draggedPage
+                            }
+                            onDragStart={(e) =>
+                                handleSectionDragStart(e, section)
+                            }
+                            onDragEnd={handleSectionDragEnd}
+                            onDragOver={handleSectionDragOver}
+                            onDragEnter={(e) =>
+                                handleSectionDragEnter(e, section)
+                            }
+                            onDrop={(e) => handleSectionDrop(e, section)}
+                        >
+                            {/* Section header */}
+                            <div className="flex items-center gap-2 px-3 py-2 bg-blue-500 rounded-t-lg">
+                                <span
+                                    className="text-gray-500 text-lg select-none touch-none"
+                                    onTouchStart={(e) =>
+                                        handleSectionTouchStart(e, section)
+                                    }
+                                    onTouchMove={handleSectionTouchMove}
+                                    onTouchEnd={(e) =>
+                                        handleSectionTouchEnd(e, section)
+                                    }
+                                >
+                                    ⋮⋮
+                                </span>
+
+                                {editingSection === section.id ? (
+                                    <>
+                                        <input
+                                            value={sectionName}
+                                            onChange={(e) =>
+                                                setSectionName(e.target.value)
+                                            }
+                                            className="bg-gray-900 text-white px-2 py-1 rounded flex-1 min-w-0"
+                                        />
+                                        <Check
+                                            size={18}
+                                            className="cursor-pointer shrink-0"
+                                            onClick={() =>
+                                                renameSection(section.id)
+                                            }
+                                        />
+                                        <X
+                                            size={18}
+                                            className="cursor-pointer shrink-0"
+                                            onClick={() =>
+                                                setEditingSection(null)
+                                            }
+                                        />
+                                    </>
+                                ) : (
+                                    <>
+                                        <span className="font-semibold flex-1 truncate">
+                                            {section.title}
+                                        </span>
+                                        <PencilIcon
+                                            size={16}
+                                            className="cursor-pointer shrink-0"
+                                            onClick={() => {
+                                                setEditingSection(section.id);
+                                                setSectionName(section.title);
+                                            }}
+                                        />
+                                        <Trash
+                                            size={16}
+                                            className="cursor-pointer shrink-0"
+                                            onClick={() => {
+                                                if (
+                                                    confirm(
+                                                        `Delete section "${section.title}"?`,
+                                                    )
+                                                ) {
+                                                    deleteSection(section.id);
+                                                }
+                                            }}
+                                        />
+                                    </>
+                                )}
+                            </div>
+
+                            {/* Pages list */}
+                            <div className="px-3 py-2 flex flex-col gap-1">
+                                {getSortedPages(section).map((page) => (
+                                    <div
+                                        key={page.id}
+                                        data-page-id={page.id}
+                                        className={`flex items-center gap-2 rounded px-1 py-1 transition-colors ${
+                                            dragOverPage?.id === page.id &&
+                                            draggedPage?.id !== page.id
+                                                ? "bg-gray-600"
+                                                : ""
+                                        }`}
+                                        draggable
+                                        onDragStart={(e) =>
+                                            handlePageDragStart(e, page)
+                                        }
+                                        onDragEnd={handlePageDragEnd}
+                                        onDragOver={handlePageDragOver}
+                                        onDragEnter={(e) =>
+                                            handlePageDragEnter(e, page)
+                                        }
+                                        onDrop={(e) =>
+                                            handlePageDrop(e, page, section)
+                                        }
+                                    >
+                                        <span
+                                            className="text-gray-500 cursor-move select-none shrink-0 touch-none"
+                                            onTouchStart={(e) =>
+                                                handlePageTouchStart(
+                                                    e,
+                                                    page,
+                                                    section,
+                                                )
+                                            }
+                                            onTouchMove={handlePageTouchMove}
+                                            onTouchEnd={handlePageTouchEnd}
+                                        >
+                                            ⋮⋮
+                                        </span>
+                                        <span className="flex-1 truncate text-sm">
+                                            {page.title}
+                                        </span>
+                                        <select
+                                            className="bg-gray-900 text-white px-1 py-1 rounded text-xs max-w-[120px] shrink-0"
+                                            onChange={(e) =>
+                                                changePageSection(
+                                                    page.id,
+                                                    e.target.value,
+                                                    page,
+                                                )
+                                            }
+                                            defaultValue=""
+                                        >
+                                            <option value="">Move to...</option>
+                                            <option value="none">
+                                                No Section
+                                            </option>
+                                            {Array.from(sectionsMap.values())
+                                                .filter(
+                                                    (s) => s.id !== section.id,
+                                                )
+                                                .map((s) => (
+                                                    <option
+                                                        key={s.id}
+                                                        value={s.id}
+                                                    >
+                                                        {s.title}
+                                                    </option>
+                                                ))}
+                                        </select>
+                                    </div>
+                                ))}
+
+                                {/* Quick-add unsectioned pages */}
+                                {unsectionedPages.length > 0 && (
+                                    <div
+                                        className="relative mt-1"
+                                        ref={
+                                            openQuickAdd === section.id
+                                                ? quickAddRef
+                                                : null
+                                        }
+                                    >
+                                        <button
+                                            className="w-full text-sm font-semibold text-white bg-black hover:bg-gray-800 px-3 py-1.5 rounded cursor-pointer transition-colors"
+                                            onClick={() =>
+                                                setOpenQuickAdd(
+                                                    openQuickAdd === section.id
+                                                        ? null
+                                                        : section.id,
+                                                )
+                                            }
+                                        >
+                                            + Add page
+                                        </button>
+
+                                        {openQuickAdd === section.id && (
+                                            <div className="absolute left-0 mb-1 z-10 bg-gray-800 border border-gray-500 rounded shadow-xl min-w-48 w-full">
+                                                {unsectionedPages.map(
+                                                    (page) => (
+                                                        <button
+                                                            key={page.id}
+                                                            className="block w-full text-left px-4 py-2 text-sm text-white hover:bg-gray-700 cursor-pointer"
+                                                            onClick={() => {
+                                                                changePageSection(
+                                                                    page.id,
+                                                                    String(
+                                                                        section.id,
+                                                                    ),
+                                                                    page,
+                                                                );
+                                                                setOpenQuickAdd(
+                                                                    null,
+                                                                );
+                                                            }}
+                                                        >
+                                                            {page.title}
+                                                        </button>
+                                                    ),
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
 
             {/* Unsectioned pages */}
             {unsectionedPages.length > 0 && (
-                <div className="mt-6">
+                <div className="mt-6 max-w-4xl w-full">
                     <h2 className="text-lg font-bold mb-2">
                         Unsectioned Pages
                     </h2>
 
-                    <table className="w-full border border-gray-700">
+                    {/* Desktop table */}
+                    <table className="w-full border border-gray-700 hidden sm:table">
                         <thead>
                             <tr className="bg-gray-800">
                                 <th className="p-2 text-left">Page</th>
@@ -680,61 +1030,43 @@ export default function NavigationPanel() {
                             ))}
                         </tbody>
                     </table>
-                </div>
-            )}
 
-            {/* Page edit popup */}
-            {editingPage && (
-                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-                    <div className="bg-gray-900 p-6 rounded-lg space-y-4 min-w-96">
-                        <h3 className="text-xl font-bold">Edit Page</h3>
-
-                        <div>
-                            <label className="block mb-2">Page Title:</label>
-                            <input
-                                value={pageName}
-                                onChange={(e) => setPageName(e.target.value)}
-                                className="bg-gray-800 text-white px-3 py-2 rounded w-full"
-                            />
-                        </div>
-
-                        <div className="flex gap-2 justify-end">
-                            <button
-                                onClick={() =>
-                                    renamePage(
-                                        editingPage.id,
-                                        editingPage.sectionId,
-                                    )
-                                }
-                                className="bg-green-600 px-4 py-2 rounded"
+                    {/* Mobile card list for unsectioned pages */}
+                    <div className="flex flex-col sm:hidden border border-gray-700 rounded-lg ">
+                        {unsectionedPages.map((page) => (
+                            <div
+                                key={page.id}
+                                className="flex items-center gap-2 border-t border-gray-700 first:border-t-0 px-3 py-2 hover:bg-gray-800 transition-colors"
                             >
-                                Save
-                            </button>
-
-                            <button
-                                onClick={() => {
-                                    if (confirm(`Delete page "${pageName}"?`)) {
-                                        deletePage(
-                                            editingPage.id,
-                                            editingPage.sectionId,
-                                        );
+                                <span className="flex-1 truncate text-sm">
+                                    {page.title}
+                                </span>
+                                <select
+                                    className="bg-gray-900 text-white px-1 py-1 rounded text-xs max-w-[140px] shrink-0"
+                                    onChange={(e) =>
+                                        changePageSection(
+                                            page.id,
+                                            e.target.value,
+                                            page,
+                                        )
                                     }
-                                }}
-                                className="bg-red-600 px-4 py-2 rounded"
-                            >
-                                Delete
-                            </button>
-
-                            <button
-                                onClick={() => setEditingPage(null)}
-                                className="bg-gray-600 px-4 py-2 rounded"
-                            >
-                                Cancel
-                            </button>
-                        </div>
+                                    defaultValue=""
+                                >
+                                    <option value="">Assign to...</option>
+                                    {Array.from(sectionsMap.values()).map(
+                                        (s) => (
+                                            <option key={s.id} value={s.id}>
+                                                {s.title}
+                                            </option>
+                                        ),
+                                    )}
+                                </select>
+                            </div>
+                        ))}
                     </div>
                 </div>
             )}
         </>
     );
 }
+
