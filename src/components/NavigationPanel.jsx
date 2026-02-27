@@ -146,6 +146,7 @@ export default function NavigationPanel() {
                     gameId,
                     sectionOrder: newOrder,
                 }),
+                credentials: "include",
             });
 
             newOrder.forEach((id, index) => {
@@ -1069,4 +1070,3 @@ export default function NavigationPanel() {
         </>
     );
 }
-
