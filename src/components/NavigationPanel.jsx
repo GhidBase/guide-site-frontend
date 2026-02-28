@@ -122,9 +122,7 @@ export default function NavigationPanel() {
         try {
             await fetch(currentAPI + "/sections/delete/" + id, {
                 method: "DELETE",
-                headers: {
-                    "x-admin-secret": secret,
-                },
+                credentials: "include",
             });
 
             sectionsMap.delete(id);
@@ -168,8 +166,8 @@ export default function NavigationPanel() {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
-                    "x-admin-secret": secret,
                 },
+                credentials: "include",
                 body: JSON.stringify({
                     sectionId,
                     pageOrder: newOrder,
@@ -464,8 +462,8 @@ export default function NavigationPanel() {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
-                    "X-Admin-Secret": secret,
                 },
+                credentials: "include",
                 body: JSON.stringify({
                     sectionId:
                         newSectionId === "none" ? null : Number(newSectionId),

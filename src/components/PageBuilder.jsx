@@ -16,6 +16,11 @@ export default function PageBuilder() {
     const isAdmin = user?.role == "ADMIN";
     const [adminMode, setAdminMode] = useState(false);
     const pageId = pageData?.page?.id;
+
+    const pageManagerSlug = !!gameData
+        ? "/games/" + gameSlug + "/page-manager"
+        : "/page-manager";
+
     useEffect(() => {
         setBlocks(pageData?.blocks ?? []);
     }, [gameData]);
@@ -166,7 +171,7 @@ export default function PageBuilder() {
                     </button>
                     <Link
                         className=" text-amber-50 w-50 px-2 py-0.5 flex justify-center items-center"
-                        to={"/games/" + gameSlug + "/page-manager"}
+                        to={pageManagerSlug}
                     >
                         Back to Page Manager
                     </Link>
@@ -264,7 +269,7 @@ export default function PageBuilder() {
                 <div className="flex flex-col items-center mt-2 gap-2">
                     <Link
                         className="text-amber-50 bg-(--primary) w-50 rounded px-2 py-0.5 cursor-pointer hover:opacity-90"
-                        to={"/games/" + gameSlug + "/page-manager"}
+                        to={pageManagerSlug}
                     >
                         Back to Page Manager
                     </Link>
