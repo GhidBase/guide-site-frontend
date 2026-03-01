@@ -26,10 +26,7 @@ export default function Navbar({
     }
 
     async function handleLogout() {
-        console.log("handleLogout() called");
         const res = await logout();
-        console.log("logged out result: " + res);
-        console.log(user);
         //navigate("/");
         toggleNav(false);
     }

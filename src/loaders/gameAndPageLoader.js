@@ -90,7 +90,6 @@ export default async function gameAndPageLoader({ params, request }) {
         // if !!gameData && !pageSlug
         // fetchGameHomepage
         if (!!gameData && !pageSlug) {
-            console.log("fetching LDG homepage");
             pageData = await fetchGameHomepage();
         }
     } else {
