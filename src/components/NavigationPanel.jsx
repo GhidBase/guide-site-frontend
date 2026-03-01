@@ -81,8 +81,8 @@ export default function NavigationPanel() {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "x-admin-secret": secret,
                 },
+                credentials: "include",
                 body: JSON.stringify({
                     title: newSectionName,
                     gameId,
@@ -105,8 +105,8 @@ export default function NavigationPanel() {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
-                    "x-admin-secret": secret,
                 },
+                credentials: "include",
                 body: JSON.stringify({ title: sectionName }),
             });
 
@@ -138,7 +138,6 @@ export default function NavigationPanel() {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
-                    "x-admin-secret": secret,
                 },
                 body: JSON.stringify({
                     gameId,
