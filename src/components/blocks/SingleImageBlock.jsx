@@ -7,7 +7,7 @@ export default function SingleImageBlock({
     deleteBlock,
     block,
     refreshBlock,
-    editMode,
+    adminMode,
 }) {
     const { gameData } = useRouteLoaderData("main");
     const gameId = gameData?.id;
@@ -104,7 +104,7 @@ export default function SingleImageBlock({
     return (
         <>
             <div
-                className={`text-(--text-color) mt-2 ${editMode && "bg-black/10 border-b border-(--primary) mb-0"}`}
+                className={`text-(--text-color) mt-2 ${adminMode && "bg-black/10 border-b border-(--primary) mb-0"}`}
                 id={"image-block-" + block.id}
             >
                 <div className="flex justify-stretch">
@@ -122,10 +122,12 @@ export default function SingleImageBlock({
                                         alt=""
                                         className="max-h-80 mx-auto"
                                     />
-                                    {editMode && (
+                                    {adminMode && (
                                         <button
                                             className="text-amber-50 bg-(--primary) rounded px-2 py-0.5 h-7 cursor-pointer hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                                            onClick={() => deleteFileById(file.id)}
+                                            onClick={() =>
+                                                deleteFileById(file.id)
+                                            }
                                             disabled={loading}
                                         >
                                             Delete
@@ -135,7 +137,7 @@ export default function SingleImageBlock({
                             );
                         })}
                 </div>
-                {editMode && (
+                {adminMode && (
                     <Fragment>
                         <form
                             onSubmit={uploadFile}
