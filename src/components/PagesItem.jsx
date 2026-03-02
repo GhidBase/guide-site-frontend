@@ -22,6 +22,10 @@ export default function PagesItem({
     const { gameData } = useRouteLoaderData("main");
     const gameSlug = gameData?.slug;
     const pageId = page.id;
+    const isLDG = import.meta.env.VITE_LDG == "True";
+    const slugActual = isLDG
+        ? "/" + page.slug
+        : "/games/" + gameSlug + "/" + page.slug;
 
     async function updatePageItemSlug() {
         await updatePageSlug(pageId, slugInputText, pageIndex);
@@ -207,7 +211,7 @@ export default function PagesItem({
                 {page.slug ? (
                     <Link
                         className="flex items-center justify-center w-full h-full md:text-amber-50 md:bg-(--primary) md:w-30 md:rounded md:px-2 md:py-0.5 text-center"
-                        to={"/games/" + gameSlug + "/" + page.slug}
+                        to={slugActual}
                     >
                         View Page
                     </Link>
