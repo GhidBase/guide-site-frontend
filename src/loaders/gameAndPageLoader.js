@@ -18,7 +18,7 @@ export default async function gameAndPageLoader({ params, request }) {
         let path = currentAPI;
         // localhost
         if (!gameData && !!pageSlug) {
-            path = path + "/" + pageSlug;
+            path = path + "/pages/by-slug/" + pageSlug;
         } else if (!!gameData && !!pageSlug) {
             path =
                 path + "/games/" + gameData.id + "/pages/by-slug/" + pageSlug;
@@ -112,6 +112,11 @@ export default async function gameAndPageLoader({ params, request }) {
             pageData = await fetchMainHomepage();
             isHomePage = true;
         }
+
+        //if (!gameData && !!pageData) {
+        //pageData = await fetchPageBySlug();
+        //isHomePage = true;
+        //}
     }
 
     if (pageSlug && isHomePage) {

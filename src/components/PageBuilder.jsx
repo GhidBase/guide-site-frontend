@@ -16,10 +16,12 @@ export default function PageBuilder() {
     const isAdmin = user?.role == "ADMIN";
     const [adminMode, setAdminMode] = useState(false);
     const pageId = pageData?.page?.id;
+    const isLDG = import.meta.env.VITE_LDG == "True";
 
-    const pageManagerSlug = !!gameData
-        ? "/games/" + gameSlug + "/page-manager"
-        : "/page-manager";
+    const pageManagerSlug =
+        isLDG || !gameData
+            ? "/page-manager"
+            : "/games/" + gameSlug + "/page-manager";
 
     useEffect(() => {
         setBlocks(pageData?.blocks ?? []);

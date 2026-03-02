@@ -23,9 +23,10 @@ export default function PagesItem({
     const gameSlug = gameData?.slug;
     const pageId = page.id;
     const isLDG = import.meta.env.VITE_LDG == "True";
-    const slugActual = isLDG
-        ? "/" + page.slug
-        : "/games/" + gameSlug + "/" + page.slug;
+    const slugActual =
+        isLDG || !gameData
+            ? "/" + page.slug
+            : "/games/" + gameSlug + "/" + page.slug;
 
     async function updatePageItemSlug() {
         await updatePageSlug(pageId, slugInputText, pageIndex);

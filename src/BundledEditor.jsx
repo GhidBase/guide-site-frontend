@@ -52,9 +52,6 @@ import "tinymce/skins/content/default/content";
 import "tinymce/skins/ui/oxide/content";
 
 export default function BundledEditor(props) {
-    console.log("height");
-    console.log(props.height);
-    console.log(props.height + 50);
     const height = props.height + 150;
     return (
         <Editor
