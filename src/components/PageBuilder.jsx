@@ -172,7 +172,7 @@ export default function PageBuilder() {
                         {adminMode ? "View Mode" : "Edit Mode"}
                     </button>
                     <Link
-                        className=" text-amber-50 w-50 px-2 py-0.5 flex justify-center items-center"
+                        className="text-amber-50 w-50 px-2 py-0.5 flex justify-center items-center text-center"
                         to={pageManagerSlug}
                     >
                         Back to Page Manager
@@ -270,7 +270,7 @@ export default function PageBuilder() {
             {user?.role === "ADMIN" && (
                 <div className="flex flex-col items-center mt-2 gap-2">
                     <Link
-                        className="text-amber-50 bg-(--primary) w-50 rounded px-2 py-0.5 cursor-pointer hover:opacity-90"
+                        className="text-amber-50 bg-(--primary) w-50 rounded px-2 py-0.5 cursor-pointer hover:opacity-90 text-center"
                         to={pageManagerSlug}
                     >
                         Back to Page Manager
