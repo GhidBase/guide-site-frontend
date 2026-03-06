@@ -53,13 +53,14 @@ import "tinymce/skins/ui/oxide/content";
 
 export default function BundledEditor(props) {
     const height = props.height + 150;
+
     return (
         <Editor
             licenseKey="gpl"
             {...props}
             init={{
-                height: height,
                 plugins: [
+                    "autoresize",
                     "lists",
                     "advlist",
                     "anchor",
@@ -67,21 +68,23 @@ export default function BundledEditor(props) {
                     "help",
                     "image",
                     "link",
-                    "lists",
                     "searchreplace",
                     "table",
                     "wordcount",
+                    "media",
                 ],
                 toolbar:
                     "undo redo | blocks | " +
                     "bold italic forecolor | alignleft aligncenter " +
                     "alignright alignjustify | bullist numlist outdent indent | " +
                     "removeformat | help" +
-                    "numlist bullist",
+                    "| link image media",
+
                 menubar: false,
                 promotion: false,
                 onboarding: false,
                 statusbar: false,
+
                 content_css: "/editor-content.css",
                 content_style: "body { padding: 0px 26px }",
             }}
