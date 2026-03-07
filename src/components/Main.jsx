@@ -3,6 +3,7 @@ import { Outlet, useLoaderData } from "react-router";
 import Navbar from "./navbar/Navbar.jsx";
 import Title from "./Title.jsx";
 import NavBarOpenButton from "./NavBarOpenButton.jsx";
+import MobileNavbar from "./navbar/MobileNavbar.jsx";
 import { useEffect, useState } from "react";
 import { usePageTracking } from "../hooks/usePageTracking.js";
 
@@ -85,6 +86,9 @@ export default function Main() {
                     <Outlet />
                 </div>
             </div>
+
+            <MobileNavbar />
+
             {gameData && (
                 <NavBarOpenButton
                     className={
