@@ -82,8 +82,9 @@ export default function Navbar({}) {
                 </div>
                 <div
                     id="mobile-menu-persistent"
-                    className="flex flex-col items-center pt-4 pb-2 text-black px-3 border-t-[2px] "
+                    className="flex flex-col items-center pt-2.5 pb-2 text-black px-3 border-t-[2px]  "
                 >
+                    <p className="pb-1 text-[0.9em] ">Join the community</p>
                     <a
                         href="https://discord.com/invite/luckydefense"
                         className="flex items-center justify-center gap-2 bg-[#5865f2] py-2 px-4 rounded-md "
