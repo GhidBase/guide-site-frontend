@@ -84,16 +84,16 @@ export default function Navbar({}) {
                     id="mobile-menu-persistent"
                     className="flex flex-col items-center pt-2.5 pb-2 text-black px-3 border-t-[2px]  "
                 >
-                    <p className="pb-1 text-[0.9em] ">Join the community</p>
-                    <a
-                        href="https://discord.com/invite/luckydefense"
-                        className="flex items-center justify-center gap-2 bg-[#5865f2] py-2 px-4 rounded-md "
-                    >
-                        <img src={discordLogo} className="h-[1.25em] " />
-                        <p className="text-white text-[0.8em] ">
-                            Join us on Discord
-                        </p>
-                    </a>
+                    <div className="flex items-center gap-2 ">
+                        <p className=" text-[0.8em] ">Join the community: </p>
+                        <a
+                            href="https://discord.com/invite/luckydefense"
+                            className="flex items-center justify-center gap-2 bg-[#5865f2] py-2 px-4 rounded-md "
+                        >
+                            <img src={discordLogo} className="h-[1.25em] " />
+                            <p className="text-white text-[0.8em] ">Discord</p>
+                        </a>
+                    </div>
                     <div className="px-8 w-full my-2 ">
                         <hr className="w-full border-t border-black/50  " />
                     </div>
