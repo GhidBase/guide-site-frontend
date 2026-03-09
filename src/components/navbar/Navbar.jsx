@@ -462,10 +462,7 @@ export default function Navbar({
                     }
                 })}
             </div>
-            <button
-                onClick={toggleNav}
-                className={closeClassName + " lg:hidden"}
-            >
+            <button onClick={toggleNav} className={closeClassName + " hidden"}>
                 Close
             </button>
             <div
