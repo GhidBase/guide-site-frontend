@@ -43,7 +43,6 @@ export default function MobileNavbarCategory({
                         actualSlug =
                             "/games/" + gameData.slug + "/" + page.slug;
                     }
-                    console.log(actualSlug);
                     return (
                         <Link
                             key={page.id}
