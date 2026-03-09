@@ -88,11 +88,13 @@ export default function Main() {
                 </div>
             </div>
 
-            <MobileNavbar
-                toggleNav={toggleNav}
-                className={`${!navOpen ? "hidden" : "lg:fixed"}`}
-                navOpen={navOpen}
-            />
+            {gameData && (
+                <MobileNavbar
+                    toggleNav={toggleNav}
+                    className={`${!navOpen ? "hidden" : "lg:fixed"}`}
+                    navOpen={navOpen}
+                />
+            )}
 
             {gameData && (
                 <NavBarOpenButton

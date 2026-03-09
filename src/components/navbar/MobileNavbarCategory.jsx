@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+import { useLoaderData, Link } from "react-router";
 import { useRef } from "react";
 
 export default function MobileNavbarCategory({
@@ -11,6 +11,8 @@ export default function MobileNavbarCategory({
     const pages = section.pages;
     const linksRef = useRef(null);
     const isLDG = import.meta.env.VITE_LDG == "True";
+    const { gameData, sectionsMap } = useLoaderData();
+
     return (
         <div id="mobile-menu-category" className="mb-[8px] w-full ">
             <button
@@ -47,7 +49,7 @@ export default function MobileNavbarCategory({
                         <Link
                             key={page.id}
                             className="block px-[12px] py-[10px] border-t-[1px] border-(--outline-brown) text-black "
-                            to={page.slug}
+                            to={actualSlug}
                             onClick={toggleNav}
                         >
                             {page.title}

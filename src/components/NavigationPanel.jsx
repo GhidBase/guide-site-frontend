@@ -8,6 +8,9 @@ const secret = import.meta.env.VITE_SECRET;
 export default function NavigationPanel() {
     const [, forceRender] = useState(0);
     const { gameData, sectionsMap } = useRouteLoaderData("main");
+    if (!gameData || !sectionsMap) {
+        return <div>Loading navigation data...</div>;
+    }
     const gameId = gameData?.id;
     const [unsectionedPages, setUnsectionedPages] = useState([]);
 

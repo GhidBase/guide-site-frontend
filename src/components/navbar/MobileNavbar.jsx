@@ -63,7 +63,7 @@ export default function MobileNavbar({ toggleNav, navOpen }) {
             <div
                 id="mobile-menu-panel"
                 className={`rounded-lg
-                    fixed inset-4 top-16 bottom-10 z-2
+                    fixed inset-4 top-16 bottom-16 z-2
                     items-stretch flex flex-col justify-start
                     bg-(--surface-background) border-(--outline-brown) border-[2px] shadow-lg shadow-black/50
                     transition-all duration-200
