@@ -66,6 +66,7 @@ export default function Main() {
                         className={`
                             w-60 max-w-60 min-w-60 z-3 lg:h-full
                             ${navOpen ? "fixed" : "hidden"} right-[50%] top-4 bottom-20 translate-x-1/2 lg:static lg:translate-0
+                            hidden lg:fixed
                             border-4 border-(--outline) lg:border-t-0 lg:border-b-0 lg:border-l-0 lg:border-r-4
                             bg-(--primary)   
                             lg:flex lg:flex-col
@@ -87,7 +88,11 @@ export default function Main() {
                 </div>
             </div>
 
-            <MobileNavbar />
+            <MobileNavbar
+                toggleNav={toggleNav}
+                className={`${!navOpen ? "hidden" : "lg:fixed"}`}
+                navOpen={navOpen}
+            />
 
             {gameData && (
                 <NavBarOpenButton

@@ -462,13 +462,16 @@ export default function Navbar({
                     }
                 })}
             </div>
-            <button onClick={toggleNav} className={closeClassName}>
+            <button
+                onClick={toggleNav}
+                className={closeClassName + " lg:hidden"}
+            >
                 Close
             </button>
             <div
                 id="navbar-obstructor"
                 onClick={toggleNav}
-                className={obstructorClassName}
+                className={obstructorClassName + " lg:hidden"}
             ></div>
         </Fragment>
     );

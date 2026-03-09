@@ -1,15 +1,25 @@
 const isLDG = import.meta.env.VITE_LDG == "True";
-import { Link } from "react-router";
 import discordLogo from "../../assets/icons8-discord-50.png";
+import MobileNavbarCategory from "./MobileNavbarCategory";
+import { useLoaderData } from "react-router";
 
-export default function Navbar({}) {
+export default function MobileNavbar({ toggleNav, navOpen }) {
     console.log("navbar rendered");
+    const { sectionsMap } = useLoaderData();
+    const sections = Array.from(sectionsMap.values());
 
     return (
-        <div className="mobile-menu-overlay">
+        <div
+            className={`mobile-menu-overlay bg-black/40 w-full h-full fixed inset z-2   ${!navOpen ? "hidden" : " "} `}
+            onClick={(e) => {
+                if (e.target === e.currentTarget) {
+                    toggleNav();
+                }
+            }}
+        >
             <div
                 id="mobile-menu-panel"
-                className="fixed inset-4 z-2 items-stretch flex flex-col justify-start bg-(--surface-background) border-(--outline-brown) border-[2px] "
+                className="rounded-lg fixed inset-4 top-16 bottom-16 z-2 items-stretch flex flex-col justify-start bg-(--surface-background) border-(--outline-brown) border-[2px] shadow-lg shadow-black/50 "
             >
                 <div
                     id="mobile-menu-header"
@@ -20,7 +30,10 @@ export default function Navbar({}) {
                         className="flex w-full px-[10px] py-[12px] border-b-[2px] bg-(--primary) text-white border-(--outline-brown) border-[2px] "
                         placeholder="Search articles..."
                     />
-                    <button className="px-[10px] py-[12px] bg-(--primary) border-(--outline-brown) border-[2px]  ">
+                    <button
+                        className="px-[10px] py-[12px] bg-(--primary) border-(--outline-brown) border-[2px] "
+                        onClick={toggleNav}
+                    >
                         Close
                     </button>
                 </div>
@@ -29,56 +42,15 @@ export default function Navbar({}) {
                     id="mobile-menu-categories"
                     className=" flex flex-col overflow-y-auto px-[12px] py-[8px] flex-1 "
                 >
-                    <div id="mobile-menu-category" className="mb-[8px] w-full ">
-                        <button
-                            id="mobile-menu-cat-header"
-                            className=" w-full text-left border-[2px] border-(--outline-brown) px-[12px] py-[10px] bg-(--primary) "
-                        >
-                            test
-                        </button>
-                        <div
-                            id="mobile-menu-links "
-                            className="border-[2px] border-t-0 border-(--outline-brown) "
-                        >
-                            <Link
-                                to="mythic-categories"
-                                className="block px-[12px] py-[10px] border-t-[1px] border-(--outline-brown) text-black "
-                            >
-                                test
-                            </Link>
-                            <Link
-                                to="mythic-categories"
-                                className="block px-[12px] py-[10px] border-t-[1px] border-(--outline-brown) text-black "
-                            >
-                                test
-                            </Link>
-                        </div>
-                    </div>
-                    <div id="mobile-menu-category" className="mb-[8px] w-full ">
-                        <button
-                            id="mobile-menu-cat-header"
-                            className=" w-full text-left border-[2px] border-(--outline-brown) px-[12px] py-[10px] bg-(--primary) "
-                        >
-                            test
-                        </button>
-                        <div
-                            id="mobile-menu-links "
-                            className="border-[2px] border-t-0 border-(--outline-brown) "
-                        >
-                            <Link
-                                to="mythic-categories"
-                                className="block px-[12px] py-[10px] border-t-[1px] border-(--outline-brown) text-black "
-                            >
-                                test
-                            </Link>
-                            <Link
-                                to="mythic-categories"
-                                className="block px-[12px] py-[10px] border-t-[1px] border-(--outline-brown) text-black "
-                            >
-                                test
-                            </Link>
-                        </div>
-                    </div>
+                    {sections.map((section) => {
+                        return (
+                            <MobileNavbarCategory
+                                key={section.id}
+                                toggleNav={toggleNav}
+                                section={section}
+                            />
+                        );
+                    })}
                 </div>
                 <div
                     id="mobile-menu-persistent"
