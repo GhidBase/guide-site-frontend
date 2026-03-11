@@ -38,6 +38,11 @@ export default function NavigationPanel() {
     // ── ACCORDION STATE ──────────────────────────────────────────────────────
     const [expandedSections, setExpandedSections] = useState(new Set());
 
+    useEffect(() => {
+        const all = getSortedSections().map((s) => s.id);
+        setExpandedSections(new Set(all));
+    }, []);
+
     function toggleSection(id) {
         setExpandedSections((prev) => {
             const next = new Set(prev);
