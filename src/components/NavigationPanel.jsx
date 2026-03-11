@@ -1,7 +1,14 @@
 import { useEffect, useState, useRef } from "react";
 import { currentAPI } from "../config/api.js";
 import { useRouteLoaderData } from "react-router";
-import { PencilIcon, Check, X, Trash, ChevronDown, ChevronRight } from "lucide-react";
+import {
+    PencilIcon,
+    Check,
+    X,
+    Trash,
+    ChevronDown,
+    ChevronRight,
+} from "lucide-react";
 
 const secret = import.meta.env.VITE_SECRET;
 
@@ -557,7 +564,7 @@ export default function NavigationPanel() {
 
             {/* ── EXPAND / COLLAPSE ALL button ─────────────────────────────── */}
             {getSortedSections().length > 0 && (
-                <div className="max-w-4xl mb-2 flex justify-end">
+                <div className="max-w-4xl mb-2 flex justify-center sm:justify-start">
                     <button
                         onClick={toggleAllSections}
                         className="text-sm text-(--text-color) hover:text-(--accent-text) bg-(--red-brown-trans) hover:bg-(--primary) px-3 py-1 rounded transition-colors cursor-pointer font-semibold"
@@ -575,7 +582,9 @@ export default function NavigationPanel() {
                     <thead>
                         <tr className="bg-(--primary)">
                             <th className="p-2 text-left w-8"></th>
-                            <th className="p-2 text-left text-white">Section</th>
+                            <th className="p-2 text-left text-white">
+                                Section
+                            </th>
                             <th className="p-2 text-left text-white">Pages</th>
                         </tr>
                     </thead>
@@ -640,16 +649,37 @@ export default function NavigationPanel() {
                                             <div className="flex gap-2 items-center">
                                                 {/* ── Per-section accordion toggle (desktop) ── */}
                                                 <button
-                                                    onClick={(e) => { e.stopPropagation(); toggleSection(section.id); }}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        toggleSection(
+                                                            section.id,
+                                                        );
+                                                    }}
                                                     className="cursor-pointer text-(--text-color) hover:text-(--outline) shrink-0"
-                                                    title={expandedSections.has(section.id) ? "Collapse" : "Expand"}
+                                                    title={
+                                                        expandedSections.has(
+                                                            section.id,
+                                                        )
+                                                            ? "Collapse"
+                                                            : "Expand"
+                                                    }
                                                 >
-                                                    {expandedSections.has(section.id)
-                                                        ? <ChevronDown size={16} />
-                                                        : <ChevronRight size={16} />}
+                                                    {expandedSections.has(
+                                                        section.id,
+                                                    ) ? (
+                                                        <ChevronDown
+                                                            size={16}
+                                                        />
+                                                    ) : (
+                                                        <ChevronRight
+                                                            size={16}
+                                                        />
+                                                    )}
                                                 </button>
                                                 {/* ─────────────────────────────────────────── */}
-                                                <span className="text-(--accent-text)">{section.title}</span>
+                                                <span className="text-(--accent-text)">
+                                                    {section.title}
+                                                </span>
                                                 <PencilIcon
                                                     className="cursor-pointer ml-auto text-(--text-color)"
                                                     onClick={() => {
@@ -684,74 +714,103 @@ export default function NavigationPanel() {
                                 <td className="p-2 align-top">
                                     {expandedSections.has(section.id) && (
                                         <>
-                                            {getSortedPages(section).map((page) => (
-                                                <div
-                                                    key={page.id}
-                                                    className={`mb-1 flex items-center gap-1 rounded px-1 transition-colors ${
-                                                        dragOverPage?.id === page.id &&
-                                                        draggedPage?.id !== page.id
-                                                            ? "bg-(--red-brown-trans)"
-                                                            : ""
-                                                    }`}
-                                                    draggable
-                                                    onDragStart={(e) =>
-                                                        handlePageDragStart(e, page)
-                                                    }
-                                                    onDragEnd={handlePageDragEnd}
-                                                    onDragOver={handlePageDragOver}
-                                                    onDragEnter={(e) =>
-                                                        handlePageDragEnter(e, page)
-                                                    }
-                                                    onDrop={(e) =>
-                                                        handlePageDrop(e, page, section)
-                                                    }
-                                                >
-                                                    <span className="text-(--text-color) cursor-move select-none mr-1">
-                                                        ⋮⋮
-                                                    </span>
-                                                    <span className="text-(--accent-text)">{page.title}</span>
-                                                    <select
-                                                        className="bg-(--accent) text-(--accent-text) px-2 py-1 rounded ml-auto"
-                                                        onChange={(e) =>
-                                                            changePageSection(
-                                                                page.id,
-                                                                e.target.value,
+                                            {getSortedPages(section).map(
+                                                (page) => (
+                                                    <div
+                                                        key={page.id}
+                                                        className={`mb-1 flex items-center gap-1 rounded px-1 transition-colors ${
+                                                            dragOverPage?.id ===
+                                                                page.id &&
+                                                            draggedPage?.id !==
+                                                                page.id
+                                                                ? "bg-(--red-brown-trans)"
+                                                                : ""
+                                                        }`}
+                                                        draggable
+                                                        onDragStart={(e) =>
+                                                            handlePageDragStart(
+                                                                e,
                                                                 page,
                                                             )
                                                         }
-                                                        defaultValue=""
-                                                    >
-                                                        <option value="">
-                                                            Move to...
-                                                        </option>
-                                                        <option value="none">
-                                                            No Section
-                                                        </option>
-                                                        {Array.from(
-                                                            sectionsMap.values(),
-                                                        )
-                                                            .filter(
-                                                                (s) =>
-                                                                    s.id !== section.id,
+                                                        onDragEnd={
+                                                            handlePageDragEnd
+                                                        }
+                                                        onDragOver={
+                                                            handlePageDragOver
+                                                        }
+                                                        onDragEnter={(e) =>
+                                                            handlePageDragEnter(
+                                                                e,
+                                                                page,
                                                             )
-                                                            .map((s) => (
-                                                                <option
-                                                                    key={s.id}
-                                                                    value={s.id}
-                                                                >
-                                                                    {s.title}
-                                                                </option>
-                                                            ))}
-                                                    </select>
-                                                </div>
-                                            ))}
+                                                        }
+                                                        onDrop={(e) =>
+                                                            handlePageDrop(
+                                                                e,
+                                                                page,
+                                                                section,
+                                                            )
+                                                        }
+                                                    >
+                                                        <span className="text-(--text-color) cursor-move select-none mr-1">
+                                                            ⋮⋮
+                                                        </span>
+                                                        <span className="text-(--accent-text)">
+                                                            {page.title}
+                                                        </span>
+                                                        <select
+                                                            className="bg-(--accent) text-(--accent-text) px-2 py-1 rounded ml-auto"
+                                                            onChange={(e) =>
+                                                                changePageSection(
+                                                                    page.id,
+                                                                    e.target
+                                                                        .value,
+                                                                    page,
+                                                                )
+                                                            }
+                                                            defaultValue=""
+                                                        >
+                                                            <option value="">
+                                                                Move to...
+                                                            </option>
+                                                            <option value="none">
+                                                                No Section
+                                                            </option>
+                                                            {Array.from(
+                                                                sectionsMap.values(),
+                                                            )
+                                                                .filter(
+                                                                    (s) =>
+                                                                        s.id !==
+                                                                        section.id,
+                                                                )
+                                                                .map((s) => (
+                                                                    <option
+                                                                        key={
+                                                                            s.id
+                                                                        }
+                                                                        value={
+                                                                            s.id
+                                                                        }
+                                                                    >
+                                                                        {
+                                                                            s.title
+                                                                        }
+                                                                    </option>
+                                                                ))}
+                                                        </select>
+                                                    </div>
+                                                ),
+                                            )}
 
                                             {/* Quick-add unsectioned pages */}
                                             {unsectionedPages.length > 0 && (
                                                 <div
                                                     className="relative mt-2"
                                                     ref={
-                                                        openQuickAdd === section.id
+                                                        openQuickAdd ===
+                                                        section.id
                                                             ? quickAddRef
                                                             : null
                                                     }
@@ -770,12 +829,15 @@ export default function NavigationPanel() {
                                                         + Add page
                                                     </button>
 
-                                                    {openQuickAdd === section.id && (
+                                                    {openQuickAdd ===
+                                                        section.id && (
                                                         <div className="absolute left-0 mb-1 z-10 bg-(--accent) border border-(--outline) rounded shadow-xl min-w-48">
                                                             {unsectionedPages.map(
                                                                 (page) => (
                                                                     <button
-                                                                        key={page.id}
+                                                                        key={
+                                                                            page.id
+                                                                        }
                                                                         className="block w-full text-left px-4 py-2 text-sm text-(--accent-text) hover:bg-(--surface-background) cursor-pointer"
                                                                         onClick={() => {
                                                                             changePageSection(
@@ -790,7 +852,9 @@ export default function NavigationPanel() {
                                                                             );
                                                                         }}
                                                                     >
-                                                                        {page.title}
+                                                                        {
+                                                                            page.title
+                                                                        }
                                                                     </button>
                                                                 ),
                                                             )}
@@ -899,13 +963,24 @@ export default function NavigationPanel() {
                                         />
                                         {/* ── Per-section accordion toggle (mobile) ── */}
                                         <button
-                                            onClick={(e) => { e.stopPropagation(); toggleSection(section.id); }}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                toggleSection(section.id);
+                                            }}
                                             className="cursor-pointer text-white shrink-0 min-w-11 flex items-center justify-center active:opacity-60"
-                                            title={expandedSections.has(section.id) ? "Collapse" : "Expand"}
+                                            title={
+                                                expandedSections.has(section.id)
+                                                    ? "Collapse"
+                                                    : "Expand"
+                                            }
                                         >
-                                            {expandedSections.has(section.id)
-                                                ? <ChevronDown size={20} />
-                                                : <ChevronRight size={20} />}
+                                            {expandedSections.has(
+                                                section.id,
+                                            ) ? (
+                                                <ChevronDown size={20} />
+                                            ) : (
+                                                <ChevronRight size={20} />
+                                            )}
                                         </button>
                                         {/* ─────────────────────────────────────────── */}
                                     </>
@@ -947,7 +1022,9 @@ export default function NavigationPanel() {
                                                         section,
                                                     )
                                                 }
-                                                onTouchMove={handlePageTouchMove}
+                                                onTouchMove={
+                                                    handlePageTouchMove
+                                                }
                                                 onTouchEnd={handlePageTouchEnd}
                                             >
                                                 ⋮⋮
@@ -966,13 +1043,18 @@ export default function NavigationPanel() {
                                                 }
                                                 defaultValue=""
                                             >
-                                                <option value="">Move to...</option>
+                                                <option value="">
+                                                    Move to...
+                                                </option>
                                                 <option value="none">
                                                     No Section
                                                 </option>
-                                                {Array.from(sectionsMap.values())
+                                                {Array.from(
+                                                    sectionsMap.values(),
+                                                )
                                                     .filter(
-                                                        (s) => s.id !== section.id,
+                                                        (s) =>
+                                                            s.id !== section.id,
                                                     )
                                                     .map((s) => (
                                                         <option
@@ -1000,7 +1082,8 @@ export default function NavigationPanel() {
                                                 className="w-full text-sm font-semibold text-white bg-(--primary) hover:opacity-90 px-3 py-1.5 rounded cursor-pointer transition-colors"
                                                 onClick={() =>
                                                     setOpenQuickAdd(
-                                                        openQuickAdd === section.id
+                                                        openQuickAdd ===
+                                                            section.id
                                                             ? null
                                                             : section.id,
                                                     )
@@ -1056,7 +1139,9 @@ export default function NavigationPanel() {
                     <table className="w-full border border-(--outline) hidden sm:table">
                         <thead>
                             <tr className="bg-(--primary)">
-                                <th className="p-2 text-left text-white">Page</th>
+                                <th className="p-2 text-left text-white">
+                                    Page
+                                </th>
                                 <th className="p-2 text-left text-white">
                                     Assign to Section
                                 </th>
@@ -1069,7 +1154,9 @@ export default function NavigationPanel() {
                                     key={page.id}
                                     className="border-t border-(--outline) hover:bg-(--accent) transition-colors"
                                 >
-                                    <td className="p-2 text-(--accent-text)">{page.title}</td>
+                                    <td className="p-2 text-(--accent-text)">
+                                        {page.title}
+                                    </td>
                                     <td className="p-2">
                                         <select
                                             className="bg-(--accent) text-(--accent-text) px-2 py-1 rounded"
@@ -1137,3 +1224,4 @@ export default function NavigationPanel() {
         </>
     );
 }
+
