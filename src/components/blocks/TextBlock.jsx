@@ -1,5 +1,6 @@
-import TextEditor from "../TextEditor.jsx";
-import { useRef, useState, useEffect } from "react";
+import { lazy, Suspense, useRef, useState, useEffect } from "react";
+
+const TextEditor = lazy(() => import("../TextEditor.jsx"));
 
 export default function TextBlock({
     deleteBlock,
@@ -60,11 +61,13 @@ export default function TextBlock({
                 </div>
             )}
             {editMode && (
-                <TextEditor
-                    height={height}
-                    editorRef={editorRef}
-                    content={content}
-                ></TextEditor>
+                <Suspense fallback={null}>
+                    <TextEditor
+                        height={height}
+                        editorRef={editorRef}
+                        content={content}
+                    ></TextEditor>
+                </Suspense>
             )}
             {!editMode && (
                 <div
