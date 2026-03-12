@@ -6,10 +6,13 @@ const SITE_DESCRIPTION =
     "Your ultimate resource for mastering normal, hard, and hell mode. Find everything you need to progress quickly—from in-depth gameplay mechanics and strategy guides to tools like Board Builders, Upgrade Calculators, and Gacha Simulators to help you choose between 1x and 10x pulls. Whether you're just starting out or pushing endgame content, we've got you covered.";
 const OG_IMAGE = "/LDG_Logo.png";
 
-export function meta({ data, matches }) {
+export function meta({ data, location }) {
     const pageTitle = data?.pageData?.page?.title;
     const isHomepage = !pageTitle || pageTitle === "LD Homepage";
     const title = isHomepage ? SITE_NAME : `${pageTitle} | ${SITE_NAME}`;
+    const base = import.meta.env.VITE_PUBLIC_URL || data?.origin || "";
+    const ogImage = `${base}${OG_IMAGE}`;
+    const ogUrl = `${base}${location.pathname}`;
 
     return [
         { title },
@@ -18,7 +21,8 @@ export function meta({ data, matches }) {
         { property: "og:title", content: title },
         { property: "og:description", content: SITE_DESCRIPTION },
         { property: "og:type", content: "website" },
-        { property: "og:image", content: OG_IMAGE },
+        { property: "og:image", content: ogImage },
+        { property: "og:url", content: ogUrl },
         { name: "twitter:card", content: "summary" },
         { name: "twitter:title", content: title },
         { name: "twitter:description", content: SITE_DESCRIPTION },

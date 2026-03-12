@@ -27,6 +27,9 @@ export default defineConfig(({ mode }) => {
             "import.meta.env.VITE_IGNORE_VIEWS": JSON.stringify(
                 env.VITE_IGNORE_VIEWS || "",
             ),
+            "import.meta.env.VITE_PUBLIC_URL": JSON.stringify(
+                env.VITE_PUBLIC_URL || "",
+            ),
         },
         resolve: {
             alias: {

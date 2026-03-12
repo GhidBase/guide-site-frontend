@@ -127,6 +127,7 @@ export default async function gameAndPageLoader({ params, request }) {
     }
 
     const sectionsMap = await fetchNavbar();
+    const origin = new URL(request.url).origin;
 
-    return { gameData, pageData, gameSlug, pageSlug, sectionsMap };
+    return { gameData, pageData, gameSlug, pageSlug, sectionsMap, origin };
 }
