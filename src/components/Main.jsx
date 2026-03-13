@@ -6,11 +6,17 @@ import NavBarOpenButton from "./NavBarOpenButton.jsx";
 import MobileNavbar from "./navbar/MobileNavbar.jsx";
 import { useEffect, useState } from "react";
 import { usePageTracking } from "../hooks/usePageTracking.js";
+import { useTheme, themeToStyle } from "../contexts/ThemeProvider.jsx";
 
 export default function Main() {
     usePageTracking();
     const [navOpen, setNavOpen] = useState(false);
     const { gameData } = useLoaderData();
+    const { theme, setTheme } = useTheme();
+
+    useEffect(() => {
+        setTheme(gameData?.theme ?? null);
+    }, [gameData?.id]);
 
     function toggleNav(state) {
         // I go by typeof because events can
@@ -50,6 +56,7 @@ export default function Main() {
         <div
             id="main-page-sections"
             className="h-full w-full flex flex-col grow box-border custom-background"
+            style={themeToStyle(theme)}
         >
             <Title></Title>
             {

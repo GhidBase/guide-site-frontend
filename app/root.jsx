@@ -1,5 +1,6 @@
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
 import { AuthProvider } from "../src/contexts/AuthProvider";
+import { ThemeProvider } from "../src/contexts/ThemeProvider";
 import "../src/index.css";
 import "../src/tailwind.css";
 
@@ -45,7 +46,9 @@ gtag('config', 'G-X8KBQ5CE84');`,
 export default function Root() {
     return (
         <AuthProvider>
-            <Outlet />
+            <ThemeProvider>
+                <Outlet />
+            </ThemeProvider>
         </AuthProvider>
     );
 }

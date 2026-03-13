@@ -9,7 +9,13 @@ import {
     ChevronDown,
     ChevronRight,
     Info,
+    Palette,
 } from "lucide-react";
+import {
+    useTheme,
+    THEME_DEFAULTS,
+    THEME_FIELDS,
+} from "../contexts/ThemeProvider.jsx";
 
 const secret = import.meta.env.VITE_SECRET;
 
@@ -43,6 +49,11 @@ export default function NavigationPanel() {
     const [detailPage, setDetailPage] = useState(null);
     const [detailTitle, setDetailTitle] = useState("");
     const [detailSlug, setDetailSlug] = useState("");
+
+    const { theme, setTheme } = useTheme();
+    const [themeOpen, setThemeOpen] = useState(false);
+    const [editingTheme, setEditingTheme] = useState(null);
+    const [savedTheme, setSavedTheme] = useState(null);
 
     // ── ACCORDION STATE ──────────────────────────────────────────────────────
     const [expandedSections, setExpandedSections] = useState(new Set());
@@ -659,6 +670,45 @@ export default function NavigationPanel() {
         setDetailPage(page);
     }
 
+    function openThemeEditor() {
+        const current = { ...THEME_DEFAULTS, ...(gameData?.theme ?? {}) };
+        setEditingTheme(current);
+        setSavedTheme(current);
+        setThemeOpen(true);
+    }
+
+    function handleThemeChange(key, value) {
+        const next = { ...editingTheme, [key]: value };
+        setEditingTheme(next);
+        setTheme(next); // live preview
+    }
+
+    function cancelTheme() {
+        setTheme(savedTheme); // revert live preview
+        setThemeOpen(false);
+        setEditingTheme(null);
+    }
+
+    function resetThemeToDefaults() {
+        setEditingTheme(THEME_DEFAULTS);
+        setTheme(THEME_DEFAULTS);
+    }
+
+    async function saveTheme() {
+        try {
+            await fetch(currentAPI + "/games/" + gameId + "/theme", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify(editingTheme),
+            });
+            setSavedTheme(editingTheme);
+            setThemeOpen(false);
+        } catch (err) {
+            console.error("Failed to save theme:", err);
+        }
+    }
+
     async function savePageDetail() {
         const id = detailPage.id;
         const titleChanged = detailTitle !== detailPage.title;
@@ -718,8 +768,19 @@ export default function NavigationPanel() {
 
     return (
         <>
+            {/* Game Theme button */}
+            <div className="mt-8 max-w-4xl mb-4 flex justify-end">
+                <button
+                    onClick={openThemeEditor}
+                    className="flex items-center gap-2 bg-(--red-brown) text-white px-4 py-2 rounded cursor-pointer hover:opacity-90"
+                >
+                    <Palette size={16} />
+                    Game Theme
+                </button>
+            </div>
+
             {/* Add Section bar — stacks vertically on mobile, row on sm+ */}
-            <div className="mt-8 max-w-4xl mb-4 flex flex-col sm:flex-row gap-2">
+            <div className="max-w-4xl mb-4 flex flex-col sm:flex-row gap-2">
                 <input
                     type="text"
                     value={newSectionName}
@@ -1734,6 +1795,81 @@ export default function NavigationPanel() {
                                 )}
                             </div>
                         ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Theme editor modal */}
+            {themeOpen && editingTheme && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+                    onClick={cancelTheme}
+                >
+                    <div
+                        className="bg-(--surface-background) border border-(--outline) rounded-xl shadow-2xl w-full max-w-md mx-4 p-6 flex flex-col gap-4 max-h-[90vh] overflow-y-auto"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex items-center justify-between gap-2">
+                            <h2 className="text-lg font-bold text-(--accent-text)">
+                                Game Theme
+                            </h2>
+                            <button
+                                onClick={cancelTheme}
+                                className="shrink-0 text-(--text-color) hover:text-(--accent-text) cursor-pointer"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <div className="flex flex-col gap-3">
+                            {THEME_FIELDS.map(({ key, label, description }) => (
+                                <div
+                                    key={key}
+                                    className="flex items-center gap-3"
+                                >
+                                    <input
+                                        type="color"
+                                        value={editingTheme[key]}
+                                        onChange={(e) =>
+                                            handleThemeChange(key, e.target.value)
+                                        }
+                                        className="w-10 h-10 rounded cursor-pointer border border-(--outline) shrink-0 p-0.5 bg-transparent"
+                                    />
+                                    <div className="flex flex-col min-w-0">
+                                        <span className="text-sm font-semibold text-(--accent-text)">
+                                            {label}
+                                        </span>
+                                        <span className="text-xs text-(--text-color)">
+                                            {description}
+                                        </span>
+                                    </div>
+                                    <span className="ml-auto font-mono text-xs text-(--text-color) shrink-0">
+                                        {editingTheme[key]}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="flex gap-2 pt-2 border-t border-(--outline)">
+                            <button
+                                onClick={resetThemeToDefaults}
+                                className="text-sm text-(--text-color) border border-(--outline) px-3 py-1.5 rounded cursor-pointer hover:bg-(--accent)"
+                            >
+                                Reset to defaults
+                            </button>
+                            <button
+                                onClick={cancelTheme}
+                                className="ml-auto text-sm text-(--text-color) border border-(--outline) px-3 py-1.5 rounded cursor-pointer hover:bg-(--accent)"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={saveTheme}
+                                className="text-sm bg-(--primary) text-white px-4 py-1.5 rounded cursor-pointer hover:opacity-90 font-semibold"
+                            >
+                                Save
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
