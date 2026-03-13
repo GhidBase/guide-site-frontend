@@ -7,7 +7,7 @@ const SITE_DESCRIPTION =
 const OG_IMAGE = "/LDG_Logo.png";
 
 export function meta({ data, location }) {
-    const gameName = data?.gameData?.name;
+    const gameName = data?.gameData?.title;
     const siteName = gameName ? `${gameName} Guides` : SITE_NAME;
     const pageTitle = data?.pageData?.page?.title;
     const isHomepage = !pageTitle || pageTitle === "LD Homepage";

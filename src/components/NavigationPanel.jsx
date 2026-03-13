@@ -10,6 +10,7 @@ import {
     ChevronRight,
     Info,
     Palette,
+    ExternalLink,
 } from "lucide-react";
 import {
     useTheme,
@@ -1121,6 +1122,16 @@ export default function NavigationPanel() {
                                                                         )
                                                                     }
                                                                 />
+                                                                {page.slug && (
+                                                                    <a
+                                                                        href={isLDG || !gameData ? "/" + page.slug : "/games/" + gameData.slug + "/" + page.slug}
+                                                                        target="_blank"
+                                                                        rel="noreferrer"
+                                                                        className="shrink-0 text-(--text-color)"
+                                                                    >
+                                                                        <ExternalLink size={14} />
+                                                                    </a>
+                                                                )}
                                                                 <select
                                                                     className="bg-(--accent) text-(--accent-text) px-2 py-1 rounded ml-auto shrink-0"
                                                                     onChange={(
@@ -1479,6 +1490,16 @@ export default function NavigationPanel() {
                                                             openDetailPage(page)
                                                         }
                                                     />
+                                                    {page.slug && (
+                                                        <a
+                                                            href={isLDG || !gameData ? "/" + page.slug : "/games/" + gameData.slug + "/" + page.slug}
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                            className="shrink-0 text-(--text-color)"
+                                                        >
+                                                            <ExternalLink size={14} />
+                                                        </a>
+                                                    )}
                                                     <select
                                                         className="bg-(--accent) text-(--accent-text) px-1 py-1 rounded text-xs max-w-[120px] shrink-0"
                                                         onChange={(e) =>
@@ -1670,6 +1691,16 @@ export default function NavigationPanel() {
                                                         openDetailPage(page)
                                                     }
                                                 />
+                                                {page.slug && (
+                                                    <a
+                                                        href={isLDG || !gameData ? "/" + page.slug : "/games/" + gameData.slug + "/" + page.slug}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        className="shrink-0 text-(--text-color)"
+                                                    >
+                                                        <ExternalLink size={14} />
+                                                    </a>
+                                                )}
                                             </div>
                                         )}
                                     </td>
@@ -1766,6 +1797,16 @@ export default function NavigationPanel() {
                                             className="cursor-pointer shrink-0 text-(--text-color)"
                                             onClick={() => openDetailPage(page)}
                                         />
+                                        {page.slug && (
+                                            <a
+                                                href={isLDG || !gameData ? "/" + page.slug : "/games/" + gameData.slug + "/" + page.slug}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="shrink-0 text-(--text-color)"
+                                            >
+                                                <ExternalLink size={14} />
+                                            </a>
+                                        )}
                                         <select
                                             className="bg-(--accent) text-(--accent-text) px-1 py-1 rounded text-xs max-w-[140px] shrink-0"
                                             onChange={(e) =>
