@@ -29,8 +29,7 @@ export function Layout({ children }) {
                     dangerouslySetInnerHTML={{
                         __html: `window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
-gtag('js', new Date());
-gtag('config', 'G-X8KBQ5CE84');`,
+gtag('js', new Date());`,
                     }}
                 />
             </head>
