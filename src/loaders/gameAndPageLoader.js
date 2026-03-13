@@ -1,9 +1,9 @@
 import { currentAPI } from "../config/api.js";
 import { redirect, isRouteErrorResponse } from "react-router";
-const isLDG = import.meta.env.VITE_LDG == "True";
 
 export default async function gameAndPageLoader({ params, request }) {
     const { gameSlug, pageSlug } = params;
+    const isLDG = new URL(request.url).hostname.includes("luckydefenseguides");
     let navbarMap;
 
     async function safeFetch(url) {
@@ -129,5 +129,5 @@ export default async function gameAndPageLoader({ params, request }) {
     const sectionsMap = await fetchNavbar();
     const origin = new URL(request.url).origin;
 
-    return { gameData, pageData, gameSlug, pageSlug, sectionsMap, origin };
+    return { gameData, pageData, gameSlug, pageSlug, sectionsMap, origin, isLDG };
 }

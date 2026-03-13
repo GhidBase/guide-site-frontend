@@ -5,15 +5,13 @@ import NavbarSection from "./NavbarSection";
 import NavbarEditButton from "./NavbarEditButton";
 import { useAuth } from "@/hooks/useAuth";
 
-const isLDG = import.meta.env.VITE_LDG == "True";
-
 export default function Navbar({
     className,
     obstructorClassName,
     toggleNav,
     closeClassName,
 }) {
-    const { gameData, sectionsMap } = useLoaderData();
+    const { gameData, sectionsMap, isLDG } = useLoaderData();
     const { isAuthenticated, user, logout, isLoading } = useAuth();
     const isAdmin = user?.role == "ADMIN";
     const navigate = useNavigate();

@@ -21,7 +21,7 @@ const secret = import.meta.env.VITE_SECRET;
 
 export default function NavigationPanel() {
     const [, forceRender] = useState(0);
-    const { gameData, sectionsMap } = useRouteLoaderData("main");
+    const { gameData, sectionsMap, isLDG } = useRouteLoaderData("main");
     if (!gameData || !sectionsMap) {
         return <div>Loading navigation data...</div>;
     }
@@ -1876,7 +1876,6 @@ export default function NavigationPanel() {
 
             {/* Page detail modal */}
             {detailPage && (() => {
-                const isLDG = import.meta.env.VITE_LDG == "True";
                 const previewUrl = detailSlug
                     ? (isLDG || !gameData
                         ? "/" + detailSlug

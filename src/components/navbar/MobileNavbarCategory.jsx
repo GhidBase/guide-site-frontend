@@ -10,8 +10,7 @@ export default function MobileNavbarCategory({
     const title = section.title;
     const pages = section.pages;
     const linksRef = useRef(null);
-    const isLDG = import.meta.env.VITE_LDG == "True";
-    const { gameData, sectionsMap } = useLoaderData();
+    const { gameData, isLDG } = useLoaderData();
 
     return (
         <div id="mobile-menu-category" className="mb-[8px] w-full ">

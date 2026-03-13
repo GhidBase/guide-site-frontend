@@ -19,10 +19,9 @@ export default function PagesItem({
     const [titleEditMode, setTitleEditMode] = useState(false);
     const [slugEditMode, setSlugEditMode] = useState(false);
     const slug = page.slug;
-    const { gameData } = useRouteLoaderData("main");
+    const { gameData, isLDG } = useRouteLoaderData("main");
     const gameSlug = gameData?.slug;
     const pageId = page.id;
-    const isLDG = import.meta.env.VITE_LDG == "True";
     const slugActual =
         isLDG || !gameData
             ? "/" + page.slug

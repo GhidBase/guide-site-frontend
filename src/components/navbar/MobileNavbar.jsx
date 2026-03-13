@@ -1,5 +1,4 @@
 import { useState } from "react";
-const isLDG = import.meta.env.VITE_LDG == "True";
 import discordLogo from "../../assets/icons8-discord-50.png";
 import MobileNavbarCategory from "./MobileNavbarCategory";
 import { useLoaderData, Link, useNavigate } from "react-router";

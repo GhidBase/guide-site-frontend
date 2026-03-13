@@ -8,7 +8,7 @@ import { Pencil } from "lucide-react";
 import PendingReviewNotification from "./notifications/PendingReviewNotification";
 
 export default function PageBuilder() {
-    const { pageData, gameData } = useRouteLoaderData("main");
+    const { pageData, gameData, isLDG } = useRouteLoaderData("main");
     const gameSlug = gameData?.slug;
     const gameId = gameData?.id;
     const { user, isAuthenticated } = useAuth();
@@ -16,7 +16,6 @@ export default function PageBuilder() {
     const isAdmin = user?.role == "ADMIN";
     const [adminMode, setAdminMode] = useState(false);
     const pageId = pageData?.page?.id;
-    const isLDG = import.meta.env.VITE_LDG == "True";
 
     const pageManagerSlug =
         isLDG || !gameData

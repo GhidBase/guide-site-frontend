@@ -12,8 +12,7 @@ export default function NavbarButton({
     nonEditable,
     buttonData,
 }) {
-    const { gameData } = useLoaderData();
-    const isLDG = import.meta.env.VITE_LDG == "True";
+    const { gameData, isLDG } = useLoaderData();
     var actualSlug;
     if (isLDG) {
         actualSlug = "/" + slug;
