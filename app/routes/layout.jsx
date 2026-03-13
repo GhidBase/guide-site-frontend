@@ -10,22 +10,23 @@ export function meta({ data, location }) {
     const pageTitle = data?.pageData?.page?.title;
     const isHomepage = !pageTitle || pageTitle === "LD Homepage";
     const title = isHomepage ? SITE_NAME : `${pageTitle} | ${SITE_NAME}`;
+    const description = data?.pageData?.page?.description || SITE_DESCRIPTION;
     const base = import.meta.env.VITE_PUBLIC_URL || data?.origin || "";
     const ogImage = `${base}${OG_IMAGE}`;
     const ogUrl = `${base}${location.pathname}`;
 
     return [
         { title },
-        { name: "description", content: SITE_DESCRIPTION },
+        { name: "description", content: description },
         { property: "og:site_name", content: SITE_NAME },
         { property: "og:title", content: title },
-        { property: "og:description", content: SITE_DESCRIPTION },
+        { property: "og:description", content: description },
         { property: "og:type", content: "website" },
         { property: "og:image", content: ogImage },
         { property: "og:url", content: ogUrl },
         { name: "twitter:card", content: "summary" },
         { name: "twitter:title", content: title },
-        { name: "twitter:description", content: SITE_DESCRIPTION },
+        { name: "twitter:description", content: description },
     ];
 }
 

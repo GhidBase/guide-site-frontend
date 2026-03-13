@@ -49,6 +49,7 @@ export default function NavigationPanel() {
     const [detailPage, setDetailPage] = useState(null);
     const [detailTitle, setDetailTitle] = useState("");
     const [detailSlug, setDetailSlug] = useState("");
+    const [detailDescription, setDetailDescription] = useState("");
 
     const { theme, setTheme } = useTheme();
     const [themeOpen, setThemeOpen] = useState(false);
@@ -663,6 +664,7 @@ export default function NavigationPanel() {
         if (detailPage) {
             setDetailTitle(detailPage.title ?? "");
             setDetailSlug(detailPage.slug ?? "");
+            setDetailDescription(detailPage.description ?? "");
         }
     }, [detailPage]);
 
@@ -713,27 +715,21 @@ export default function NavigationPanel() {
         const id = detailPage.id;
         const titleChanged = detailTitle !== detailPage.title;
         const slugChanged = detailSlug !== (detailPage.slug ?? "");
+        const descriptionChanged = detailDescription !== (detailPage.description ?? "");
 
         try {
-            if (titleChanged) {
+            if (titleChanged || slugChanged || descriptionChanged) {
+                const body = {};
+                if (titleChanged) body.title = detailTitle;
+                if (slugChanged) body.slug = detailSlug;
+                if (descriptionChanged) body.description = detailDescription;
                 await fetch(
                     currentAPI + "/games/" + gameId + "/pages/by-id/" + id,
                     {
                         method: "PUT",
                         headers: { "Content-Type": "application/json" },
                         credentials: "include",
-                        body: JSON.stringify({ title: detailTitle }),
-                    },
-                );
-            }
-            if (slugChanged) {
-                await fetch(
-                    currentAPI + "/games/" + gameId + "/pages/by-id/" + id,
-                    {
-                        method: "PUT",
-                        headers: { "Content-Type": "application/json" },
-                        credentials: "include",
-                        body: JSON.stringify({ slug: detailSlug }),
+                        body: JSON.stringify(body),
                     },
                 );
             }
@@ -743,6 +739,7 @@ export default function NavigationPanel() {
                 ...detailPage,
                 title: detailTitle,
                 slug: detailSlug,
+                description: detailDescription,
             };
             let foundInSection = false;
             for (const section of sectionsMap.values()) {
@@ -1946,12 +1943,16 @@ export default function NavigationPanel() {
                                 </div>
                             </div>
 
-                            {/* Discord embed section — placeholder */}
+                            {/* Discord embed section */}
                             <div className="border-t border-(--outline) pt-4 flex flex-col gap-2">
-                                <p className="text-(--accent-text) font-semibold text-sm">Discord Embed</p>
-                                <p className="text-(--text-color) text-xs italic">
-                                    Customization coming soon.
-                                </p>
+                                <label className="text-(--accent-text) font-semibold text-sm">Discord Embed Description</label>
+                                <textarea
+                                    value={detailDescription}
+                                    onChange={(e) => setDetailDescription(e.target.value)}
+                                    rows={3}
+                                    placeholder="Short description shown in Discord link previews…"
+                                    className="bg-(--accent) text-(--accent-text) px-3 py-1.5 rounded w-full text-sm resize-y"
+                                />
                             </div>
 
                             {/* Save button */}
