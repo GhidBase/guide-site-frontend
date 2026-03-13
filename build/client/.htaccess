@@ -1,5 +1,12 @@
 RewriteEngine On
 
+# React Router v7 client navigation data requests
+# These add ?_routes=... and expect JSON back — serve the prerendered .data file
+RewriteCond %{QUERY_STRING} (^|&)_routes=
+RewriteCond %{REQUEST_URI} !\.data$
+RewriteRule ^(.+)$ /$1.data [L,QSD]
+
+# SPA/prerender fallback
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^ index.html [L]
