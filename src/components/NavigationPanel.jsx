@@ -702,7 +702,7 @@ export default function NavigationPanel() {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",
-                body: JSON.stringify(editingTheme),
+                body: JSON.stringify({ theme: editingTheme }),
             });
             setSavedTheme(editingTheme);
             setThemeOpen(false);
