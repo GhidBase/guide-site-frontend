@@ -3,7 +3,7 @@ import { redirect, isRouteErrorResponse } from "react-router";
 
 export default async function gameAndPageLoader({ params, request }) {
     const { gameSlug, pageSlug } = params;
-    const isLDG = new URL(request.url).hostname.includes("luckydefenseguides");
+    const isLDG = new URL(request.url).hostname.includes("guidecodex");
     let navbarMap;
 
     async function safeFetch(url) {
