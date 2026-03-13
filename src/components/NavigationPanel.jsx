@@ -757,7 +757,7 @@ export default function NavigationPanel() {
             } else {
                 forceRender((x) => x + 1);
             }
-            setDetailPage(updated);
+            setDetailPage(null);
         } catch (err) {
             console.error("Failed to save page detail:", err);
         }

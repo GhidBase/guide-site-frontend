@@ -7,9 +7,11 @@ const SITE_DESCRIPTION =
 const OG_IMAGE = "/LDG_Logo.png";
 
 export function meta({ data, location }) {
+    const gameName = data?.gameData?.name;
+    const siteName = gameName ? `${gameName} Guides` : SITE_NAME;
     const pageTitle = data?.pageData?.page?.title;
     const isHomepage = !pageTitle || pageTitle === "LD Homepage";
-    const title = isHomepage ? SITE_NAME : `${pageTitle} | ${SITE_NAME}`;
+    const title = isHomepage ? siteName : `${pageTitle} | ${siteName}`;
     const description = data?.pageData?.page?.description || SITE_DESCRIPTION;
     const base = import.meta.env.VITE_PUBLIC_URL || data?.origin || "";
     const ogImage = `${base}${OG_IMAGE}`;
@@ -18,7 +20,7 @@ export function meta({ data, location }) {
     return [
         { title },
         { name: "description", content: description },
-        { property: "og:site_name", content: SITE_NAME },
+        { property: "og:site_name", content: siteName },
         { property: "og:title", content: title },
         { property: "og:description", content: description },
         { property: "og:type", content: "website" },
