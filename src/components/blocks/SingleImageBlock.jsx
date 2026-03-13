@@ -8,6 +8,7 @@ export default function SingleImageBlock({
     block,
     refreshBlock,
     adminMode,
+    canDelete,
 }) {
     const { gameData } = useRouteLoaderData("main");
     const gameId = gameData?.id;
@@ -122,7 +123,7 @@ export default function SingleImageBlock({
                                         alt=""
                                         className="max-h-80 mx-auto"
                                     />
-                                    {adminMode && (
+                                    {adminMode && canDelete && (
                                         <button
                                             className="text-amber-50 bg-(--primary) rounded px-2 py-0.5 h-7 cursor-pointer hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                                             onClick={() =>
@@ -190,18 +191,20 @@ export default function SingleImageBlock({
                                 )}
                             </div>
                         </form>
-                        <div
-                            id="lower-buttons"
-                            className="flex gap-2 m-2 justify-center"
-                        >
-                            <button
-                                onClick={() => deleteAllFiles()}
-                                className="text-amber-50 bg-red-700 rounded px-3 py-1 font-semibold cursor-pointer hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                                disabled={loading}
+                        {canDelete && (
+                            <div
+                                id="lower-buttons"
+                                className="flex gap-2 m-2 justify-center"
                             >
-                                Delete All
-                            </button>
-                        </div>
+                                <button
+                                    onClick={() => deleteAllFiles()}
+                                    className="text-amber-50 bg-red-700 rounded px-3 py-1 font-semibold cursor-pointer hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    disabled={loading}
+                                >
+                                    Delete All
+                                </button>
+                            </div>
+                        )}
                     </Fragment>
                 )}
             </div>

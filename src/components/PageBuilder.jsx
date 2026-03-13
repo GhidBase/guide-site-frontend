@@ -14,13 +14,19 @@ export default function PageBuilder() {
     const { user, isAuthenticated } = useAuth();
     const [blocks, setBlocks] = useState(pageData?.blocks ?? []);
     const isAdmin = user?.role == "ADMIN";
+    const isContributor = isAuthenticated && !isAdmin;
     const [adminMode, setAdminMode] = useState(false);
+    const [showPendingNotification, setShowPendingNotification] = useState(false);
     const pageId = pageData?.page?.id;
 
     const pageManagerSlug =
         isLDG || !gameData
             ? "/page-manager"
             : "/games/" + gameSlug + "/page-manager";
+    const navigationPanelSlug =
+        isLDG || !gameData
+            ? "/navigation-panel"
+            : "/games/" + gameSlug + "/navigation-panel";
 
     useEffect(() => {
         setBlocks(pageData?.blocks ?? []);
@@ -134,6 +140,11 @@ export default function PageBuilder() {
             },
         );
 
+        if (response.status === 202) {
+            setShowPendingNotification(true);
+            return;
+        }
+
         const result = await response.json();
         const newBlocks = [...blocks];
         const adjustIndex = newBlocks.findIndex(
@@ -160,7 +171,7 @@ export default function PageBuilder() {
     return (
         <Fragment>
         <div style={{ viewTransitionName: "page-content" }}>
-            {isAdmin && (
+            {(isAdmin || isContributor) && (
                 <div
                     id="dev-toolbar"
                     className=" self-stretch flex justify-center sticky top-0 bg-(--primary) sm:rounded-b max-w-full z-2 "
@@ -169,17 +180,25 @@ export default function PageBuilder() {
                         className=" text-amber-50 w-50 px-2 py-0.5 flex justify-center items-center border-r border-(--outline-brown)/25 "
                         onClick={() => setAdminMode(!adminMode)}
                     >
-                        {adminMode ? "View Mode" : "Edit Mode"}
+                        {adminMode
+                            ? "View Mode"
+                            : isAdmin ? "Edit Mode" : "Suggest Edit"}
                     </button>
-                    <Link
-                        className="text-amber-50 w-50 px-2 py-0.5 flex justify-center items-center text-center"
-                        to={pageManagerSlug}
-                    >
-                        Back to Page Manager
-                    </Link>
+                    {isAdmin && (
+                        <Link
+                            className="text-amber-50 w-50 px-2 py-0.5 flex justify-center items-center text-center"
+                            to={navigationPanelSlug}
+                        >
+                            Navigation Panel
+                        </Link>
+                    )}
                 </div>
             )}
-            {adminMode && (
+            <PendingReviewNotification
+                visible={showPendingNotification}
+                onDismiss={() => setShowPendingNotification(false)}
+            />
+            {adminMode && isAdmin && (
                 <div className="flex justify-center gap-2 mt-4">
                     <button
                         onClick={async () => {
@@ -209,7 +228,7 @@ export default function PageBuilder() {
                 .map((block) => {
                     // block values: id, pageId, content
                     let blockType;
-                    const buttons = adminMode ? (
+                    const buttons = adminMode && isAdmin ? (
                         <div className="flex justify-center gap-2">
                             <button
                                 onClick={async () => {
@@ -246,6 +265,7 @@ export default function PageBuilder() {
                                         }
                                         adminMode={adminMode}
                                         addBlock={addBlock}
+                                        canDelete={isAdmin}
                                     />
                                     {buttons}
                                 </Fragment>
@@ -260,6 +280,7 @@ export default function PageBuilder() {
                                         refreshBlock={refreshBlock}
                                         adminMode={adminMode}
                                         addBlock={addBlock}
+                                        canDelete={isAdmin}
                                     />
                                     {buttons}
                                 </Fragment>
@@ -267,13 +288,13 @@ export default function PageBuilder() {
                     }
                     return blockType;
                 })}
-            {user?.role === "ADMIN" && (
+            {isAdmin && (
                 <div className="flex flex-col items-center mt-2 gap-2">
                     <Link
                         className="text-amber-50 bg-(--primary) w-50 rounded px-2 py-0.5 cursor-pointer hover:opacity-90 text-center"
-                        to={pageManagerSlug}
+                        to={navigationPanelSlug}
                     >
-                        Back to Page Manager
+                        Navigation Panel
                     </Link>
                 </div>
             )}

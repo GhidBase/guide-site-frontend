@@ -8,6 +8,7 @@ export default function TextBlock({
     updateBlockWithEditorData,
     adminMode,
     addBlock,
+    canDelete,
 }) {
     const editorRef = useRef(null);
     const [editMode, setEditMode] = useState(false);
@@ -118,15 +119,16 @@ export default function TextBlock({
                         {!editMode && "Edit"}
                         {editMode && "Cancel"}
                     </button>
-                    <button
-                        onClick={checkDeletion}
-                        //className="text-amber-50 bg-(--primary) w-25 rounded px-2 py-0.5"
-                        className="text-red-700/70
-                        flex items-center justify-center text-center 
-                        w-full h-full "
-                    >
-                        Delete
-                    </button>
+                    {canDelete && (
+                        <button
+                            onClick={checkDeletion}
+                            className="text-red-700/70
+                            flex items-center justify-center text-center
+                            w-full h-full "
+                        >
+                            Delete
+                        </button>
+                    )}
                 </div>
             )}
         </div>
