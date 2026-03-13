@@ -159,6 +159,7 @@ export default function PageBuilder() {
 
     return (
         <Fragment>
+        <div style={{ viewTransitionName: "page-content" }}>
             {isAdmin && (
                 <div
                     id="dev-toolbar"
@@ -276,6 +277,7 @@ export default function PageBuilder() {
                     </Link>
                 </div>
             )}
+        </div>
         </Fragment>
     );
 }

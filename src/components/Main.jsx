@@ -77,7 +77,7 @@ export default function Main() {
                             border-4 border-(--outline) lg:border-t-0 lg:border-b-0 lg:border-l-0 lg:border-r-4
                             bg-(--primary)   
                             lg:flex lg:flex-col
-                            overflow-y-auto`}
+                            overflow-y-auto overflow-x-hidden`}
                         obstructorClassName={`z-1 ${navOpen ? "fixed" : "hidden"} top-0 w-full h-full bg-black/30`}
                         toggleNav={toggleNav}
                         navOpen={navOpen}

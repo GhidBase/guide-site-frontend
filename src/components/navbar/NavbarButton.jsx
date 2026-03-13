@@ -64,9 +64,10 @@ export default function NavbarButton({
     //console.log(actualSlug);
     return (
         <Link
-            className={className}
+            className={className + " transition-transform hover:translate-x-2"}
             to={actualSlug}
             onClick={() => toggleNav(false)}
+            viewTransition
         >
             {navbarTitle}
         </Link>
