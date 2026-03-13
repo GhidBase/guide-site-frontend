@@ -1,6 +1,8 @@
 import { route, index, layout } from "@react-router/dev/routes";
 
 export default [
+    route("ads.txt", "routes/ads-txt.jsx"),
+
     // Legacy .html URL redirects (301 server-side)
     route("/pages/:page", "routes/old-pages.jsx"),
 

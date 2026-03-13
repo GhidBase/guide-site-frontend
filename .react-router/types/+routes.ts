@@ -14,6 +14,9 @@ type Pages = {
   "/": {
     params: {};
   };
+  "/ads.txt": {
+    params: {};
+  };
   "/pages/:page": {
     params: {
       "page": string;
@@ -105,7 +108,11 @@ type Pages = {
 type RouteFiles = {
   "root.jsx": {
     id: "root";
-    page: "/" | "/pages/:page" | "/:pageSlug" | "/games/:gameSlug" | "/games/:gameSlug/:pageSlug" | "/games/:gameSlug/guardian-upgrade-costs" | "/games/:gameSlug/immortal-guardians" | "/games/:gameSlug/flea-guide" | "/games/:gameSlug/page-manager" | "/games/:gameSlug/game-manager" | "/games/:gameSlug/navigation-panel" | "/guardian-upgrade-costs" | "/immortal-guardians" | "/login" | "/signup" | "/dashboard" | "/access-denied" | "/page-manager" | "/game-manager" | "/navigation-panel" | "/404" | "/*";
+    page: "/" | "/ads.txt" | "/pages/:page" | "/:pageSlug" | "/games/:gameSlug" | "/games/:gameSlug/:pageSlug" | "/games/:gameSlug/guardian-upgrade-costs" | "/games/:gameSlug/immortal-guardians" | "/games/:gameSlug/flea-guide" | "/games/:gameSlug/page-manager" | "/games/:gameSlug/game-manager" | "/games/:gameSlug/navigation-panel" | "/guardian-upgrade-costs" | "/immortal-guardians" | "/login" | "/signup" | "/dashboard" | "/access-denied" | "/page-manager" | "/game-manager" | "/navigation-panel" | "/404" | "/*";
+  };
+  "routes/ads-txt.jsx": {
+    id: "routes/ads-txt";
+    page: "/ads.txt";
   };
   "routes/old-pages.jsx": {
     id: "routes/old-pages";
@@ -201,6 +208,7 @@ type RouteFiles = {
 
 type RouteModules = {
   "root": typeof import("./app/root.jsx");
+  "routes/ads-txt": typeof import("./app/routes/ads-txt.jsx");
   "routes/old-pages": typeof import("./app/routes/old-pages.jsx");
   "main": typeof import("./app/routes/layout.jsx");
   "routes/home": typeof import("./app/routes/home.jsx");
