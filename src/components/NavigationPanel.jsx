@@ -8,6 +8,7 @@ import {
     Trash,
     ChevronDown,
     ChevronRight,
+    Info,
 } from "lucide-react";
 
 const secret = import.meta.env.VITE_SECRET;
@@ -34,6 +35,14 @@ export default function NavigationPanel() {
     const [sectionName, setSectionName] = useState("");
 
     const [newSectionName, setNewSectionName] = useState("");
+
+    const [newPageTitle, setNewPageTitle] = useState("");
+    const [newPageSection, setNewPageSection] = useState("");
+    const [editingPage, setEditingPage] = useState(null);
+    const [pageName, setPageName] = useState("");
+    const [detailPage, setDetailPage] = useState(null);
+    const [detailTitle, setDetailTitle] = useState("");
+    const [detailSlug, setDetailSlug] = useState("");
 
     // ── ACCORDION STATE ──────────────────────────────────────────────────────
     const [expandedSections, setExpandedSections] = useState(new Set());
@@ -548,6 +557,165 @@ export default function NavigationPanel() {
         }
     }
 
+    async function createPage() {
+        if (!newPageTitle.trim()) {
+            alert("Page title cannot be empty");
+            return;
+        }
+        const body = { title: newPageTitle };
+        if (newPageSection) body.sectionId = Number(newPageSection);
+        try {
+            const res = await fetch(currentAPI + "/games/" + gameId + "/pages", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify(body),
+            });
+            const newPage = await res.json();
+            if (newPage.sectionId) {
+                const section = sectionsMap.get(newPage.sectionId);
+                if (section) section.pages.push(newPage);
+                forceRender((x) => x + 1);
+            } else {
+                setUnsectionedPages((prev) => [...prev, newPage]);
+            }
+            setNewPageTitle("");
+            setNewPageSection("");
+        } catch (err) {
+            console.error("Failed to create page:", err);
+        }
+    }
+
+    async function deletePage(page) {
+        try {
+            await fetch(
+                currentAPI + "/games/" + gameId + "/pages/by-id/" + page.id,
+                {
+                    method: "DELETE",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "include",
+                },
+            );
+            if (page.sectionId) {
+                const section = sectionsMap.get(page.sectionId);
+                if (section)
+                    section.pages = section.pages.filter(
+                        (p) => p.id !== page.id,
+                    );
+                forceRender((x) => x + 1);
+            } else {
+                setUnsectionedPages((prev) =>
+                    prev.filter((p) => p.id !== page.id),
+                );
+            }
+        } catch (err) {
+            console.error("Failed to delete page:", err);
+        }
+    }
+
+    async function renamePage(id) {
+        try {
+            await fetch(
+                currentAPI + "/games/" + gameId + "/pages/by-id/" + id,
+                {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "include",
+                    body: JSON.stringify({ title: pageName }),
+                },
+            );
+            let updated = false;
+            for (const section of sectionsMap.values()) {
+                const page = section.pages.find((p) => p.id === id);
+                if (page) {
+                    page.title = pageName;
+                    updated = true;
+                    break;
+                }
+            }
+            if (!updated) {
+                setUnsectionedPages((prev) =>
+                    prev.map((p) =>
+                        p.id === id ? { ...p, title: pageName } : p,
+                    ),
+                );
+            } else {
+                forceRender((x) => x + 1);
+            }
+            setEditingPage(null);
+        } catch (err) {
+            console.error("Failed to rename page:", err);
+        }
+    }
+
+    useEffect(() => {
+        if (detailPage) {
+            setDetailTitle(detailPage.title ?? "");
+            setDetailSlug(detailPage.slug ?? "");
+        }
+    }, [detailPage]);
+
+    function openDetailPage(page) {
+        setDetailPage(page);
+    }
+
+    async function savePageDetail() {
+        const id = detailPage.id;
+        const titleChanged = detailTitle !== detailPage.title;
+        const slugChanged = detailSlug !== (detailPage.slug ?? "");
+
+        try {
+            if (titleChanged) {
+                await fetch(
+                    currentAPI + "/games/" + gameId + "/pages/by-id/" + id,
+                    {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        credentials: "include",
+                        body: JSON.stringify({ title: detailTitle }),
+                    },
+                );
+            }
+            if (slugChanged) {
+                await fetch(
+                    currentAPI + "/games/" + gameId + "/pages/by-id/" + id,
+                    {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        credentials: "include",
+                        body: JSON.stringify({ slug: detailSlug }),
+                    },
+                );
+            }
+
+            // Update local state mirrors
+            const updated = {
+                ...detailPage,
+                title: detailTitle,
+                slug: detailSlug,
+            };
+            let foundInSection = false;
+            for (const section of sectionsMap.values()) {
+                const idx = section.pages.findIndex((p) => p.id === id);
+                if (idx !== -1) {
+                    section.pages[idx] = updated;
+                    foundInSection = true;
+                    break;
+                }
+            }
+            if (!foundInSection) {
+                setUnsectionedPages((prev) =>
+                    prev.map((p) => (p.id === id ? updated : p)),
+                );
+            } else {
+                forceRender((x) => x + 1);
+            }
+            setDetailPage(updated);
+        } catch (err) {
+            console.error("Failed to save page detail:", err);
+        }
+    }
+
     return (
         <>
             {/* Add Section bar — stacks vertically on mobile, row on sm+ */}
@@ -564,6 +732,41 @@ export default function NavigationPanel() {
                     className="bg-(--red-brown) text-white px-4 py-2 rounded hover: cursor-pointer w-full sm:w-auto"
                 >
                     Add Section
+                </button>
+            </div>
+
+            {/* Add Page bar */}
+            <div className="max-w-4xl mb-4 flex flex-col sm:flex-row gap-2">
+                <input
+                    type="text"
+                    value={newPageTitle}
+                    onChange={(e) => setNewPageTitle(e.target.value)}
+                    placeholder="New page title"
+                    className="bg-(--red-brown) text-white px-3 py-2 rounded w-full sm:flex-1"
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                            e.preventDefault();
+                            createPage();
+                        }
+                    }}
+                />
+                <select
+                    value={newPageSection}
+                    onChange={(e) => setNewPageSection(e.target.value)}
+                    className="bg-(--red-brown) text-white px-3 py-2 rounded w-full sm:w-auto"
+                >
+                    <option value="">No section</option>
+                    {getSortedSections().map((s) => (
+                        <option key={s.id} value={s.id}>
+                            {s.title}
+                        </option>
+                    ))}
+                </select>
+                <button
+                    onClick={createPage}
+                    className="bg-(--red-brown) text-white px-4 py-2 rounded hover:cursor-pointer w-full sm:w-auto"
+                >
+                    Add Page
                 </button>
             </div>
 
@@ -731,7 +934,10 @@ export default function NavigationPanel() {
                                                                 ? "bg-(--red-brown-trans)"
                                                                 : ""
                                                         }`}
-                                                        draggable
+                                                        draggable={
+                                                            editingPage !==
+                                                            page.id
+                                                        }
                                                         onDragStart={(e) =>
                                                             handlePageDragStart(
                                                                 e,
@@ -758,53 +964,159 @@ export default function NavigationPanel() {
                                                             )
                                                         }
                                                     >
-                                                        <span className="text-(--text-color) cursor-move select-none mr-1">
+                                                        <span className="text-(--text-color) cursor-move select-none mr-1 shrink-0">
                                                             ⋮⋮
                                                         </span>
-                                                        <span className="text-(--accent-text)">
-                                                            {page.title}
-                                                        </span>
-                                                        <select
-                                                            className="bg-(--accent) text-(--accent-text) px-2 py-1 rounded ml-auto"
-                                                            onChange={(e) =>
-                                                                changePageSection(
-                                                                    page.id,
-                                                                    e.target
-                                                                        .value,
-                                                                    page,
-                                                                )
-                                                            }
-                                                            defaultValue=""
-                                                        >
-                                                            <option value="">
-                                                                Move to...
-                                                            </option>
-                                                            <option value="none">
-                                                                No Section
-                                                            </option>
-                                                            {Array.from(
-                                                                sectionsMap.values(),
-                                                            )
-                                                                .filter(
-                                                                    (s) =>
-                                                                        s.id !==
-                                                                        section.id,
-                                                                )
-                                                                .map((s) => (
-                                                                    <option
-                                                                        key={
-                                                                            s.id
-                                                                        }
-                                                                        value={
-                                                                            s.id
-                                                                        }
-                                                                    >
-                                                                        {
-                                                                            s.title
-                                                                        }
+                                                        {editingPage ===
+                                                        page.id ? (
+                                                            <>
+                                                                <input
+                                                                    value={
+                                                                        pageName
+                                                                    }
+                                                                    onChange={(
+                                                                        e,
+                                                                    ) =>
+                                                                        setPageName(
+                                                                            e
+                                                                                .target
+                                                                                .value,
+                                                                        )
+                                                                    }
+                                                                    className="bg-(--accent) text-(--accent-text) px-2 py-1 rounded flex-1 min-w-0"
+                                                                    onKeyDown={(
+                                                                        e,
+                                                                    ) => {
+                                                                        if (
+                                                                            e.key ===
+                                                                            "Enter"
+                                                                        )
+                                                                            renamePage(
+                                                                                page.id,
+                                                                            );
+                                                                        if (
+                                                                            e.key ===
+                                                                            "Escape"
+                                                                        )
+                                                                            setEditingPage(
+                                                                                null,
+                                                                            );
+                                                                    }}
+                                                                    autoFocus
+                                                                />
+                                                                <Check
+                                                                    size={14}
+                                                                    className="cursor-pointer shrink-0 text-(--text-color)"
+                                                                    onClick={() =>
+                                                                        renamePage(
+                                                                            page.id,
+                                                                        )
+                                                                    }
+                                                                />
+                                                                <X
+                                                                    size={14}
+                                                                    className="cursor-pointer shrink-0 text-(--text-color)"
+                                                                    onClick={() =>
+                                                                        setEditingPage(
+                                                                            null,
+                                                                        )
+                                                                    }
+                                                                />
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <span className="text-(--accent-text) flex-1 truncate">
+                                                                    {page.title}
+                                                                </span>
+                                                                <PencilIcon
+                                                                    size={14}
+                                                                    className="cursor-pointer shrink-0 text-(--text-color)"
+                                                                    onClick={() => {
+                                                                        setEditingPage(
+                                                                            page.id,
+                                                                        );
+                                                                        setPageName(
+                                                                            page.title,
+                                                                        );
+                                                                    }}
+                                                                />
+                                                                <Trash
+                                                                    size={14}
+                                                                    className="cursor-pointer shrink-0 text-(--danger-text-color)"
+                                                                    onClick={() => {
+                                                                        if (
+                                                                            confirm(
+                                                                                `Delete page "${page.title}"?`,
+                                                                            )
+                                                                        )
+                                                                            deletePage(
+                                                                                page,
+                                                                            );
+                                                                    }}
+                                                                />
+                                                                <Info
+                                                                    size={14}
+                                                                    className="cursor-pointer shrink-0 text-(--text-color)"
+                                                                    onClick={() =>
+                                                                        setDetailPage(
+                                                                            page,
+                                                                        )
+                                                                    }
+                                                                />
+                                                                <select
+                                                                    className="bg-(--accent) text-(--accent-text) px-2 py-1 rounded ml-auto shrink-0"
+                                                                    onChange={(
+                                                                        e,
+                                                                    ) =>
+                                                                        changePageSection(
+                                                                            page.id,
+                                                                            e
+                                                                                .target
+                                                                                .value,
+                                                                            page,
+                                                                        )
+                                                                    }
+                                                                    defaultValue=""
+                                                                >
+                                                                    <option value="">
+                                                                        Move
+                                                                        to...
                                                                     </option>
-                                                                ))}
-                                                        </select>
+                                                                    <option value="none">
+                                                                        No
+                                                                        Section
+                                                                    </option>
+                                                                    {Array.from(
+                                                                        sectionsMap.values(),
+                                                                    )
+                                                                        .filter(
+                                                                            (
+                                                                                s,
+                                                                            ) =>
+                                                                                s.id !==
+                                                                                section.id,
+                                                                        )
+                                                                        .map(
+                                                                            (
+                                                                                s,
+                                                                            ) => (
+                                                                                <option
+                                                                                    key={
+                                                                                        s.id
+                                                                                    }
+                                                                                    value={
+                                                                                        s.id
+                                                                                    }
+                                                                                >
+                                                                                    {
+                                                                                        s.title
+                                                                                    }
+                                                                                </option>
+                                                                            ),
+                                                                        )}
+                                                                </select>
+                                                            </>
+                                                        )}
                                                     </div>
                                                 ),
                                             )}
@@ -1034,42 +1346,117 @@ export default function NavigationPanel() {
                                             >
                                                 ⋮⋮
                                             </span>
-                                            <span className="flex-1 truncate text-sm text-(--accent-text)">
-                                                {page.title}
-                                            </span>
-                                            <select
-                                                className="bg-(--accent) text-(--accent-text) px-1 py-1 rounded text-xs max-w-[120px] shrink-0"
-                                                onChange={(e) =>
-                                                    changePageSection(
-                                                        page.id,
-                                                        e.target.value,
-                                                        page,
-                                                    )
-                                                }
-                                                defaultValue=""
-                                            >
-                                                <option value="">
-                                                    Move to...
-                                                </option>
-                                                <option value="none">
-                                                    No Section
-                                                </option>
-                                                {Array.from(
-                                                    sectionsMap.values(),
-                                                )
-                                                    .filter(
-                                                        (s) =>
-                                                            s.id !== section.id,
-                                                    )
-                                                    .map((s) => (
-                                                        <option
-                                                            key={s.id}
-                                                            value={s.id}
-                                                        >
-                                                            {s.title}
+                                            {editingPage === page.id ? (
+                                                <>
+                                                    <input
+                                                        value={pageName}
+                                                        onChange={(e) =>
+                                                            setPageName(
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                        className="bg-(--accent) text-(--accent-text) px-2 py-1 rounded flex-1 min-w-0 text-sm"
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === "Enter")
+                                                                renamePage(
+                                                                    page.id,
+                                                                );
+                                                            if (
+                                                                e.key === "Escape"
+                                                            )
+                                                                setEditingPage(
+                                                                    null,
+                                                                );
+                                                        }}
+                                                        autoFocus
+                                                    />
+                                                    <Check
+                                                        size={16}
+                                                        className="cursor-pointer shrink-0 text-(--text-color)"
+                                                        onClick={() =>
+                                                            renamePage(page.id)
+                                                        }
+                                                    />
+                                                    <X
+                                                        size={16}
+                                                        className="cursor-pointer shrink-0 text-(--text-color)"
+                                                        onClick={() =>
+                                                            setEditingPage(null)
+                                                        }
+                                                    />
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <span className="flex-1 truncate text-sm text-(--accent-text)">
+                                                        {page.title}
+                                                    </span>
+                                                    <PencilIcon
+                                                        size={14}
+                                                        className="cursor-pointer shrink-0 text-(--text-color)"
+                                                        onClick={() => {
+                                                            setEditingPage(
+                                                                page.id,
+                                                            );
+                                                            setPageName(
+                                                                page.title,
+                                                            );
+                                                        }}
+                                                    />
+                                                    <Trash
+                                                        size={14}
+                                                        className="cursor-pointer shrink-0 text-(--danger-text-color)"
+                                                        onClick={() => {
+                                                            if (
+                                                                confirm(
+                                                                    `Delete page "${page.title}"?`,
+                                                                )
+                                                            )
+                                                                deletePage(page);
+                                                        }}
+                                                    />
+                                                    <Info
+                                                        size={14}
+                                                        className="cursor-pointer shrink-0 text-(--text-color)"
+                                                        onClick={() =>
+                                                            openDetailPage(page)
+                                                        }
+                                                    />
+                                                    <select
+                                                        className="bg-(--accent) text-(--accent-text) px-1 py-1 rounded text-xs max-w-[120px] shrink-0"
+                                                        onChange={(e) =>
+                                                            changePageSection(
+                                                                page.id,
+                                                                e.target.value,
+                                                                page,
+                                                            )
+                                                        }
+                                                        defaultValue=""
+                                                    >
+                                                        <option value="">
+                                                            Move to...
                                                         </option>
-                                                    ))}
-                                            </select>
+                                                        <option value="none">
+                                                            No Section
+                                                        </option>
+                                                        {Array.from(
+                                                            sectionsMap.values(),
+                                                        )
+                                                            .filter(
+                                                                (s) =>
+                                                                    s.id !==
+                                                                    section.id,
+                                                            )
+                                                            .map((s) => (
+                                                                <option
+                                                                    key={s.id}
+                                                                    value={s.id}
+                                                                >
+                                                                    {s.title}
+                                                                </option>
+                                                            ))}
+                                                    </select>
+                                                </>
+                                            )}
                                         </div>
                                     ))}
 
@@ -1160,7 +1547,73 @@ export default function NavigationPanel() {
                                     className="border-t border-(--outline) hover:bg-(--accent) transition-colors"
                                 >
                                     <td className="p-2 text-(--accent-text)">
-                                        {page.title}
+                                        {editingPage === page.id ? (
+                                            <div className="flex gap-2 items-center">
+                                                <input
+                                                    value={pageName}
+                                                    onChange={(e) =>
+                                                        setPageName(
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                    className="bg-(--accent) text-(--accent-text) px-2 py-1 rounded flex-1 min-w-0"
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === "Enter")
+                                                            renamePage(page.id);
+                                                        if (e.key === "Escape")
+                                                            setEditingPage(null);
+                                                    }}
+                                                    autoFocus
+                                                />
+                                                <Check
+                                                    size={14}
+                                                    className="cursor-pointer shrink-0 text-(--text-color)"
+                                                    onClick={() =>
+                                                        renamePage(page.id)
+                                                    }
+                                                />
+                                                <X
+                                                    size={14}
+                                                    className="cursor-pointer shrink-0 text-(--text-color)"
+                                                    onClick={() =>
+                                                        setEditingPage(null)
+                                                    }
+                                                />
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center gap-2">
+                                                <span className="flex-1">
+                                                    {page.title}
+                                                </span>
+                                                <PencilIcon
+                                                    size={14}
+                                                    className="cursor-pointer shrink-0 text-(--text-color)"
+                                                    onClick={() => {
+                                                        setEditingPage(page.id);
+                                                        setPageName(page.title);
+                                                    }}
+                                                />
+                                                <Trash
+                                                    size={14}
+                                                    className="cursor-pointer shrink-0 text-(--danger-text-color)"
+                                                    onClick={() => {
+                                                        if (
+                                                            confirm(
+                                                                `Delete page "${page.title}"?`,
+                                                            )
+                                                        )
+                                                            deletePage(page);
+                                                    }}
+                                                />
+                                                <Info
+                                                    size={14}
+                                                    className="cursor-pointer shrink-0 text-(--text-color)"
+                                                    onClick={() =>
+                                                        openDetailPage(page)
+                                                    }
+                                                />
+                                            </div>
+                                        )}
                                     </td>
                                     <td className="p-2">
                                         <select
@@ -1198,34 +1651,185 @@ export default function NavigationPanel() {
                                 key={page.id}
                                 className="flex items-center gap-2 border-t border-(--outline) first:border-t-0 px-3 py-2 hover:bg-(--accent) transition-colors"
                             >
-                                <span className="flex-1 truncate text-sm text-(--accent-text)">
-                                    {page.title}
-                                </span>
-                                <select
-                                    className="bg-(--accent) text-(--accent-text) px-1 py-1 rounded text-xs max-w-[140px] shrink-0"
-                                    onChange={(e) =>
-                                        changePageSection(
-                                            page.id,
-                                            e.target.value,
-                                            page,
-                                        )
-                                    }
-                                    defaultValue=""
-                                >
-                                    <option value="">Assign to...</option>
-                                    {Array.from(sectionsMap.values()).map(
-                                        (s) => (
-                                            <option key={s.id} value={s.id}>
-                                                {s.title}
+                                {editingPage === page.id ? (
+                                    <>
+                                        <input
+                                            value={pageName}
+                                            onChange={(e) =>
+                                                setPageName(e.target.value)
+                                            }
+                                            className="bg-(--accent) text-(--accent-text) px-2 py-1 rounded flex-1 min-w-0 text-sm"
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter")
+                                                    renamePage(page.id);
+                                                if (e.key === "Escape")
+                                                    setEditingPage(null);
+                                            }}
+                                            autoFocus
+                                        />
+                                        <Check
+                                            size={16}
+                                            className="cursor-pointer shrink-0 text-(--text-color)"
+                                            onClick={() => renamePage(page.id)}
+                                        />
+                                        <X
+                                            size={16}
+                                            className="cursor-pointer shrink-0 text-(--text-color)"
+                                            onClick={() => setEditingPage(null)}
+                                        />
+                                    </>
+                                ) : (
+                                    <>
+                                        <span className="flex-1 truncate text-sm text-(--accent-text)">
+                                            {page.title}
+                                        </span>
+                                        <PencilIcon
+                                            size={14}
+                                            className="cursor-pointer shrink-0 text-(--text-color)"
+                                            onClick={() => {
+                                                setEditingPage(page.id);
+                                                setPageName(page.title);
+                                            }}
+                                        />
+                                        <Trash
+                                            size={14}
+                                            className="cursor-pointer shrink-0 text-(--danger-text-color)"
+                                            onClick={() => {
+                                                if (
+                                                    confirm(
+                                                        `Delete page "${page.title}"?`,
+                                                    )
+                                                )
+                                                    deletePage(page);
+                                            }}
+                                        />
+                                        <Info
+                                            size={14}
+                                            className="cursor-pointer shrink-0 text-(--text-color)"
+                                            onClick={() => openDetailPage(page)}
+                                        />
+                                        <select
+                                            className="bg-(--accent) text-(--accent-text) px-1 py-1 rounded text-xs max-w-[140px] shrink-0"
+                                            onChange={(e) =>
+                                                changePageSection(
+                                                    page.id,
+                                                    e.target.value,
+                                                    page,
+                                                )
+                                            }
+                                            defaultValue=""
+                                        >
+                                            <option value="">
+                                                Assign to...
                                             </option>
-                                        ),
-                                    )}
-                                </select>
+                                            {Array.from(
+                                                sectionsMap.values(),
+                                            ).map((s) => (
+                                                <option key={s.id} value={s.id}>
+                                                    {s.title}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </>
+                                )}
                             </div>
                         ))}
                     </div>
                 </div>
             )}
+
+            {/* Page detail modal */}
+            {detailPage && (() => {
+                const isLDG = import.meta.env.VITE_LDG == "True";
+                const previewUrl = detailSlug
+                    ? (isLDG || !gameData
+                        ? "/" + detailSlug
+                        : "/games/" + gameData.slug + "/" + detailSlug)
+                    : null;
+                const section = detailPage.sectionId
+                    ? sectionsMap.get(detailPage.sectionId)
+                    : null;
+
+                return (
+                    <div
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+                        onClick={() => setDetailPage(null)}
+                    >
+                        <div
+                            className="bg-(--surface-background) border border-(--outline) rounded-xl shadow-2xl w-full max-w-md mx-4 p-6 flex flex-col gap-4"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            {/* Header */}
+                            <div className="flex items-start justify-between gap-2">
+                                <h2 className="text-lg font-bold text-(--accent-text) leading-tight">
+                                    Page Details
+                                </h2>
+                                <button
+                                    onClick={() => setDetailPage(null)}
+                                    className="shrink-0 text-(--text-color) hover:text-(--accent-text) cursor-pointer"
+                                >
+                                    <X size={20} />
+                                </button>
+                            </div>
+
+                            {/* Editable fields */}
+                            <div className="flex flex-col gap-3 text-sm">
+                                <div>
+                                    <label className="text-(--text-color) font-semibold block mb-1">Title</label>
+                                    <input
+                                        value={detailTitle}
+                                        onChange={(e) => setDetailTitle(e.target.value)}
+                                        className="bg-(--accent) text-(--accent-text) px-3 py-1.5 rounded w-full"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="text-(--text-color) font-semibold block mb-1">URL slug</label>
+                                    <input
+                                        value={detailSlug}
+                                        onChange={(e) => setDetailSlug(e.target.value)}
+                                        className="bg-(--accent) text-(--accent-text) px-3 py-1.5 rounded w-full font-mono"
+                                        placeholder="page-slug"
+                                    />
+                                    {previewUrl && (
+                                        <p className="text-(--text-color) text-xs mt-1 break-all font-mono">
+                                            {previewUrl}
+                                        </p>
+                                    )}
+                                </div>
+
+                                <div>
+                                    <p className="text-(--text-color) font-semibold mb-0.5">Section</p>
+                                    <p className="text-(--accent-text)">
+                                        {section ? section.title : <span className="italic text-(--text-color)">None</span>}
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <p className="text-(--text-color) font-semibold mb-0.5">Page ID</p>
+                                    <p className="text-(--accent-text) font-mono">{detailPage.id}</p>
+                                </div>
+                            </div>
+
+                            {/* Discord embed section — placeholder */}
+                            <div className="border-t border-(--outline) pt-4 flex flex-col gap-2">
+                                <p className="text-(--accent-text) font-semibold text-sm">Discord Embed</p>
+                                <p className="text-(--text-color) text-xs italic">
+                                    Customization coming soon.
+                                </p>
+                            </div>
+
+                            {/* Save button */}
+                            <button
+                                onClick={savePageDetail}
+                                className="bg-(--primary) text-white px-4 py-2 rounded cursor-pointer hover:opacity-90 font-semibold"
+                            >
+                                Save
+                            </button>
+                        </div>
+                    </div>
+                );
+            })()}
         </>
     );
 }

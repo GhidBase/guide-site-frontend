@@ -2,7 +2,7 @@ import { jsx, jsxs, Fragment as Fragment$1 } from "react/jsx-runtime";
 import { renderToReadableStream } from "react-dom/server";
 import { ServerRouter, UNSAFE_withComponentProps, Outlet, Meta, Links, ScrollRestoration, Scripts, redirect, useLoaderData, Link, useNavigate, useRouteLoaderData, useMatches, useLocation } from "react-router";
 import { createContext, useState, useEffect, useContext, Fragment, useRef, lazy, Suspense } from "react";
-import { PencilIcon, Check, X, Clock, ChevronDown, ChevronRight, Trash } from "lucide-react";
+import { PencilIcon, Check, X, Clock, ChevronDown, ChevronRight, Trash, Info } from "lucide-react";
 async function handleRequest(request, responseStatusCode, responseHeaders, routerContext) {
   const body = await renderToReadableStream(
     /* @__PURE__ */ jsx(ServerRouter, { context: routerContext, url: request.url }),
@@ -4024,6 +4024,13 @@ function NavigationPanel() {
   const [editingSection, setEditingSection] = useState(null);
   const [sectionName, setSectionName] = useState("");
   const [newSectionName, setNewSectionName] = useState("");
+  const [newPageTitle, setNewPageTitle] = useState("");
+  const [newPageSection, setNewPageSection] = useState("");
+  const [editingPage, setEditingPage] = useState(null);
+  const [pageName, setPageName] = useState("");
+  const [detailPage, setDetailPage] = useState(null);
+  const [detailTitle, setDetailTitle] = useState("");
+  const [detailSlug, setDetailSlug] = useState("");
   const [expandedSections, setExpandedSections] = useState(/* @__PURE__ */ new Set());
   useEffect(() => {
     const all = getSortedSections().map((s) => s.id);
@@ -4448,6 +4455,156 @@ function NavigationPanel() {
       console.error("Failed to change page section:", err);
     }
   }
+  async function createPage() {
+    if (!newPageTitle.trim()) {
+      alert("Page title cannot be empty");
+      return;
+    }
+    const body = { title: newPageTitle };
+    if (newPageSection) body.sectionId = Number(newPageSection);
+    try {
+      const res = await fetch(currentAPI + "/games/" + gameId + "/pages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(body)
+      });
+      const newPage = await res.json();
+      if (newPage.sectionId) {
+        const section = sectionsMap.get(newPage.sectionId);
+        if (section) section.pages.push(newPage);
+        forceRender((x) => x + 1);
+      } else {
+        setUnsectionedPages((prev) => [...prev, newPage]);
+      }
+      setNewPageTitle("");
+      setNewPageSection("");
+    } catch (err) {
+      console.error("Failed to create page:", err);
+    }
+  }
+  async function deletePage(page) {
+    try {
+      await fetch(
+        currentAPI + "/games/" + gameId + "/pages/by-id/" + page.id,
+        {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include"
+        }
+      );
+      if (page.sectionId) {
+        const section = sectionsMap.get(page.sectionId);
+        if (section)
+          section.pages = section.pages.filter(
+            (p) => p.id !== page.id
+          );
+        forceRender((x) => x + 1);
+      } else {
+        setUnsectionedPages(
+          (prev) => prev.filter((p) => p.id !== page.id)
+        );
+      }
+    } catch (err) {
+      console.error("Failed to delete page:", err);
+    }
+  }
+  async function renamePage(id) {
+    try {
+      await fetch(
+        currentAPI + "/games/" + gameId + "/pages/by-id/" + id,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ title: pageName })
+        }
+      );
+      let updated = false;
+      for (const section of sectionsMap.values()) {
+        const page = section.pages.find((p) => p.id === id);
+        if (page) {
+          page.title = pageName;
+          updated = true;
+          break;
+        }
+      }
+      if (!updated) {
+        setUnsectionedPages(
+          (prev) => prev.map(
+            (p) => p.id === id ? { ...p, title: pageName } : p
+          )
+        );
+      } else {
+        forceRender((x) => x + 1);
+      }
+      setEditingPage(null);
+    } catch (err) {
+      console.error("Failed to rename page:", err);
+    }
+  }
+  useEffect(() => {
+    if (detailPage) {
+      setDetailTitle(detailPage.title ?? "");
+      setDetailSlug(detailPage.slug ?? "");
+    }
+  }, [detailPage]);
+  function openDetailPage(page) {
+    setDetailPage(page);
+  }
+  async function savePageDetail() {
+    const id = detailPage.id;
+    const titleChanged = detailTitle !== detailPage.title;
+    const slugChanged = detailSlug !== (detailPage.slug ?? "");
+    try {
+      if (titleChanged) {
+        await fetch(
+          currentAPI + "/games/" + gameId + "/pages/by-id/" + id,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ title: detailTitle })
+          }
+        );
+      }
+      if (slugChanged) {
+        await fetch(
+          currentAPI + "/games/" + gameId + "/pages/by-id/" + id,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ slug: detailSlug })
+          }
+        );
+      }
+      const updated = {
+        ...detailPage,
+        title: detailTitle,
+        slug: detailSlug
+      };
+      let foundInSection = false;
+      for (const section of sectionsMap.values()) {
+        const idx = section.pages.findIndex((p) => p.id === id);
+        if (idx !== -1) {
+          section.pages[idx] = updated;
+          foundInSection = true;
+          break;
+        }
+      }
+      if (!foundInSection) {
+        setUnsectionedPages(
+          (prev) => prev.map((p) => p.id === id ? updated : p)
+        );
+      } else {
+        forceRender((x) => x + 1);
+      }
+      setDetailPage(updated);
+    } catch (err) {
+      console.error("Failed to save page detail:", err);
+    }
+  }
   return /* @__PURE__ */ jsxs(Fragment$1, { children: [
     /* @__PURE__ */ jsxs("div", { className: "mt-8 max-w-4xl mb-4 flex flex-col sm:flex-row gap-2", children: [
       /* @__PURE__ */ jsx(
@@ -4466,6 +4623,44 @@ function NavigationPanel() {
           onClick: createSection,
           className: "bg-(--red-brown) text-white px-4 py-2 rounded hover: cursor-pointer w-full sm:w-auto",
           children: "Add Section"
+        }
+      )
+    ] }),
+    /* @__PURE__ */ jsxs("div", { className: "max-w-4xl mb-4 flex flex-col sm:flex-row gap-2", children: [
+      /* @__PURE__ */ jsx(
+        "input",
+        {
+          type: "text",
+          value: newPageTitle,
+          onChange: (e) => setNewPageTitle(e.target.value),
+          placeholder: "New page title",
+          className: "bg-(--red-brown) text-white px-3 py-2 rounded w-full sm:flex-1",
+          onKeyDown: (e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              createPage();
+            }
+          }
+        }
+      ),
+      /* @__PURE__ */ jsxs(
+        "select",
+        {
+          value: newPageSection,
+          onChange: (e) => setNewPageSection(e.target.value),
+          className: "bg-(--red-brown) text-white px-3 py-2 rounded w-full sm:w-auto",
+          children: [
+            /* @__PURE__ */ jsx("option", { value: "", children: "No section" }),
+            getSortedSections().map((s) => /* @__PURE__ */ jsx("option", { value: s.id, children: s.title }, s.id))
+          ]
+        }
+      ),
+      /* @__PURE__ */ jsx(
+        "button",
+        {
+          onClick: createPage,
+          className: "bg-(--red-brown) text-white px-4 py-2 rounded hover:cursor-pointer w-full sm:w-auto",
+          children: "Add Page"
         }
       )
     ] }),
@@ -4589,7 +4784,7 @@ function NavigationPanel() {
                     "div",
                     {
                       className: `mb-1 flex items-center gap-1 rounded px-1 transition-colors ${dragOverPage?.id === page.id && draggedPage?.id !== page.id ? "bg-(--red-brown-trans)" : ""}`,
-                      draggable: true,
+                      draggable: editingPage !== page.id,
                       onDragStart: (e) => handlePageDragStart(
                         e,
                         page
@@ -4606,36 +4801,122 @@ function NavigationPanel() {
                         section
                       ),
                       children: [
-                        /* @__PURE__ */ jsx("span", { className: "text-(--text-color) cursor-move select-none mr-1", children: "⋮⋮" }),
-                        /* @__PURE__ */ jsx("span", { className: "text-(--accent-text)", children: page.title }),
-                        /* @__PURE__ */ jsxs(
-                          "select",
-                          {
-                            className: "bg-(--accent) text-(--accent-text) px-2 py-1 rounded ml-auto",
-                            onChange: (e) => changePageSection(
-                              page.id,
-                              e.target.value,
-                              page
-                            ),
-                            defaultValue: "",
-                            children: [
-                              /* @__PURE__ */ jsx("option", { value: "", children: "Move to..." }),
-                              /* @__PURE__ */ jsx("option", { value: "none", children: "No Section" }),
-                              Array.from(
-                                sectionsMap.values()
-                              ).filter(
-                                (s) => s.id !== section.id
-                              ).map((s) => /* @__PURE__ */ jsx(
-                                "option",
-                                {
-                                  value: s.id,
-                                  children: s.title
-                                },
-                                s.id
-                              ))
-                            ]
-                          }
-                        )
+                        /* @__PURE__ */ jsx("span", { className: "text-(--text-color) cursor-move select-none mr-1 shrink-0", children: "⋮⋮" }),
+                        editingPage === page.id ? /* @__PURE__ */ jsxs(Fragment$1, { children: [
+                          /* @__PURE__ */ jsx(
+                            "input",
+                            {
+                              value: pageName,
+                              onChange: (e) => setPageName(
+                                e.target.value
+                              ),
+                              className: "bg-(--accent) text-(--accent-text) px-2 py-1 rounded flex-1 min-w-0",
+                              onKeyDown: (e) => {
+                                if (e.key === "Enter")
+                                  renamePage(
+                                    page.id
+                                  );
+                                if (e.key === "Escape")
+                                  setEditingPage(
+                                    null
+                                  );
+                              },
+                              autoFocus: true
+                            }
+                          ),
+                          /* @__PURE__ */ jsx(
+                            Check,
+                            {
+                              size: 14,
+                              className: "cursor-pointer shrink-0 text-(--text-color)",
+                              onClick: () => renamePage(
+                                page.id
+                              )
+                            }
+                          ),
+                          /* @__PURE__ */ jsx(
+                            X,
+                            {
+                              size: 14,
+                              className: "cursor-pointer shrink-0 text-(--text-color)",
+                              onClick: () => setEditingPage(
+                                null
+                              )
+                            }
+                          )
+                        ] }) : /* @__PURE__ */ jsxs(Fragment$1, { children: [
+                          /* @__PURE__ */ jsx("span", { className: "text-(--accent-text) flex-1 truncate", children: page.title }),
+                          /* @__PURE__ */ jsx(
+                            PencilIcon,
+                            {
+                              size: 14,
+                              className: "cursor-pointer shrink-0 text-(--text-color)",
+                              onClick: () => {
+                                setEditingPage(
+                                  page.id
+                                );
+                                setPageName(
+                                  page.title
+                                );
+                              }
+                            }
+                          ),
+                          /* @__PURE__ */ jsx(
+                            Trash,
+                            {
+                              size: 14,
+                              className: "cursor-pointer shrink-0 text-(--danger-text-color)",
+                              onClick: () => {
+                                if (confirm(
+                                  `Delete page "${page.title}"?`
+                                ))
+                                  deletePage(
+                                    page
+                                  );
+                              }
+                            }
+                          ),
+                          /* @__PURE__ */ jsx(
+                            Info,
+                            {
+                              size: 14,
+                              className: "cursor-pointer shrink-0 text-(--text-color)",
+                              onClick: () => setDetailPage(
+                                page
+                              )
+                            }
+                          ),
+                          /* @__PURE__ */ jsxs(
+                            "select",
+                            {
+                              className: "bg-(--accent) text-(--accent-text) px-2 py-1 rounded ml-auto shrink-0",
+                              onChange: (e) => changePageSection(
+                                page.id,
+                                e.target.value,
+                                page
+                              ),
+                              defaultValue: "",
+                              children: [
+                                /* @__PURE__ */ jsx("option", { value: "", children: "Move to..." }),
+                                /* @__PURE__ */ jsx("option", { value: "none", children: "No Section" }),
+                                Array.from(
+                                  sectionsMap.values()
+                                ).filter(
+                                  (s) => s.id !== section.id
+                                ).map(
+                                  (s) => /* @__PURE__ */ jsx(
+                                    "option",
+                                    {
+                                      value: s.id,
+                                      children: s.title
+                                    },
+                                    s.id
+                                  )
+                                )
+                              ]
+                            }
+                          )
+                        ] })
                       ]
                     },
                     page.id
@@ -4806,35 +5087,111 @@ function NavigationPanel() {
                         children: "⋮⋮"
                       }
                     ),
-                    /* @__PURE__ */ jsx("span", { className: "flex-1 truncate text-sm text-(--accent-text)", children: page.title }),
-                    /* @__PURE__ */ jsxs(
-                      "select",
-                      {
-                        className: "bg-(--accent) text-(--accent-text) px-1 py-1 rounded text-xs max-w-[120px] shrink-0",
-                        onChange: (e) => changePageSection(
-                          page.id,
-                          e.target.value,
-                          page
-                        ),
-                        defaultValue: "",
-                        children: [
-                          /* @__PURE__ */ jsx("option", { value: "", children: "Move to..." }),
-                          /* @__PURE__ */ jsx("option", { value: "none", children: "No Section" }),
-                          Array.from(
-                            sectionsMap.values()
-                          ).filter(
-                            (s) => s.id !== section.id
-                          ).map((s) => /* @__PURE__ */ jsx(
-                            "option",
-                            {
-                              value: s.id,
-                              children: s.title
-                            },
-                            s.id
-                          ))
-                        ]
-                      }
-                    )
+                    editingPage === page.id ? /* @__PURE__ */ jsxs(Fragment$1, { children: [
+                      /* @__PURE__ */ jsx(
+                        "input",
+                        {
+                          value: pageName,
+                          onChange: (e) => setPageName(
+                            e.target.value
+                          ),
+                          className: "bg-(--accent) text-(--accent-text) px-2 py-1 rounded flex-1 min-w-0 text-sm",
+                          onKeyDown: (e) => {
+                            if (e.key === "Enter")
+                              renamePage(
+                                page.id
+                              );
+                            if (e.key === "Escape")
+                              setEditingPage(
+                                null
+                              );
+                          },
+                          autoFocus: true
+                        }
+                      ),
+                      /* @__PURE__ */ jsx(
+                        Check,
+                        {
+                          size: 16,
+                          className: "cursor-pointer shrink-0 text-(--text-color)",
+                          onClick: () => renamePage(page.id)
+                        }
+                      ),
+                      /* @__PURE__ */ jsx(
+                        X,
+                        {
+                          size: 16,
+                          className: "cursor-pointer shrink-0 text-(--text-color)",
+                          onClick: () => setEditingPage(null)
+                        }
+                      )
+                    ] }) : /* @__PURE__ */ jsxs(Fragment$1, { children: [
+                      /* @__PURE__ */ jsx("span", { className: "flex-1 truncate text-sm text-(--accent-text)", children: page.title }),
+                      /* @__PURE__ */ jsx(
+                        PencilIcon,
+                        {
+                          size: 14,
+                          className: "cursor-pointer shrink-0 text-(--text-color)",
+                          onClick: () => {
+                            setEditingPage(
+                              page.id
+                            );
+                            setPageName(
+                              page.title
+                            );
+                          }
+                        }
+                      ),
+                      /* @__PURE__ */ jsx(
+                        Trash,
+                        {
+                          size: 14,
+                          className: "cursor-pointer shrink-0 text-(--danger-text-color)",
+                          onClick: () => {
+                            if (confirm(
+                              `Delete page "${page.title}"?`
+                            ))
+                              deletePage(page);
+                          }
+                        }
+                      ),
+                      /* @__PURE__ */ jsx(
+                        Info,
+                        {
+                          size: 14,
+                          className: "cursor-pointer shrink-0 text-(--text-color)",
+                          onClick: () => openDetailPage(page)
+                        }
+                      ),
+                      /* @__PURE__ */ jsxs(
+                        "select",
+                        {
+                          className: "bg-(--accent) text-(--accent-text) px-1 py-1 rounded text-xs max-w-[120px] shrink-0",
+                          onChange: (e) => changePageSection(
+                            page.id,
+                            e.target.value,
+                            page
+                          ),
+                          defaultValue: "",
+                          children: [
+                            /* @__PURE__ */ jsx("option", { value: "", children: "Move to..." }),
+                            /* @__PURE__ */ jsx("option", { value: "none", children: "No Section" }),
+                            Array.from(
+                              sectionsMap.values()
+                            ).filter(
+                              (s) => s.id !== section.id
+                            ).map((s) => /* @__PURE__ */ jsx(
+                              "option",
+                              {
+                                value: s.id,
+                                children: s.title
+                              },
+                              s.id
+                            ))
+                          ]
+                        }
+                      )
+                    ] })
                   ]
                 },
                 page.id
@@ -4898,7 +5255,75 @@ function NavigationPanel() {
           {
             className: "border-t border-(--outline) hover:bg-(--accent) transition-colors",
             children: [
-              /* @__PURE__ */ jsx("td", { className: "p-2 text-(--accent-text)", children: page.title }),
+              /* @__PURE__ */ jsx("td", { className: "p-2 text-(--accent-text)", children: editingPage === page.id ? /* @__PURE__ */ jsxs("div", { className: "flex gap-2 items-center", children: [
+                /* @__PURE__ */ jsx(
+                  "input",
+                  {
+                    value: pageName,
+                    onChange: (e) => setPageName(
+                      e.target.value
+                    ),
+                    className: "bg-(--accent) text-(--accent-text) px-2 py-1 rounded flex-1 min-w-0",
+                    onKeyDown: (e) => {
+                      if (e.key === "Enter")
+                        renamePage(page.id);
+                      if (e.key === "Escape")
+                        setEditingPage(null);
+                    },
+                    autoFocus: true
+                  }
+                ),
+                /* @__PURE__ */ jsx(
+                  Check,
+                  {
+                    size: 14,
+                    className: "cursor-pointer shrink-0 text-(--text-color)",
+                    onClick: () => renamePage(page.id)
+                  }
+                ),
+                /* @__PURE__ */ jsx(
+                  X,
+                  {
+                    size: 14,
+                    className: "cursor-pointer shrink-0 text-(--text-color)",
+                    onClick: () => setEditingPage(null)
+                  }
+                )
+              ] }) : /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-2", children: [
+                /* @__PURE__ */ jsx("span", { className: "flex-1", children: page.title }),
+                /* @__PURE__ */ jsx(
+                  PencilIcon,
+                  {
+                    size: 14,
+                    className: "cursor-pointer shrink-0 text-(--text-color)",
+                    onClick: () => {
+                      setEditingPage(page.id);
+                      setPageName(page.title);
+                    }
+                  }
+                ),
+                /* @__PURE__ */ jsx(
+                  Trash,
+                  {
+                    size: 14,
+                    className: "cursor-pointer shrink-0 text-(--danger-text-color)",
+                    onClick: () => {
+                      if (confirm(
+                        `Delete page "${page.title}"?`
+                      ))
+                        deletePage(page);
+                    }
+                  }
+                ),
+                /* @__PURE__ */ jsx(
+                  Info,
+                  {
+                    size: 14,
+                    className: "cursor-pointer shrink-0 text-(--text-color)",
+                    onClick: () => openDetailPage(page)
+                  }
+                )
+              ] }) }),
               /* @__PURE__ */ jsx("td", { className: "p-2", children: /* @__PURE__ */ jsxs(
                 "select",
                 {
@@ -4922,12 +5347,76 @@ function NavigationPanel() {
           page.id
         )) })
       ] }),
-      /* @__PURE__ */ jsx("div", { className: "flex flex-col sm:hidden border border-(--outline) rounded-lg bg-(--surface-background)", children: unsectionedPages.map((page) => /* @__PURE__ */ jsxs(
+      /* @__PURE__ */ jsx("div", { className: "flex flex-col sm:hidden border border-(--outline) rounded-lg bg-(--surface-background)", children: unsectionedPages.map((page) => /* @__PURE__ */ jsx(
         "div",
         {
           className: "flex items-center gap-2 border-t border-(--outline) first:border-t-0 px-3 py-2 hover:bg-(--accent) transition-colors",
-          children: [
+          children: editingPage === page.id ? /* @__PURE__ */ jsxs(Fragment$1, { children: [
+            /* @__PURE__ */ jsx(
+              "input",
+              {
+                value: pageName,
+                onChange: (e) => setPageName(e.target.value),
+                className: "bg-(--accent) text-(--accent-text) px-2 py-1 rounded flex-1 min-w-0 text-sm",
+                onKeyDown: (e) => {
+                  if (e.key === "Enter")
+                    renamePage(page.id);
+                  if (e.key === "Escape")
+                    setEditingPage(null);
+                },
+                autoFocus: true
+              }
+            ),
+            /* @__PURE__ */ jsx(
+              Check,
+              {
+                size: 16,
+                className: "cursor-pointer shrink-0 text-(--text-color)",
+                onClick: () => renamePage(page.id)
+              }
+            ),
+            /* @__PURE__ */ jsx(
+              X,
+              {
+                size: 16,
+                className: "cursor-pointer shrink-0 text-(--text-color)",
+                onClick: () => setEditingPage(null)
+              }
+            )
+          ] }) : /* @__PURE__ */ jsxs(Fragment$1, { children: [
             /* @__PURE__ */ jsx("span", { className: "flex-1 truncate text-sm text-(--accent-text)", children: page.title }),
+            /* @__PURE__ */ jsx(
+              PencilIcon,
+              {
+                size: 14,
+                className: "cursor-pointer shrink-0 text-(--text-color)",
+                onClick: () => {
+                  setEditingPage(page.id);
+                  setPageName(page.title);
+                }
+              }
+            ),
+            /* @__PURE__ */ jsx(
+              Trash,
+              {
+                size: 14,
+                className: "cursor-pointer shrink-0 text-(--danger-text-color)",
+                onClick: () => {
+                  if (confirm(
+                    `Delete page "${page.title}"?`
+                  ))
+                    deletePage(page);
+                }
+              }
+            ),
+            /* @__PURE__ */ jsx(
+              Info,
+              {
+                size: 14,
+                className: "cursor-pointer shrink-0 text-(--text-color)",
+                onClick: () => openDetailPage(page)
+              }
+            ),
             /* @__PURE__ */ jsxs(
               "select",
               {
@@ -4940,17 +5429,94 @@ function NavigationPanel() {
                 defaultValue: "",
                 children: [
                   /* @__PURE__ */ jsx("option", { value: "", children: "Assign to..." }),
-                  Array.from(sectionsMap.values()).map(
-                    (s) => /* @__PURE__ */ jsx("option", { value: s.id, children: s.title }, s.id)
-                  )
+                  Array.from(
+                    sectionsMap.values()
+                  ).map((s) => /* @__PURE__ */ jsx("option", { value: s.id, children: s.title }, s.id))
                 ]
               }
             )
-          ]
+          ] })
         },
         page.id
       )) })
-    ] })
+    ] }),
+    detailPage && (() => {
+      const previewUrl = detailSlug ? "/" + detailSlug : null;
+      const section = detailPage.sectionId ? sectionsMap.get(detailPage.sectionId) : null;
+      return /* @__PURE__ */ jsx(
+        "div",
+        {
+          className: "fixed inset-0 z-50 flex items-center justify-center bg-black/50",
+          onClick: () => setDetailPage(null),
+          children: /* @__PURE__ */ jsxs(
+            "div",
+            {
+              className: "bg-(--surface-background) border border-(--outline) rounded-xl shadow-2xl w-full max-w-md mx-4 p-6 flex flex-col gap-4",
+              onClick: (e) => e.stopPropagation(),
+              children: [
+                /* @__PURE__ */ jsxs("div", { className: "flex items-start justify-between gap-2", children: [
+                  /* @__PURE__ */ jsx("h2", { className: "text-lg font-bold text-(--accent-text) leading-tight", children: "Page Details" }),
+                  /* @__PURE__ */ jsx(
+                    "button",
+                    {
+                      onClick: () => setDetailPage(null),
+                      className: "shrink-0 text-(--text-color) hover:text-(--accent-text) cursor-pointer",
+                      children: /* @__PURE__ */ jsx(X, { size: 20 })
+                    }
+                  )
+                ] }),
+                /* @__PURE__ */ jsxs("div", { className: "flex flex-col gap-3 text-sm", children: [
+                  /* @__PURE__ */ jsxs("div", { children: [
+                    /* @__PURE__ */ jsx("label", { className: "text-(--text-color) font-semibold block mb-1", children: "Title" }),
+                    /* @__PURE__ */ jsx(
+                      "input",
+                      {
+                        value: detailTitle,
+                        onChange: (e) => setDetailTitle(e.target.value),
+                        className: "bg-(--accent) text-(--accent-text) px-3 py-1.5 rounded w-full"
+                      }
+                    )
+                  ] }),
+                  /* @__PURE__ */ jsxs("div", { children: [
+                    /* @__PURE__ */ jsx("label", { className: "text-(--text-color) font-semibold block mb-1", children: "URL slug" }),
+                    /* @__PURE__ */ jsx(
+                      "input",
+                      {
+                        value: detailSlug,
+                        onChange: (e) => setDetailSlug(e.target.value),
+                        className: "bg-(--accent) text-(--accent-text) px-3 py-1.5 rounded w-full font-mono",
+                        placeholder: "page-slug"
+                      }
+                    ),
+                    previewUrl && /* @__PURE__ */ jsx("p", { className: "text-(--text-color) text-xs mt-1 break-all font-mono", children: previewUrl })
+                  ] }),
+                  /* @__PURE__ */ jsxs("div", { children: [
+                    /* @__PURE__ */ jsx("p", { className: "text-(--text-color) font-semibold mb-0.5", children: "Section" }),
+                    /* @__PURE__ */ jsx("p", { className: "text-(--accent-text)", children: section ? section.title : /* @__PURE__ */ jsx("span", { className: "italic text-(--text-color)", children: "None" }) })
+                  ] }),
+                  /* @__PURE__ */ jsxs("div", { children: [
+                    /* @__PURE__ */ jsx("p", { className: "text-(--text-color) font-semibold mb-0.5", children: "Page ID" }),
+                    /* @__PURE__ */ jsx("p", { className: "text-(--accent-text) font-mono", children: detailPage.id })
+                  ] })
+                ] }),
+                /* @__PURE__ */ jsxs("div", { className: "border-t border-(--outline) pt-4 flex flex-col gap-2", children: [
+                  /* @__PURE__ */ jsx("p", { className: "text-(--accent-text) font-semibold text-sm", children: "Discord Embed" }),
+                  /* @__PURE__ */ jsx("p", { className: "text-(--text-color) text-xs italic", children: "Customization coming soon." })
+                ] }),
+                /* @__PURE__ */ jsx(
+                  "button",
+                  {
+                    onClick: savePageDetail,
+                    className: "bg-(--primary) text-white px-4 py-2 rounded cursor-pointer hover:opacity-90 font-semibold",
+                    children: "Save"
+                  }
+                )
+              ]
+            }
+          )
+        }
+      );
+    })()
   ] });
 }
 const handle$2 = {
@@ -5595,7 +6161,7 @@ const route24 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.definePrope
   default: NotFound,
   handle
 }, Symbol.toStringTag, { value: "Module" }));
-const serverManifest = { "entry": { "module": "/assets/entry.client-Cm36hgD3.js", "imports": ["/assets/jsx-runtime-D_zvdyIk.js", "/assets/index-CBUVxBP-.js", "/assets/chunk-LFPYN7LY-CcihArmh.js"], "css": [] }, "routes": { "root": { "id": "root", "parentId": void 0, "path": "", "index": void 0, "caseSensitive": void 0, "hasAction": false, "hasLoader": false, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/root-C_4nCq4I.js", "imports": ["/assets/jsx-runtime-D_zvdyIk.js", "/assets/index-CBUVxBP-.js", "/assets/chunk-LFPYN7LY-CcihArmh.js", "/assets/AuthContext-XAl0zdOo.js", "/assets/api-DZGr2Fk-.js"], "css": ["/assets/root-DRz0hKbj.css"], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 }, "routes/old-pages": { "id": "routes/old-pages", "parentId": "root", "path": "/pages/:page", "index": void 0, "caseSensitive": void 0, "hasAction": false, "hasLoader": true, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/old-pages-BHBLkflV.js", "imports": ["/assets/chunk-LFPYN7LY-CcihArmh.js", "/assets/index-CBUVxBP-.js"], "css": [], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 }, "main": { "id": "main", "parentId": "root", "path": void 0, "index": void 0, "caseSensitive": void 0, "hasAction": false, "hasLoader": true, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/layout-CjWUCD6k.js", "imports": ["/assets/jsx-runtime-D_zvdyIk.js", "/assets/index-CBUVxBP-.js", "/assets/AuthContext-XAl0zdOo.js", "/assets/chunk-LFPYN7LY-CcihArmh.js", "/assets/pencil-DSk1CVHI.js", "/assets/x-DLti0-co.js", "/assets/useAuth-ds-rD23W.js"], "css": ["/assets/layout-CQMAlS4_.css"], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 }, "routes/home": { "id": "routes/home", "parentId": "main", "path": void 0, "index": true, "caseSensitive": void 0, "hasAction": false, "hasLoader": false, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/home-BslqgMcx.js", "imports": ["/assets/jsx-runtime-D_zvdyIk.js", "/assets/index-CBUVxBP-.js", "/assets/api-DZGr2Fk-.js", "/assets/chunk-LFPYN7LY-CcihArmh.js", "/assets/x-DLti0-co.js", "/assets/useAuth-ds-rD23W.js", "/assets/AuthContext-XAl0zdOo.js"], "css": [], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 }, "routes/page-slug": { "id": "routes/page-slug", "parentId": "main", "path": ":pageSlug", "index": void 0, "caseSensitive": void 0, "hasAction": false, "hasLoader": false, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/page-slug-Ddi7v5LM.js", "imports": ["/assets/home-BslqgMcx.js", "/assets/jsx-runtime-D_zvdyIk.js", "/assets/index-CBUVxBP-.js", "/assets/api-DZGr2Fk-.js", "/assets/chunk-LFPYN7LY-CcihArmh.js", "/assets/x-DLti0-co.js", "/assets/useAuth-ds-rD23W.js", "/assets/AuthContext-XAl0zdOo.js"], "css": [], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 }, "routes/game-layout": { "id": "routes/game-layout", "parentId": "main", "path": "games/:gameSlug", "index": void 0, "caseSensitive": void 0, "hasAction": false, "hasLoader": false, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/game-layout-B0IauSlY.js", "imports": ["/assets/chunk-LFPYN7LY-CcihArmh.js", "/assets/jsx-runtime-D_zvdyIk.js", "/assets/index-CBUVxBP-.js"], "css": [], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 }, "routes/game-home": { "id": "routes/game-home", "parentId": "routes/game-layout", "path": void 0, "index": true, "caseSensitive": void 0, "hasAction": false, "hasLoader": false, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/game-home-Ddi7v5LM.js", "imports": ["/assets/home-BslqgMcx.js", "/assets/jsx-runtime-D_zvdyIk.js", "/assets/index-CBUVxBP-.js", "/assets/api-DZGr2Fk-.js", "/assets/chunk-LFPYN7LY-CcihArmh.js", "/assets/x-DLti0-co.js", "/assets/useAuth-ds-rD23W.js", "/assets/AuthContext-XAl0zdOo.js"], "css": [], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 }, "game-page-slug": { "id": "game-page-slug", "parentId": "routes/game-layout", "path": ":pageSlug", "index": void 0, "caseSensitive": void 0, "hasAction": false, "hasLoader": false, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/game-page-Ddi7v5LM.js", "imports": ["/assets/home-BslqgMcx.js", "/assets/jsx-runtime-D_zvdyIk.js", "/assets/index-CBUVxBP-.js", "/assets/api-DZGr2Fk-.js", "/assets/chunk-LFPYN7LY-CcihArmh.js", "/assets/x-DLti0-co.js", "/assets/useAuth-ds-rD23W.js", "/assets/AuthContext-XAl0zdOo.js"], "css": [], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 }, "game-guardian-costs": { "id": "game-guardian-costs", "parentId": "routes/game-layout", "path": "guardian-upgrade-costs", "index": void 0, "caseSensitive": void 0, "hasAction": false, "hasLoader": false, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/guardian-costs-BwRGQ4KO.js", "imports": ["/assets/jsx-runtime-D_zvdyIk.js", "/assets/index-CBUVxBP-.js"], "css": [], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 }, "game-immortal-guardians": { "id": "game-immortal-guardians", "parentId": "routes/game-layout", "path": "immortal-guardians", "index": void 0, "caseSensitive": void 0, "hasAction": false, "hasLoader": false, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/immortal-guardians-BfEwLYit.js", "imports": ["/assets/jsx-runtime-D_zvdyIk.js", "/assets/index-CBUVxBP-.js"], "css": ["/assets/immortal-guardians-BhGpVoxj.css"], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 }, "routes/flea-guide": { "id": "routes/flea-guide", "parentId": "routes/game-layout", "path": "flea-guide", "index": void 0, "caseSensitive": void 0, "hasAction": false, "hasLoader": false, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/flea-guide-C8uh8FaN.js", "imports": ["/assets/chunk-LFPYN7LY-CcihArmh.js", "/assets/jsx-runtime-D_zvdyIk.js", "/assets/index-CBUVxBP-.js"], "css": [], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 }, "game-page-manager": { "id": "game-page-manager", "parentId": "routes/game-layout", "path": "page-manager", "index": void 0, "caseSensitive": void 0, "hasAction": false, "hasLoader": false, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/page-manager-CfWWnqz0.js", "imports": ["/assets/chunk-LFPYN7LY-CcihArmh.js", "/assets/jsx-runtime-D_zvdyIk.js", "/assets/ProtectedRoute-BMi3ZDWJ.js", "/assets/api-DZGr2Fk-.js", "/assets/index-CBUVxBP-.js", "/assets/useAuth-ds-rD23W.js", "/assets/AuthContext-XAl0zdOo.js"], "css": [], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 }, "game-game-manager": { "id": "game-game-manager", "parentId": "routes/game-layout", "path": "game-manager", "index": void 0, "caseSensitive": void 0, "hasAction": false, "hasLoader": false, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/game-manager-B7H4g8gx.js", "imports": ["/assets/chunk-LFPYN7LY-CcihArmh.js", "/assets/jsx-runtime-D_zvdyIk.js", "/assets/ProtectedRoute-BMi3ZDWJ.js", "/assets/index-CBUVxBP-.js", "/assets/api-DZGr2Fk-.js", "/assets/useAuth-ds-rD23W.js", "/assets/AuthContext-XAl0zdOo.js"], "css": [], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 }, "game-navigation-panel": { "id": "game-navigation-panel", "parentId": "routes/game-layout", "path": "navigation-panel", "index": void 0, "caseSensitive": void 0, "hasAction": false, "hasLoader": false, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/navigation-panel-DwUNc4YT.js", "imports": ["/assets/chunk-LFPYN7LY-CcihArmh.js", "/assets/jsx-runtime-D_zvdyIk.js", "/assets/ProtectedRoute-BMi3ZDWJ.js", "/assets/index-CBUVxBP-.js", "/assets/api-DZGr2Fk-.js", "/assets/pencil-DSk1CVHI.js", "/assets/x-DLti0-co.js", "/assets/useAuth-ds-rD23W.js", "/assets/AuthContext-XAl0zdOo.js"], "css": [], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 }, "top-guardian-costs": { "id": "top-guardian-costs", "parentId": "main", "path": "guardian-upgrade-costs", "index": void 0, "caseSensitive": void 0, "hasAction": false, "hasLoader": false, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/guardian-costs-BwRGQ4KO.js", "imports": ["/assets/jsx-runtime-D_zvdyIk.js", "/assets/index-CBUVxBP-.js"], "css": [], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 }, "top-immortal-guardians": { "id": "top-immortal-guardians", "parentId": "main", "path": "immortal-guardians", "index": void 0, "caseSensitive": void 0, "hasAction": false, "hasLoader": false, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/immortal-guardians-BfEwLYit.js", "imports": ["/assets/jsx-runtime-D_zvdyIk.js", "/assets/index-CBUVxBP-.js"], "css": ["/assets/immortal-guardians-BhGpVoxj.css"], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 }, "routes/login": { "id": "routes/login", "parentId": "main", "path": "login", "index": void 0, "caseSensitive": void 0, "hasAction": false, "hasLoader": false, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/login-DoIniX_D.js", "imports": ["/assets/jsx-runtime-D_zvdyIk.js", "/assets/useAuth-ds-rD23W.js", "/assets/index-CBUVxBP-.js", "/assets/chunk-LFPYN7LY-CcihArmh.js", "/assets/AuthContext-XAl0zdOo.js"], "css": [], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 }, "routes/signup": { "id": "routes/signup", "parentId": "main", "path": "signup", "index": void 0, "caseSensitive": void 0, "hasAction": false, "hasLoader": false, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/signup-St-hpmQ3.js", "imports": ["/assets/jsx-runtime-D_zvdyIk.js", "/assets/useAuth-ds-rD23W.js", "/assets/index-CBUVxBP-.js", "/assets/chunk-LFPYN7LY-CcihArmh.js", "/assets/AuthContext-XAl0zdOo.js"], "css": [], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 }, "routes/dashboard": { "id": "routes/dashboard", "parentId": "main", "path": "dashboard", "index": void 0, "caseSensitive": void 0, "hasAction": false, "hasLoader": false, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/dashboard-Khr3u3ev.js", "imports": ["/assets/chunk-LFPYN7LY-CcihArmh.js", "/assets/jsx-runtime-D_zvdyIk.js", "/assets/ProtectedRoute-BMi3ZDWJ.js", "/assets/index-CBUVxBP-.js", "/assets/useAuth-ds-rD23W.js", "/assets/api-DZGr2Fk-.js", "/assets/AuthContext-XAl0zdOo.js"], "css": [], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 }, "routes/access-denied": { "id": "routes/access-denied", "parentId": "main", "path": "access-denied", "index": void 0, "caseSensitive": void 0, "hasAction": false, "hasLoader": false, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/access-denied-BzO9u25s.js", "imports": ["/assets/jsx-runtime-D_zvdyIk.js", "/assets/chunk-LFPYN7LY-CcihArmh.js", "/assets/index-CBUVxBP-.js"], "css": [], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 }, "top-page-manager": { "id": "top-page-manager", "parentId": "main", "path": "page-manager", "index": void 0, "caseSensitive": void 0, "hasAction": false, "hasLoader": false, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/page-manager-CfWWnqz0.js", "imports": ["/assets/chunk-LFPYN7LY-CcihArmh.js", "/assets/jsx-runtime-D_zvdyIk.js", "/assets/ProtectedRoute-BMi3ZDWJ.js", "/assets/api-DZGr2Fk-.js", "/assets/index-CBUVxBP-.js", "/assets/useAuth-ds-rD23W.js", "/assets/AuthContext-XAl0zdOo.js"], "css": [], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 }, "top-game-manager": { "id": "top-game-manager", "parentId": "main", "path": "game-manager", "index": void 0, "caseSensitive": void 0, "hasAction": false, "hasLoader": false, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/game-manager-B7H4g8gx.js", "imports": ["/assets/chunk-LFPYN7LY-CcihArmh.js", "/assets/jsx-runtime-D_zvdyIk.js", "/assets/ProtectedRoute-BMi3ZDWJ.js", "/assets/index-CBUVxBP-.js", "/assets/api-DZGr2Fk-.js", "/assets/useAuth-ds-rD23W.js", "/assets/AuthContext-XAl0zdOo.js"], "css": [], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 }, "top-navigation-panel": { "id": "top-navigation-panel", "parentId": "main", "path": "navigation-panel", "index": void 0, "caseSensitive": void 0, "hasAction": false, "hasLoader": false, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/navigation-panel-DwUNc4YT.js", "imports": ["/assets/chunk-LFPYN7LY-CcihArmh.js", "/assets/jsx-runtime-D_zvdyIk.js", "/assets/ProtectedRoute-BMi3ZDWJ.js", "/assets/index-CBUVxBP-.js", "/assets/api-DZGr2Fk-.js", "/assets/pencil-DSk1CVHI.js", "/assets/x-DLti0-co.js", "/assets/useAuth-ds-rD23W.js", "/assets/AuthContext-XAl0zdOo.js"], "css": [], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 }, "not-found-404": { "id": "not-found-404", "parentId": "main", "path": "404", "index": void 0, "caseSensitive": void 0, "hasAction": false, "hasLoader": false, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/not-found-CyNaDhbV.js", "imports": ["/assets/jsx-runtime-D_zvdyIk.js", "/assets/index-CBUVxBP-.js"], "css": [], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 }, "not-found-wildcard": { "id": "not-found-wildcard", "parentId": "main", "path": "*", "index": void 0, "caseSensitive": void 0, "hasAction": false, "hasLoader": false, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/not-found-CyNaDhbV.js", "imports": ["/assets/jsx-runtime-D_zvdyIk.js", "/assets/index-CBUVxBP-.js"], "css": [], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 } }, "url": "/assets/manifest-31e58da7.js", "version": "31e58da7", "sri": void 0 };
+const serverManifest = { "entry": { "module": "/assets/entry.client-Cm36hgD3.js", "imports": ["/assets/jsx-runtime-D_zvdyIk.js", "/assets/index-CBUVxBP-.js", "/assets/chunk-LFPYN7LY-CcihArmh.js"], "css": [] }, "routes": { "root": { "id": "root", "parentId": void 0, "path": "", "index": void 0, "caseSensitive": void 0, "hasAction": false, "hasLoader": false, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/root-C58pJxxl.js", "imports": ["/assets/jsx-runtime-D_zvdyIk.js", "/assets/index-CBUVxBP-.js", "/assets/chunk-LFPYN7LY-CcihArmh.js", "/assets/AuthContext-XAl0zdOo.js", "/assets/api-DZGr2Fk-.js"], "css": ["/assets/root-BeZSL96v.css"], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 }, "routes/old-pages": { "id": "routes/old-pages", "parentId": "root", "path": "/pages/:page", "index": void 0, "caseSensitive": void 0, "hasAction": false, "hasLoader": true, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/old-pages-BHBLkflV.js", "imports": ["/assets/chunk-LFPYN7LY-CcihArmh.js", "/assets/index-CBUVxBP-.js"], "css": [], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 }, "main": { "id": "main", "parentId": "root", "path": void 0, "index": void 0, "caseSensitive": void 0, "hasAction": false, "hasLoader": true, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/layout-CjWUCD6k.js", "imports": ["/assets/jsx-runtime-D_zvdyIk.js", "/assets/index-CBUVxBP-.js", "/assets/AuthContext-XAl0zdOo.js", "/assets/chunk-LFPYN7LY-CcihArmh.js", "/assets/pencil-DSk1CVHI.js", "/assets/x-DLti0-co.js", "/assets/useAuth-ds-rD23W.js"], "css": ["/assets/layout-CQMAlS4_.css"], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 }, "routes/home": { "id": "routes/home", "parentId": "main", "path": void 0, "index": true, "caseSensitive": void 0, "hasAction": false, "hasLoader": false, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/home-BslqgMcx.js", "imports": ["/assets/jsx-runtime-D_zvdyIk.js", "/assets/index-CBUVxBP-.js", "/assets/api-DZGr2Fk-.js", "/assets/chunk-LFPYN7LY-CcihArmh.js", "/assets/x-DLti0-co.js", "/assets/useAuth-ds-rD23W.js", "/assets/AuthContext-XAl0zdOo.js"], "css": [], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 }, "routes/page-slug": { "id": "routes/page-slug", "parentId": "main", "path": ":pageSlug", "index": void 0, "caseSensitive": void 0, "hasAction": false, "hasLoader": false, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/page-slug-Ddi7v5LM.js", "imports": ["/assets/home-BslqgMcx.js", "/assets/jsx-runtime-D_zvdyIk.js", "/assets/index-CBUVxBP-.js", "/assets/api-DZGr2Fk-.js", "/assets/chunk-LFPYN7LY-CcihArmh.js", "/assets/x-DLti0-co.js", "/assets/useAuth-ds-rD23W.js", "/assets/AuthContext-XAl0zdOo.js"], "css": [], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 }, "routes/game-layout": { "id": "routes/game-layout", "parentId": "main", "path": "games/:gameSlug", "index": void 0, "caseSensitive": void 0, "hasAction": false, "hasLoader": false, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/game-layout-B0IauSlY.js", "imports": ["/assets/chunk-LFPYN7LY-CcihArmh.js", "/assets/jsx-runtime-D_zvdyIk.js", "/assets/index-CBUVxBP-.js"], "css": [], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 }, "routes/game-home": { "id": "routes/game-home", "parentId": "routes/game-layout", "path": void 0, "index": true, "caseSensitive": void 0, "hasAction": false, "hasLoader": false, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/game-home-Ddi7v5LM.js", "imports": ["/assets/home-BslqgMcx.js", "/assets/jsx-runtime-D_zvdyIk.js", "/assets/index-CBUVxBP-.js", "/assets/api-DZGr2Fk-.js", "/assets/chunk-LFPYN7LY-CcihArmh.js", "/assets/x-DLti0-co.js", "/assets/useAuth-ds-rD23W.js", "/assets/AuthContext-XAl0zdOo.js"], "css": [], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 }, "game-page-slug": { "id": "game-page-slug", "parentId": "routes/game-layout", "path": ":pageSlug", "index": void 0, "caseSensitive": void 0, "hasAction": false, "hasLoader": false, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/game-page-Ddi7v5LM.js", "imports": ["/assets/home-BslqgMcx.js", "/assets/jsx-runtime-D_zvdyIk.js", "/assets/index-CBUVxBP-.js", "/assets/api-DZGr2Fk-.js", "/assets/chunk-LFPYN7LY-CcihArmh.js", "/assets/x-DLti0-co.js", "/assets/useAuth-ds-rD23W.js", "/assets/AuthContext-XAl0zdOo.js"], "css": [], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 }, "game-guardian-costs": { "id": "game-guardian-costs", "parentId": "routes/game-layout", "path": "guardian-upgrade-costs", "index": void 0, "caseSensitive": void 0, "hasAction": false, "hasLoader": false, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/guardian-costs-BwRGQ4KO.js", "imports": ["/assets/jsx-runtime-D_zvdyIk.js", "/assets/index-CBUVxBP-.js"], "css": [], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 }, "game-immortal-guardians": { "id": "game-immortal-guardians", "parentId": "routes/game-layout", "path": "immortal-guardians", "index": void 0, "caseSensitive": void 0, "hasAction": false, "hasLoader": false, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/immortal-guardians-BfEwLYit.js", "imports": ["/assets/jsx-runtime-D_zvdyIk.js", "/assets/index-CBUVxBP-.js"], "css": ["/assets/immortal-guardians-BhGpVoxj.css"], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 }, "routes/flea-guide": { "id": "routes/flea-guide", "parentId": "routes/game-layout", "path": "flea-guide", "index": void 0, "caseSensitive": void 0, "hasAction": false, "hasLoader": false, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/flea-guide-C8uh8FaN.js", "imports": ["/assets/chunk-LFPYN7LY-CcihArmh.js", "/assets/jsx-runtime-D_zvdyIk.js", "/assets/index-CBUVxBP-.js"], "css": [], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 }, "game-page-manager": { "id": "game-page-manager", "parentId": "routes/game-layout", "path": "page-manager", "index": void 0, "caseSensitive": void 0, "hasAction": false, "hasLoader": false, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/page-manager-CfWWnqz0.js", "imports": ["/assets/chunk-LFPYN7LY-CcihArmh.js", "/assets/jsx-runtime-D_zvdyIk.js", "/assets/ProtectedRoute-BMi3ZDWJ.js", "/assets/api-DZGr2Fk-.js", "/assets/index-CBUVxBP-.js", "/assets/useAuth-ds-rD23W.js", "/assets/AuthContext-XAl0zdOo.js"], "css": [], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 }, "game-game-manager": { "id": "game-game-manager", "parentId": "routes/game-layout", "path": "game-manager", "index": void 0, "caseSensitive": void 0, "hasAction": false, "hasLoader": false, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/game-manager-B7H4g8gx.js", "imports": ["/assets/chunk-LFPYN7LY-CcihArmh.js", "/assets/jsx-runtime-D_zvdyIk.js", "/assets/ProtectedRoute-BMi3ZDWJ.js", "/assets/index-CBUVxBP-.js", "/assets/api-DZGr2Fk-.js", "/assets/useAuth-ds-rD23W.js", "/assets/AuthContext-XAl0zdOo.js"], "css": [], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 }, "game-navigation-panel": { "id": "game-navigation-panel", "parentId": "routes/game-layout", "path": "navigation-panel", "index": void 0, "caseSensitive": void 0, "hasAction": false, "hasLoader": false, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/navigation-panel-Dnx3_AWZ.js", "imports": ["/assets/chunk-LFPYN7LY-CcihArmh.js", "/assets/jsx-runtime-D_zvdyIk.js", "/assets/ProtectedRoute-BMi3ZDWJ.js", "/assets/index-CBUVxBP-.js", "/assets/api-DZGr2Fk-.js", "/assets/pencil-DSk1CVHI.js", "/assets/x-DLti0-co.js", "/assets/useAuth-ds-rD23W.js", "/assets/AuthContext-XAl0zdOo.js"], "css": [], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 }, "top-guardian-costs": { "id": "top-guardian-costs", "parentId": "main", "path": "guardian-upgrade-costs", "index": void 0, "caseSensitive": void 0, "hasAction": false, "hasLoader": false, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/guardian-costs-BwRGQ4KO.js", "imports": ["/assets/jsx-runtime-D_zvdyIk.js", "/assets/index-CBUVxBP-.js"], "css": [], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 }, "top-immortal-guardians": { "id": "top-immortal-guardians", "parentId": "main", "path": "immortal-guardians", "index": void 0, "caseSensitive": void 0, "hasAction": false, "hasLoader": false, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/immortal-guardians-BfEwLYit.js", "imports": ["/assets/jsx-runtime-D_zvdyIk.js", "/assets/index-CBUVxBP-.js"], "css": ["/assets/immortal-guardians-BhGpVoxj.css"], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 }, "routes/login": { "id": "routes/login", "parentId": "main", "path": "login", "index": void 0, "caseSensitive": void 0, "hasAction": false, "hasLoader": false, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/login-DoIniX_D.js", "imports": ["/assets/jsx-runtime-D_zvdyIk.js", "/assets/useAuth-ds-rD23W.js", "/assets/index-CBUVxBP-.js", "/assets/chunk-LFPYN7LY-CcihArmh.js", "/assets/AuthContext-XAl0zdOo.js"], "css": [], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 }, "routes/signup": { "id": "routes/signup", "parentId": "main", "path": "signup", "index": void 0, "caseSensitive": void 0, "hasAction": false, "hasLoader": false, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/signup-St-hpmQ3.js", "imports": ["/assets/jsx-runtime-D_zvdyIk.js", "/assets/useAuth-ds-rD23W.js", "/assets/index-CBUVxBP-.js", "/assets/chunk-LFPYN7LY-CcihArmh.js", "/assets/AuthContext-XAl0zdOo.js"], "css": [], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 }, "routes/dashboard": { "id": "routes/dashboard", "parentId": "main", "path": "dashboard", "index": void 0, "caseSensitive": void 0, "hasAction": false, "hasLoader": false, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/dashboard-Khr3u3ev.js", "imports": ["/assets/chunk-LFPYN7LY-CcihArmh.js", "/assets/jsx-runtime-D_zvdyIk.js", "/assets/ProtectedRoute-BMi3ZDWJ.js", "/assets/index-CBUVxBP-.js", "/assets/useAuth-ds-rD23W.js", "/assets/api-DZGr2Fk-.js", "/assets/AuthContext-XAl0zdOo.js"], "css": [], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 }, "routes/access-denied": { "id": "routes/access-denied", "parentId": "main", "path": "access-denied", "index": void 0, "caseSensitive": void 0, "hasAction": false, "hasLoader": false, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/access-denied-BzO9u25s.js", "imports": ["/assets/jsx-runtime-D_zvdyIk.js", "/assets/chunk-LFPYN7LY-CcihArmh.js", "/assets/index-CBUVxBP-.js"], "css": [], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 }, "top-page-manager": { "id": "top-page-manager", "parentId": "main", "path": "page-manager", "index": void 0, "caseSensitive": void 0, "hasAction": false, "hasLoader": false, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/page-manager-CfWWnqz0.js", "imports": ["/assets/chunk-LFPYN7LY-CcihArmh.js", "/assets/jsx-runtime-D_zvdyIk.js", "/assets/ProtectedRoute-BMi3ZDWJ.js", "/assets/api-DZGr2Fk-.js", "/assets/index-CBUVxBP-.js", "/assets/useAuth-ds-rD23W.js", "/assets/AuthContext-XAl0zdOo.js"], "css": [], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 }, "top-game-manager": { "id": "top-game-manager", "parentId": "main", "path": "game-manager", "index": void 0, "caseSensitive": void 0, "hasAction": false, "hasLoader": false, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/game-manager-B7H4g8gx.js", "imports": ["/assets/chunk-LFPYN7LY-CcihArmh.js", "/assets/jsx-runtime-D_zvdyIk.js", "/assets/ProtectedRoute-BMi3ZDWJ.js", "/assets/index-CBUVxBP-.js", "/assets/api-DZGr2Fk-.js", "/assets/useAuth-ds-rD23W.js", "/assets/AuthContext-XAl0zdOo.js"], "css": [], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 }, "top-navigation-panel": { "id": "top-navigation-panel", "parentId": "main", "path": "navigation-panel", "index": void 0, "caseSensitive": void 0, "hasAction": false, "hasLoader": false, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/navigation-panel-Dnx3_AWZ.js", "imports": ["/assets/chunk-LFPYN7LY-CcihArmh.js", "/assets/jsx-runtime-D_zvdyIk.js", "/assets/ProtectedRoute-BMi3ZDWJ.js", "/assets/index-CBUVxBP-.js", "/assets/api-DZGr2Fk-.js", "/assets/pencil-DSk1CVHI.js", "/assets/x-DLti0-co.js", "/assets/useAuth-ds-rD23W.js", "/assets/AuthContext-XAl0zdOo.js"], "css": [], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 }, "not-found-404": { "id": "not-found-404", "parentId": "main", "path": "404", "index": void 0, "caseSensitive": void 0, "hasAction": false, "hasLoader": false, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/not-found-CyNaDhbV.js", "imports": ["/assets/jsx-runtime-D_zvdyIk.js", "/assets/index-CBUVxBP-.js"], "css": [], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 }, "not-found-wildcard": { "id": "not-found-wildcard", "parentId": "main", "path": "*", "index": void 0, "caseSensitive": void 0, "hasAction": false, "hasLoader": false, "hasClientAction": false, "hasClientLoader": false, "hasClientMiddleware": false, "hasDefaultExport": true, "hasErrorBoundary": false, "module": "/assets/not-found-CyNaDhbV.js", "imports": ["/assets/jsx-runtime-D_zvdyIk.js", "/assets/index-CBUVxBP-.js"], "css": [], "clientActionModule": void 0, "clientLoaderModule": void 0, "clientMiddlewareModule": void 0, "hydrateFallbackModule": void 0 } }, "url": "/assets/manifest-776e3897.js", "version": "776e3897", "sri": void 0 };
 const assetsBuildDirectory = "build/client";
 const basename = "/";
 const future = { "unstable_optimizeDeps": false, "unstable_subResourceIntegrity": false, "unstable_trailingSlashAwareDataRequests": false, "unstable_previewServerPrerendering": false, "v8_middleware": false, "v8_splitRouteModules": false, "v8_viteEnvironmentApi": false };
