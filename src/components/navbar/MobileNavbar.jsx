@@ -152,16 +152,18 @@ export default function MobileNavbar({ toggleNav, navOpen }) {
                     id="mobile-menu-persistent"
                     className="flex flex-col items-center pt-2.5 pb-2 text-black px-3 border-t-[2px]  "
                 >
-                    <div className="flex items-center gap-2 ">
-                        <p className="  ">Join the community: </p>
-                        <a
-                            href="https://discord.com/invite/luckydefense"
-                            className="flex items-center justify-center gap-2 bg-[#5865f2] py-2 px-4 rounded-md "
-                        >
-                            <img src={discordLogo} className="h-[1.25em] " />
-                            <p className="text-white text-[0.8em] ">Discord</p>
-                        </a>
-                    </div>
+                    {gameData?.discordUrl && (
+                        <div className="flex items-center gap-2 ">
+                            <p className="  ">Join the community: </p>
+                            <a
+                                href={gameData.discordUrl}
+                                className="flex items-center justify-center gap-2 bg-[#5865f2] py-2 px-4 rounded-md "
+                            >
+                                <img src={discordLogo} className="h-[1.25em] " />
+                                <p className="text-white text-[0.8em] ">Discord</p>
+                            </a>
+                        </div>
+                    )}
                     <div className="px-8 w-full my-2 ">
                         <hr className="w-full border-t border-black/50  " />
                     </div>

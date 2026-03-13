@@ -57,6 +57,8 @@ export default function NavigationPanel() {
     const [editingTheme, setEditingTheme] = useState(null);
     const [savedTheme, setSavedTheme] = useState(null);
 
+    const [discordUrl, setDiscordUrl] = useState(gameData?.discordUrl ?? "");
+
     // ── ACCORDION STATE ──────────────────────────────────────────────────────
     const [expandedSections, setExpandedSections] = useState(new Set());
 
@@ -712,6 +714,19 @@ export default function NavigationPanel() {
         }
     }
 
+    async function saveDiscordUrl() {
+        try {
+            await fetch(currentAPI + "/games/" + gameId, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ discordUrl }),
+            });
+        } catch (err) {
+            console.error("Failed to save discord URL:", err);
+        }
+    }
+
     async function savePageDetail() {
         const id = detailPage.id;
         const titleChanged = detailTitle !== detailPage.title;
@@ -766,11 +781,24 @@ export default function NavigationPanel() {
 
     return (
         <>
-            {/* Game Theme button */}
-            <div className="mt-8 max-w-4xl mb-4 flex justify-end">
+            {/* Game settings bar */}
+            <div className="mt-8 max-w-4xl mb-4 flex flex-wrap items-center gap-2">
+                <input
+                    type="url"
+                    value={discordUrl}
+                    onChange={(e) => setDiscordUrl(e.target.value)}
+                    placeholder="Discord invite URL"
+                    className="bg-(--red-brown) text-white placeholder-white/60 px-3 py-2 rounded flex-1 min-w-0"
+                />
+                <button
+                    onClick={saveDiscordUrl}
+                    className="bg-(--red-brown) text-white px-4 py-2 rounded cursor-pointer hover:opacity-90 shrink-0"
+                >
+                    Save Discord URL
+                </button>
                 <button
                     onClick={openThemeEditor}
-                    className="flex items-center gap-2 bg-(--red-brown) text-white px-4 py-2 rounded cursor-pointer hover:opacity-90"
+                    className="flex items-center gap-2 bg-(--red-brown) text-white px-4 py-2 rounded cursor-pointer hover:opacity-90 shrink-0"
                 >
                     <Palette size={16} />
                     Game Theme
