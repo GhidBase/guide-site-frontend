@@ -29,7 +29,10 @@ export function Layout({ children }) {
                     dangerouslySetInnerHTML={{
                         __html: `window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
-gtag('js', new Date());`,
+gtag('js', new Date());
+window.GA_ID = window.location.hostname.includes('luckydefenseguides')
+  ? 'G-X8KBQ5CE84'
+  : 'G-XR5P6T66LS';`,
                     }}
                 />
             </head>

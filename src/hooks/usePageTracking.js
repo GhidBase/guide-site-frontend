@@ -11,7 +11,7 @@ export function usePageTracking() {
         if (ignoreViews === "True") return;
         if (!window.gtag) return;
 
-        window.gtag("config", "G-X8KBQ5CE84", {
+        window.gtag("config", window.GA_ID || "G-X8KBQ5CE84", {
             page_path: location.pathname + location.search,
         });
     }, [location.pathname, location.search]);
