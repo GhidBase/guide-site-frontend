@@ -1153,8 +1153,6 @@ export default function NavigationPanel() {
                                                                 {page.slug && (
                                                                     <a
                                                                         href={isLDG || !gameData ? "/" + page.slug : "/games/" + gameData.slug + "/" + page.slug}
-                                                                        target="_blank"
-                                                                        rel="noreferrer"
                                                                         className="shrink-0 text-(--text-color)"
                                                                     >
                                                                         <ExternalLink size={14} />
@@ -1521,8 +1519,6 @@ export default function NavigationPanel() {
                                                     {page.slug && (
                                                         <a
                                                             href={isLDG || !gameData ? "/" + page.slug : "/games/" + gameData.slug + "/" + page.slug}
-                                                            target="_blank"
-                                                            rel="noreferrer"
                                                             className="shrink-0 text-(--text-color)"
                                                         >
                                                             <ExternalLink size={14} />
@@ -1722,8 +1718,6 @@ export default function NavigationPanel() {
                                                 {page.slug && (
                                                     <a
                                                         href={isLDG || !gameData ? "/" + page.slug : "/games/" + gameData.slug + "/" + page.slug}
-                                                        target="_blank"
-                                                        rel="noreferrer"
                                                         className="shrink-0 text-(--text-color)"
                                                     >
                                                         <ExternalLink size={14} />
@@ -1828,8 +1822,6 @@ export default function NavigationPanel() {
                                         {page.slug && (
                                             <a
                                                 href={isLDG || !gameData ? "/" + page.slug : "/games/" + gameData.slug + "/" + page.slug}
-                                                target="_blank"
-                                                rel="noreferrer"
                                                 className="shrink-0 text-(--text-color)"
                                             >
                                                 <ExternalLink size={14} />
