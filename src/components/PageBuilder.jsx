@@ -288,6 +288,16 @@ export default function PageBuilder() {
                     }
                     return blockType;
                 })}
+            {pageData?.page?.contributors?.length > 0 && (
+                <div className="mt-6 px-8 py-3 border-t border-(--outline) text-sm text-(--text-color)">
+                    <span className="font-semibold">Contributors: </span>
+                    {pageData.page.contributors.map((c, i) => (
+                        <span key={c.id}>
+                            {c.username}{i < pageData.page.contributors.length - 1 ? ", " : ""}
+                        </span>
+                    ))}
+                </div>
+            )}
             {isAdmin && (
                 <div className="flex flex-col items-center mt-2 gap-2">
                     <Link
