@@ -50,6 +50,7 @@ export default function MobileNavbarCategory({
                             className="block px-[12px] py-[10px] border-t-[1px] border-(--outline-brown) text-black "
                             to={actualSlug}
                             onClick={toggleNav}
+                            viewTransition
                         >
                             {page.title}
                         </Link>
