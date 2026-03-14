@@ -59,6 +59,62 @@ export default function NavigationPanel() {
 
     const [discordUrl, setDiscordUrl] = useState(gameData?.discordUrl ?? "");
 
+    // ── IMAGE POOL ────────────────────────────────────────────────────────────
+    const [images, setImages] = useState([]);
+    const [imagePoolOpen, setImagePoolOpen] = useState(false);
+    const [imageUploadFile, setImageUploadFile] = useState(null);
+    const [imageUploadTitle, setImageUploadTitle] = useState("");
+    const [imageUploadCategory, setImageUploadCategory] = useState("");
+    const [imageUploading, setImageUploading] = useState(false);
+
+    useEffect(() => {
+        if (!gameId) return;
+        fetch(currentAPI + "/games/" + gameId + "/images")
+            .then((r) => r.json())
+            .then(setImages)
+            .catch(() => {});
+    }, [gameId]);
+
+    async function uploadImage() {
+        if (!imageUploadFile) return;
+        setImageUploading(true);
+        const formData = new FormData();
+        formData.append("image", imageUploadFile);
+        formData.append("title", imageUploadTitle || imageUploadFile.name);
+        if (imageUploadCategory.trim()) {
+            formData.append("category", imageUploadCategory.trim());
+        }
+        try {
+            const res = await fetch(currentAPI + "/games/" + gameId + "/images", {
+                method: "POST",
+                credentials: "include",
+                body: formData,
+            });
+            const newImage = await res.json();
+            setImages((prev) => [...prev, newImage]);
+            setImageUploadFile(null);
+            setImageUploadTitle("");
+            setImageUploadCategory("");
+        } catch (err) {
+            console.error("Failed to upload image:", err);
+        } finally {
+            setImageUploading(false);
+        }
+    }
+
+    async function deleteImage(imageId) {
+        try {
+            await fetch(currentAPI + "/games/" + gameId + "/images/" + imageId, {
+                method: "DELETE",
+                credentials: "include",
+            });
+            setImages((prev) => prev.filter((img) => img.id !== imageId));
+        } catch (err) {
+            console.error("Failed to delete image:", err);
+        }
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     // ── ACCORDION STATE ──────────────────────────────────────────────────────
     const [expandedSections, setExpandedSections] = useState(new Set());
 
@@ -805,6 +861,100 @@ export default function NavigationPanel() {
                     <Palette size={16} />
                     Game Theme
                 </button>
+            </div>
+
+            {/* Image Pool */}
+            <div className="max-w-4xl mb-4">
+                <button
+                    onClick={() => setImagePoolOpen((o) => !o)}
+                    className="flex items-center gap-2 bg-(--red-brown) text-white px-4 py-2 rounded cursor-pointer hover:opacity-90 w-full sm:w-auto"
+                >
+                    {imagePoolOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                    Image Pool
+                    <span className="text-white/70 text-sm">({images.length})</span>
+                </button>
+
+                {imagePoolOpen && (
+                    <div className="mt-2 border border-(--outline)/40 rounded-lg p-4 flex flex-col gap-4 bg-(--accent)">
+                        {/* Upload form */}
+                        <div className="flex flex-col gap-2">
+                            <p className="text-sm font-semibold text-(--accent-text)">Upload Image</p>
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => setImageUploadFile(e.target.files[0] ?? null)}
+                                className="text-sm text-(--text-color)"
+                            />
+                            <div className="flex gap-2 flex-wrap">
+                                <input
+                                    type="text"
+                                    value={imageUploadTitle}
+                                    onChange={(e) => setImageUploadTitle(e.target.value)}
+                                    placeholder="Title (optional)"
+                                    className="bg-(--surface-background) text-(--accent-text) px-3 py-1.5 rounded text-sm flex-1 min-w-0"
+                                />
+                                <input
+                                    type="text"
+                                    value={imageUploadCategory}
+                                    onChange={(e) => setImageUploadCategory(e.target.value)}
+                                    placeholder="Category (optional)"
+                                    className="bg-(--surface-background) text-(--accent-text) px-3 py-1.5 rounded text-sm flex-1 min-w-0"
+                                />
+                            </div>
+                            <button
+                                onClick={uploadImage}
+                                disabled={!imageUploadFile || imageUploading}
+                                className="bg-(--primary) text-white px-4 py-1.5 rounded text-sm cursor-pointer hover:opacity-90 disabled:opacity-50 self-start"
+                            >
+                                {imageUploading ? "Uploading…" : "Upload"}
+                            </button>
+                        </div>
+
+                        {/* Image grid grouped by category */}
+                        {images.length === 0 && (
+                            <p className="text-sm text-(--text-color) italic">No images yet.</p>
+                        )}
+                        {(() => {
+                            const categories = ["", ...new Set(images.map((img) => img.category).filter(Boolean))];
+                            return categories.map((cat) => {
+                                const group = images.filter((img) =>
+                                    cat === "" ? !img.category : img.category === cat,
+                                );
+                                if (group.length === 0) return null;
+                                return (
+                                    <div key={cat || "__uncategorized"}>
+                                        <p className="text-xs font-semibold text-(--text-color) uppercase mb-2">
+                                            {cat || "Uncategorized"}
+                                        </p>
+                                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                                            {group.map((img) => (
+                                                <div
+                                                    key={img.id}
+                                                    className="relative group border border-(--outline)/30 rounded overflow-hidden"
+                                                >
+                                                    <img
+                                                        src={img.url}
+                                                        alt={img.title}
+                                                        className="w-full h-16 object-contain bg-white"
+                                                    />
+                                                    <p className="text-xs text-(--text-color) px-1 py-0.5 truncate">
+                                                        {img.title}
+                                                    </p>
+                                                    <button
+                                                        onClick={() => deleteImage(img.id)}
+                                                        className="absolute top-1 right-1 bg-black/60 text-white rounded p-0.5 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                                                    >
+                                                        <Trash size={12} />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                );
+                            });
+                        })()}
+                    </div>
+                )}
             </div>
 
             {/* Add Section bar — stacks vertically on mobile, row on sm+ */}

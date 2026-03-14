@@ -51,7 +51,7 @@ import "tinymce/plugins/emoticons/js/emojis";
 import "tinymce/skins/content/default/content";
 import "tinymce/skins/ui/oxide/content";
 
-export default function BundledEditor(props) {
+export default function BundledEditor({ imagePickerTriggerRef, ...props }) {
     const height = props.height + 150;
 
     return (
@@ -78,7 +78,7 @@ export default function BundledEditor(props) {
                     "bold italic forecolor | alignleft aligncenter " +
                     "alignright alignjustify | bullist numlist outdent indent | " +
                     "removeformat | help" +
-                    "| link image media",
+                    "| link image media | imagepicker",
 
                 menubar: false,
                 promotion: false,
@@ -87,6 +87,18 @@ export default function BundledEditor(props) {
 
                 content_css: "/editor-content.css",
                 content_style: "body { padding: 0px 26px }",
+
+                setup: (editor) => {
+                    editor.ui.registry.addButton("imagepicker", {
+                        icon: "gallery",
+                        tooltip: "Insert from image pool",
+                        onAction: () => {
+                            if (imagePickerTriggerRef?.current) {
+                                imagePickerTriggerRef.current();
+                            }
+                        },
+                    });
+                },
             }}
         />
     );

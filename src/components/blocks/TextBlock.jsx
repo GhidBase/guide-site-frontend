@@ -1,4 +1,6 @@
 import { lazy, Suspense, useRef, useState, useEffect } from "react";
+import { useRouteLoaderData } from "react-router";
+import ImagePickerModal from "../ImagePickerModal.jsx";
 
 const TextEditor = lazy(() => import("../TextEditor.jsx"));
 
@@ -10,10 +12,15 @@ export default function TextBlock({
     addBlock,
     canDelete,
 }) {
+    const { gameData } = useRouteLoaderData("main");
     const editorRef = useRef(null);
+    const imagePickerTriggerRef = useRef(null);
     const [editMode, setEditMode] = useState(false);
+    const [imagePickerOpen, setImagePickerOpen] = useState(false);
     const contentRef = useRef(null);
     const [height, setHeight] = useState(0);
+
+    imagePickerTriggerRef.current = () => setImagePickerOpen(true);
 
     let content;
 
@@ -67,8 +74,21 @@ export default function TextBlock({
                         height={height}
                         editorRef={editorRef}
                         content={content}
+                        imagePickerTriggerRef={imagePickerTriggerRef}
                     ></TextEditor>
                 </Suspense>
+            )}
+            {imagePickerOpen && (
+                <ImagePickerModal
+                    gameId={gameData?.id}
+                    onSelect={(url) => {
+                        editorRef.current?.insertContent(
+                            `<img src="${url}" />`,
+                        );
+                        setImagePickerOpen(false);
+                    }}
+                    onClose={() => setImagePickerOpen(false)}
+                />
             )}
             {!editMode && (
                 <div

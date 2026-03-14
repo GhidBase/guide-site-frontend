@@ -1,7 +1,7 @@
 import BundledEditor from "../BundledEditor.jsx";
 import "../css/textEditor.css";
 
-export default function TextEditor({ editorRef, content, height }) {
+export default function TextEditor({ editorRef, content, height, imagePickerTriggerRef }) {
     /* const log = () => {
         if (editorRef.current) {
             console.log(editorRef.current.getContent());
@@ -17,6 +17,7 @@ export default function TextEditor({ editorRef, content, height }) {
                     menubar: false,
                 }}
                 height={height}
+                imagePickerTriggerRef={imagePickerTriggerRef}
             />
             {
                 //Style the editor in BundledEditor.jsx
