@@ -145,13 +145,7 @@ export default function PageBuilder() {
             return;
         }
 
-        const result = await response.json();
-        const newBlocks = [...blocks];
-        const adjustIndex = newBlocks.findIndex(
-            (block) => block.id == result.id,
-        );
-        newBlocks[adjustIndex] = result;
-        setBlocks(newBlocks);
+        await refreshBlock(block.id);
     }
 
     async function refreshBlock(id) {
