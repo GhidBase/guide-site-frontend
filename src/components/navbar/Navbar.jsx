@@ -352,6 +352,14 @@ export default function Navbar({
             });
     }
 
+    navbarItems.push({
+        id: "leaderboard",
+        slug: "leaderboard",
+        navbarTitle: "Leaderboard",
+        type: "page",
+        nonEditable: true,
+    });
+
     return (
         <Fragment>
             <div id="nav-bar" className={className}>
