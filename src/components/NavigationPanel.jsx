@@ -782,23 +782,25 @@ export default function NavigationPanel() {
     return (
         <>
             {/* Game settings bar */}
-            <div className="mt-8 max-w-4xl mb-4 flex flex-wrap items-center gap-2">
-                <input
-                    type="url"
-                    value={discordUrl}
-                    onChange={(e) => setDiscordUrl(e.target.value)}
-                    placeholder="Discord invite URL"
-                    className="bg-(--red-brown) text-white placeholder-white/60 px-3 py-2 rounded flex-1 min-w-0"
-                />
-                <button
-                    onClick={saveDiscordUrl}
-                    className="bg-(--red-brown) text-white px-4 py-2 rounded cursor-pointer hover:opacity-90 shrink-0"
-                >
-                    Save Discord URL
-                </button>
+            <div className="mt-8 max-w-4xl mb-4 flex flex-col gap-2">
+                <div className="flex gap-2">
+                    <input
+                        type="url"
+                        value={discordUrl}
+                        onChange={(e) => setDiscordUrl(e.target.value)}
+                        placeholder="Discord invite URL"
+                        className="bg-(--red-brown) text-white placeholder-white/60 px-3 py-2 rounded flex-1 min-w-0"
+                    />
+                    <button
+                        onClick={saveDiscordUrl}
+                        className="bg-(--red-brown) text-white px-4 py-2 rounded cursor-pointer hover:opacity-90 shrink-0"
+                    >
+                        Save Discord URL
+                    </button>
+                </div>
                 <button
                     onClick={openThemeEditor}
-                    className="flex items-center gap-2 bg-(--red-brown) text-white px-4 py-2 rounded cursor-pointer hover:opacity-90 shrink-0"
+                    className="flex items-center justify-center gap-2 bg-(--red-brown) text-white px-4 py-2 rounded cursor-pointer hover:opacity-90 w-full sm:w-auto sm:self-start"
                 >
                     <Palette size={16} />
                     Game Theme
@@ -837,18 +839,6 @@ export default function NavigationPanel() {
                         }
                     }}
                 />
-                <select
-                    value={newPageSection}
-                    onChange={(e) => setNewPageSection(e.target.value)}
-                    className="bg-(--red-brown) text-white px-3 py-2 rounded w-full sm:w-auto"
-                >
-                    <option value="">No section</option>
-                    {getSortedSections().map((s) => (
-                        <option key={s.id} value={s.id}>
-                            {s.title}
-                        </option>
-                    ))}
-                </select>
                 <button
                     onClick={createPage}
                     className="bg-(--red-brown) text-white px-4 py-2 rounded hover:cursor-pointer w-full sm:w-auto"
@@ -1486,8 +1476,8 @@ export default function NavigationPanel() {
                                                         {page.title}
                                                     </span>
                                                     <PencilIcon
-                                                        size={14}
-                                                        className="cursor-pointer shrink-0 text-(--text-color)"
+                                                        size={18}
+                                                        className="cursor-pointer shrink-0 text-(--text-color) p-0.5"
                                                         onClick={() => {
                                                             setEditingPage(
                                                                 page.id,
@@ -1498,8 +1488,8 @@ export default function NavigationPanel() {
                                                         }}
                                                     />
                                                     <Trash
-                                                        size={14}
-                                                        className="cursor-pointer shrink-0 text-(--danger-text-color)"
+                                                        size={18}
+                                                        className="cursor-pointer shrink-0 text-(--danger-text-color) p-0.5"
                                                         onClick={() => {
                                                             if (
                                                                 confirm(
@@ -1510,8 +1500,8 @@ export default function NavigationPanel() {
                                                         }}
                                                     />
                                                     <Info
-                                                        size={14}
-                                                        className="cursor-pointer shrink-0 text-(--text-color)"
+                                                        size={18}
+                                                        className="cursor-pointer shrink-0 text-(--text-color) p-0.5"
                                                         onClick={() =>
                                                             openDetailPage(page)
                                                         }
@@ -1519,13 +1509,13 @@ export default function NavigationPanel() {
                                                     {page.slug && (
                                                         <a
                                                             href={isLDG || !gameData ? "/" + page.slug : "/games/" + gameData.slug + "/" + page.slug}
-                                                            className="shrink-0 text-(--text-color)"
+                                                            className="shrink-0 text-(--text-color) p-0.5"
                                                         >
-                                                            <ExternalLink size={14} />
+                                                            <ExternalLink size={18} />
                                                         </a>
                                                     )}
                                                     <select
-                                                        className="bg-(--accent) text-(--accent-text) px-1 py-1 rounded text-xs max-w-[120px] shrink-0"
+                                                        className="hidden sm:block bg-(--accent) text-(--accent-text) px-1 py-1 rounded text-xs max-w-[120px] shrink-0"
                                                         onChange={(e) =>
                                                             changePageSection(
                                                                 page.id,

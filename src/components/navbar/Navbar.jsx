@@ -277,13 +277,6 @@ export default function Navbar({
                 nonEditable: true,
             },
             {
-                id: "page-mgr",
-                slug: "page-manager",
-                navbarTitle: "Page Manager",
-                type: "page",
-                nonEditable: true,
-            },
-            {
                 //id: "edit-nav",
                 //type: "edit-button",
                 //navbarTitle: "Edit Navbar",

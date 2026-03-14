@@ -91,8 +91,8 @@ export default function Leaderboard() {
                                     <span className="text-sm text-(--text-color)">
                                         {entry.contributions}{" "}
                                         {entry.contributions === 1
-                                            ? "page"
-                                            : "pages"}
+                                            ? "contribution"
+                                            : "contributions"}
                                     </span>
                                     {tab === "global" && entry.byGame?.length > 0 && (
                                         <span className="text-xs text-(--text-color)">
@@ -113,8 +113,8 @@ export default function Leaderboard() {
                                                     <span>
                                                         {g.contributions}{" "}
                                                         {g.contributions === 1
-                                                            ? "page"
-                                                            : "pages"}
+                                                            ? "contribution"
+                                                            : "contributions"}
                                                     </span>
                                                 </div>
                                             ))}
