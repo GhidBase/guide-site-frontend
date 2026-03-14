@@ -29,9 +29,26 @@ export default function Leaderboard() {
 
     return (
         <div className="max-w-2xl mx-auto px-4 py-6">
-            <h1 className="text-2xl font-bold text-(--accent-text) mb-4">
+            <h1 className="text-2xl font-bold text-(--accent-text) mb-2">
                 Leaderboard
             </h1>
+            <p className="text-(--text-color) mb-1">
+                These are the players who've helped build this site - writing
+                guides, filling in details, and sharing what they know so others
+                can learn faster.
+            </p>
+            <p className="text-(--text-color) mb-4">
+                Anyone with an account can suggest edits or contribute to any
+                page. Your contributions get reviewed and, once accepted, your
+                name appears here.{" "}
+                <a
+                    href="/signup"
+                    className="underline font-semibold text-(--accent-text) hover:opacity-80"
+                >
+                    Create an account
+                </a>{" "}
+                to get started.
+            </p>
 
             <div className="flex gap-2 mb-6">
                 {gameName && (
@@ -63,7 +80,9 @@ export default function Leaderboard() {
             )}
 
             {entries && entries.length === 0 && (
-                <p className="text-(--text-color) italic">No contributors yet.</p>
+                <p className="text-(--text-color) italic">
+                    No contributors yet.
+                </p>
             )}
 
             {entries && entries.length > 0 && (
@@ -79,7 +98,9 @@ export default function Leaderboard() {
                                 <div
                                     className="flex items-center gap-3 px-4 py-3 cursor-pointer"
                                     onClick={() =>
-                                        setExpanded(isExpanded ? null : entry.id)
+                                        setExpanded(
+                                            isExpanded ? null : entry.id,
+                                        )
                                     }
                                 >
                                     <span className="w-8 text-center font-bold text-(--text-color)">
@@ -94,11 +115,12 @@ export default function Leaderboard() {
                                             ? "contribution"
                                             : "contributions"}
                                     </span>
-                                    {tab === "global" && entry.byGame?.length > 0 && (
-                                        <span className="text-xs text-(--text-color)">
-                                            {isExpanded ? "▲" : "▼"}
-                                        </span>
-                                    )}
+                                    {tab === "global" &&
+                                        entry.byGame?.length > 0 && (
+                                            <span className="text-xs text-(--text-color)">
+                                                {isExpanded ? "▲" : "▼"}
+                                            </span>
+                                        )}
                                 </div>
                                 {tab === "global" &&
                                     isExpanded &&
