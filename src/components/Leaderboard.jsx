@@ -1,28 +1,16 @@
-import { useEffect, useState } from "react";
-import { useRouteLoaderData } from "react-router";
-import { currentAPI } from "../config/api";
+import { useState } from "react";
+import { useRouteLoaderData, useLoaderData } from "react-router";
 
 const MEDALS = ["🥇", "🥈", "🥉"];
 
 export default function Leaderboard() {
     const { gameData } = useRouteLoaderData("main");
+    const { leaderboardGlobal, leaderboardGame } = useLoaderData();
     const [tab, setTab] = useState(gameData ? "game" : "global");
-    const [global, setGlobal] = useState(null);
-    const [game, setGame] = useState(null);
     const [expanded, setExpanded] = useState(null);
 
-    useEffect(() => {
-        fetch(currentAPI + "/leaderboard")
-            .then((r) => r.json())
-            .then(setGlobal);
-    }, []);
-
-    useEffect(() => {
-        if (!gameData) return;
-        fetch(currentAPI + "/games/by-id/" + gameData.id + "/leaderboard")
-            .then((r) => r.json())
-            .then(setGame);
-    }, [gameData?.id]);
+    const global = leaderboardGlobal;
+    const game = leaderboardGame;
 
     const entries = tab === "global" ? global : game;
     const gameName = gameData?.title;
