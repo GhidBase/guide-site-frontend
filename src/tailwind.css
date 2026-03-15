@@ -30,12 +30,19 @@
     to   { opacity: 0; }
 }
 
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+}
+
 ::view-transition-old(page-content) {
     animation: page-fade-out 150ms ease forwards;
 }
 
 ::view-transition-new(page-content) {
     animation: page-slide-in 200ms ease forwards;
+    mix-blend-mode: normal;
 }
 
 @layer base {
