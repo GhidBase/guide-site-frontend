@@ -54,8 +54,10 @@ export default function NavigationPanel() {
 
     const { theme, setTheme } = useTheme();
     const [themeOpen, setThemeOpen] = useState(false);
+    const [themeClosing, setThemeClosing] = useState(false);
     const [editingTheme, setEditingTheme] = useState(null);
     const [savedTheme, setSavedTheme] = useState(null);
+    const [detailClosing, setDetailClosing] = useState(false);
 
     const [discordUrl, setDiscordUrl] = useState(gameData?.discordUrl ?? "");
 
@@ -744,10 +746,18 @@ export default function NavigationPanel() {
         setTheme(next); // live preview
     }
 
+    function closeThemeAnimated(then) {
+        setThemeClosing(true);
+        setTimeout(() => {
+            setThemeClosing(false);
+            setThemeOpen(false);
+            then?.();
+        }, 150);
+    }
+
     function cancelTheme() {
         setTheme(savedTheme); // revert live preview
-        setThemeOpen(false);
-        setEditingTheme(null);
+        closeThemeAnimated(() => setEditingTheme(null));
     }
 
     function resetThemeToDefaults() {
@@ -764,7 +774,7 @@ export default function NavigationPanel() {
                 body: JSON.stringify({ theme: editingTheme }),
             });
             setSavedTheme(editingTheme);
-            setThemeOpen(false);
+            closeThemeAnimated();
         } catch (err) {
             console.error("Failed to save theme:", err);
         }
@@ -829,10 +839,18 @@ export default function NavigationPanel() {
             } else {
                 forceRender((x) => x + 1);
             }
-            setDetailPage(null);
+            closeDetailAnimated();
         } catch (err) {
             console.error("Failed to save page detail:", err);
         }
+    }
+
+    function closeDetailAnimated() {
+        setDetailClosing(true);
+        setTimeout(() => {
+            setDetailClosing(false);
+            setDetailPage(null);
+        }, 150);
     }
 
     return (
@@ -2006,13 +2024,13 @@ export default function NavigationPanel() {
         </div>{/* end px-4 sm:px-0 wrapper */}
 
             {/* Theme editor modal */}
-            {themeOpen && editingTheme && (
+            {(themeOpen || themeClosing) && editingTheme && (
                 <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+                    className={`modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/50${themeClosing ? " out" : ""}`}
                     onClick={cancelTheme}
                 >
                     <div
-                        className="bg-(--surface-background) border border-(--outline) rounded-xl shadow-2xl w-full max-w-md mx-4 p-6 flex flex-col gap-4 max-h-[90vh] overflow-y-auto"
+                        className={`modal-panel bg-(--surface-background) border border-(--outline) rounded-xl shadow-2xl w-full max-w-md mx-4 p-6 flex flex-col gap-4 max-h-[90vh] overflow-y-auto${themeClosing ? " out" : ""}`}
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="flex items-center justify-between gap-2">
@@ -2081,7 +2099,7 @@ export default function NavigationPanel() {
             )}
 
             {/* Page detail modal */}
-            {detailPage && (() => {
+            {(detailPage || detailClosing) && (() => {
                 const previewUrl = detailSlug
                     ? (isLDG || !gameData
                         ? "/" + detailSlug
@@ -2093,11 +2111,11 @@ export default function NavigationPanel() {
 
                 return (
                     <div
-                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-                        onClick={() => setDetailPage(null)}
+                        className={`modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/50${detailClosing ? " out" : ""}`}
+                        onClick={closeDetailAnimated}
                     >
                         <div
-                            className="bg-(--surface-background) border border-(--outline) rounded-xl shadow-2xl w-full max-w-md mx-4 p-6 flex flex-col gap-4"
+                            className={`modal-panel bg-(--surface-background) border border-(--outline) rounded-xl shadow-2xl w-full max-w-md mx-4 p-6 flex flex-col gap-4${detailClosing ? " out" : ""}`}
                             onClick={(e) => e.stopPropagation()}
                         >
                             {/* Header */}
@@ -2106,7 +2124,7 @@ export default function NavigationPanel() {
                                     Page Details
                                 </h2>
                                 <button
-                                    onClick={() => setDetailPage(null)}
+                                    onClick={closeDetailAnimated}
                                     className="shrink-0 text-(--text-color) hover:text-(--accent-text) cursor-pointer"
                                 >
                                     <X size={20} />
