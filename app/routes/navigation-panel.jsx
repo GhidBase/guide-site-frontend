@@ -5,8 +5,10 @@ export const handle = { title: "Navbar Manager" };
 
 export default function NavigationPanelRoute() {
     return (
-        <ProtectedRoute requiredRole="ADMIN">
-            <NavigationPanel isAdmin={true} />
-        </ProtectedRoute>
+        <div style={{ viewTransitionName: "page-content" }}>
+            <ProtectedRoute requiredRole="ADMIN">
+                <NavigationPanel isAdmin={true} />
+            </ProtectedRoute>
+        </div>
     );
 }
