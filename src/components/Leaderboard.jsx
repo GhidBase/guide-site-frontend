@@ -6,7 +6,7 @@ const MEDALS = ["🥇", "🥈", "🥉"];
 
 export default function Leaderboard() {
     const { gameData } = useRouteLoaderData("main");
-    const [tab, setTab] = useState(gameData ? "game" : "global");
+    const [tab, setTab] = useState("global");
     const [global, setGlobal] = useState(null);
     const [game, setGame] = useState(null);
     const [expanded, setExpanded] = useState(null);
