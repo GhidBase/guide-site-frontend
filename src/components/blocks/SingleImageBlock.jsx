@@ -189,7 +189,7 @@ export default function SingleImageBlock({
                     }
                 >
                     {block.files && block.files.map((file) => (
-                        <div id={file.id} key={file.id} className={`${sizeClasses[size]} ${alignClasses[alignment]}`}>
+                        <div id={file.id} key={file.id} className={`relative ${sizeClasses[size]} ${alignClasses[alignment]}`}>
                             <img
                                 id={"photo-img-" + file.id}
                                 src={file.url}
@@ -198,31 +198,31 @@ export default function SingleImageBlock({
                                 style={{ transform: `translateY(${offsets[file.id] ?? 0}px)` }}
                             />
                             {adminMode && (
-                                <div className="flex justify-center items-center gap-2 mt-1">
-                                    <button
-                                        type="button"
-                                        onClick={() => nudgeImage(file.id, -4)}
-                                        className="text-(--text-color) text-xs px-1.5 py-0.5 rounded hover:bg-(--surface-background) cursor-pointer"
-                                        title="Move up"
-                                    >▲</button>
-                                    <span className="text-xs text-(--text-color) w-8 text-center">
-                                        {offsets[file.id] ?? 0}px
-                                    </span>
-                                    <button
-                                        type="button"
-                                        onClick={() => nudgeImage(file.id, 4)}
-                                        className="text-(--text-color) text-xs px-1.5 py-0.5 rounded hover:bg-(--surface-background) cursor-pointer"
-                                        title="Move down"
-                                    >▼</button>
-                                    {canDelete && (
+                                <div className="absolute inset-0 z-10 pointer-events-none">
+                                    <div className="absolute inset-0 flex flex-col items-center justify-between py-1 pointer-events-none">
                                         <button
-                                            className="text-red-700/70 text-sm cursor-pointer hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed ml-2"
-                                            onClick={() => deleteFileById(file.id)}
-                                            disabled={loading}
-                                        >
-                                            Delete
-                                        </button>
-                                    )}
+                                            type="button"
+                                            onClick={() => nudgeImage(file.id, -4)}
+                                            className="pointer-events-auto bg-black/50 text-white text-xs px-2 py-0.5 rounded cursor-pointer hover:bg-black/70"
+                                        >▲</button>
+                                        <span className="text-xs text-white bg-black/50 px-1.5 py-0.5 rounded">
+                                            {offsets[file.id] ?? 0}px
+                                        </span>
+                                        <div className="flex flex-col items-center gap-1 pointer-events-none">
+                                            <button
+                                                type="button"
+                                                onClick={() => nudgeImage(file.id, 4)}
+                                                className="pointer-events-auto bg-black/50 text-white text-xs px-2 py-0.5 rounded cursor-pointer hover:bg-black/70"
+                                            >▼</button>
+                                            {canDelete && (
+                                                <button
+                                                    className="pointer-events-auto bg-black/50 text-red-400 text-xs px-2 py-0.5 rounded cursor-pointer hover:bg-black/70 disabled:opacity-50"
+                                                    onClick={() => deleteFileById(file.id)}
+                                                    disabled={loading}
+                                                >Delete</button>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
                             )}
                         </div>
