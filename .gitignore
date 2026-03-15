@@ -27,3 +27,6 @@ dist-ssr
 notes.txt
 bugs.txt
 .env
+
+# React Router auto-generated types
+.react-router/
