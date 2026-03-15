@@ -23,6 +23,7 @@ export default function SingleImageBlock({
     const alignment = contentSettings.alignment ?? "center";
     const size = contentSettings.size ?? "full";
     const verticalAlign = contentSettings.verticalAlign ?? "center";
+    const offsets = contentSettings.offsets ?? {};
 
     const sizeClasses = {
         small:  "max-w-48",
@@ -40,6 +41,21 @@ export default function SingleImageBlock({
         center: "justify-center",
         bottom: "justify-end",
     };
+
+    async function nudgeImage(fileId, delta) {
+        const current = offsets[fileId] ?? 0;
+        const newContent = {
+            ...contentSettings,
+            offsets: { ...offsets, [fileId]: current + delta },
+        };
+        await fetch(currentAPIgames + "/blocks/" + block.id, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ content: newContent }),
+        });
+        refreshBlock(block.id);
+    }
 
     async function saveSetting(key, value) {
         const newContent = { ...contentSettings, [key]: value };
@@ -179,16 +195,34 @@ export default function SingleImageBlock({
                                 src={file.url}
                                 alt=""
                                 className="w-full"
+                                style={{ transform: `translateY(${offsets[file.id] ?? 0}px)` }}
                             />
-                            {adminMode && canDelete && (
-                                <div className="flex justify-center mt-1">
+                            {adminMode && (
+                                <div className="flex justify-center items-center gap-2 mt-1">
                                     <button
-                                        className="text-red-700/70 text-sm cursor-pointer hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                                        onClick={() => deleteFileById(file.id)}
-                                        disabled={loading}
-                                    >
-                                        Delete
-                                    </button>
+                                        type="button"
+                                        onClick={() => nudgeImage(file.id, -4)}
+                                        className="text-(--text-color) text-xs px-1.5 py-0.5 rounded hover:bg-(--surface-background) cursor-pointer"
+                                        title="Move up"
+                                    >▲</button>
+                                    <span className="text-xs text-(--text-color) w-8 text-center">
+                                        {offsets[file.id] ?? 0}px
+                                    </span>
+                                    <button
+                                        type="button"
+                                        onClick={() => nudgeImage(file.id, 4)}
+                                        className="text-(--text-color) text-xs px-1.5 py-0.5 rounded hover:bg-(--surface-background) cursor-pointer"
+                                        title="Move down"
+                                    >▼</button>
+                                    {canDelete && (
+                                        <button
+                                            className="text-red-700/70 text-sm cursor-pointer hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed ml-2"
+                                            onClick={() => deleteFileById(file.id)}
+                                            disabled={loading}
+                                        >
+                                            Delete
+                                        </button>
+                                    )}
                                 </div>
                             )}
                         </div>
