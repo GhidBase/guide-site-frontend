@@ -574,10 +574,11 @@ export default function NavigationPanel() {
     }
 
     async function changePageSection(pageId, newSectionId, page = null) {
+        console.log("changePageSection:", { pageId, newSectionId, parsedId: Number(newSectionId) });
         if (!pageId) return;
 
         try {
-            await fetch(currentAPI + "/games/" + gameId + "/pages/by-id/" + pageId, {
+            const res = await fetch(currentAPI + "/games/" + gameId + "/pages/by-id/" + pageId, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -588,6 +589,12 @@ export default function NavigationPanel() {
                         newSectionId === "none" ? null : Number(newSectionId),
                 }),
             });
+            if (!res.ok) {
+                const text = await res.text();
+                console.error("changePageSection failed:", res.status, text);
+                alert("Failed to assign page to section: " + res.status + " " + text);
+                return;
+            }
 
             if (newSectionId === "none") {
                 if (page?.sectionId) {
