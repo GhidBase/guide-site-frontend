@@ -8,7 +8,7 @@ export default function MobileNavbar({ toggleNav, navOpen }) {
     console.log("navbar rendered");
     const { gameData, sectionsMap } = useLoaderData();
     const sections = Array.from(sectionsMap.values());
-    const [openedSection, setOpenedSection] = useState(sections[0].id);
+    const [openedSection, setOpenedSection] = useState(sections[0]?.id);
     const { isAuthenticated, user, logout, isLoading } = useAuth();
     const isAdmin = user?.role == "ADMIN";
     const navigate = useNavigate();
@@ -42,7 +42,9 @@ export default function MobileNavbar({ toggleNav, navOpen }) {
         pages: [...section.pages],
     }));
 
-    actualSections[0].pages = [...navbarItems, ...actualSections[0].pages];
+    if (actualSections[0]) {
+        actualSections[0].pages = [...navbarItems, ...actualSections[0].pages];
+    }
 
     async function handleLogout() {
         const res = await logout();
