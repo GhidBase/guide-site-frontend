@@ -9,7 +9,7 @@ export default function Leaderboard() {
     const [tab, setTab] = useState("global");
     const [global, setGlobal] = useState(null);
     const [game, setGame] = useState(null);
-    const [expanded, setExpanded] = useState(null);
+    const [expanded, setExpanded] = useState(new Set());
 
     useEffect(() => {
         fetch(currentAPI + "/leaderboard")
@@ -88,7 +88,7 @@ export default function Leaderboard() {
             {entries && entries.length > 0 && (
                 <div className="flex flex-col gap-2">
                     {entries.map((entry, i) => {
-                        const isExpanded = expanded === entry.id;
+                        const isExpanded = expanded.has(entry.id);
                         const medal = MEDALS[i];
                         return (
                             <div
@@ -98,9 +98,11 @@ export default function Leaderboard() {
                                 <div
                                     className="flex items-center gap-3 px-4 py-3 cursor-pointer"
                                     onClick={() =>
-                                        setExpanded(
-                                            isExpanded ? null : entry.id,
-                                        )
+                                        setExpanded((prev) => {
+                                            const next = new Set(prev);
+                                            isExpanded ? next.delete(entry.id) : next.add(entry.id);
+                                            return next;
+                                        })
                                     }
                                 >
                                     <span className="w-8 text-center font-bold text-(--text-color)">

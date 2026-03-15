@@ -2,6 +2,7 @@ import { useState } from "react";
 import { currentAPI } from "../../config/api";
 import { useRouteLoaderData } from "react-router";
 import PendingReviewNotification from "../notifications/PendingReviewNotification";
+import ImagePickerModal from "../ImagePickerModal.jsx";
 
 export default function SingleImageBlock({
     deleteBlock,
@@ -16,7 +17,35 @@ export default function SingleImageBlock({
     const [stagedFiles, setStagedFiles] = useState(["No File Chosen"]);
     const [loading, setLoading] = useState(false);
     const [showNotification, setShowNotification] = useState(false);
-    const blockHasFiles = !!block.files;
+    const [imagePickerOpen, setImagePickerOpen] = useState(false);
+
+    const contentSettings = block.content ?? {};
+    const alignment = contentSettings.alignment ?? "center";
+    const size = contentSettings.size ?? "full";
+
+    const sizeClasses = {
+        small:  "max-w-48",
+        medium: "max-w-80",
+        large:  "max-w-2xl",
+        full:   "w-full",
+    };
+    const alignClasses = {
+        left:   "mr-auto",
+        center: "mx-auto",
+        right:  "ml-auto",
+    };
+
+    async function saveSetting(key, value) {
+        const newContent = { ...contentSettings, [key]: value };
+        await fetch(currentAPIgames + "/blocks/" + block.id, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ content: newContent }),
+        });
+        refreshBlock(block.id);
+    }
+
 
     async function deleteAllFiles() {
         if (block.isUnsaved) {
@@ -74,6 +103,30 @@ export default function SingleImageBlock({
         }
     }
 
+    async function addFileFromPool(url) {
+        try {
+            setLoading(true);
+            const response = await fetch(
+                currentAPIgames + "/blocks/" + block.id + "/files",
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "include",
+                    body: JSON.stringify({ imageUrl: url }),
+                },
+            );
+            if (response.status === 202) {
+                setShowNotification(true);
+            } else if (!response.ok) {
+                console.error("add from pool failed");
+                return;
+            }
+            refreshBlock(block.id);
+        } finally {
+            setLoading(false);
+        }
+    }
+
     async function deleteFileById(id) {
         try {
             setLoading(true);
@@ -90,13 +143,6 @@ export default function SingleImageBlock({
         } finally {
             setLoading(false);
         }
-    }
-
-    let imgUrls = [];
-    if (blockHasFiles) {
-        imgUrls = block.files.map((v) =>
-            typeof v.url === "string" ? v.url : undefined,
-        );
     }
 
     return (
@@ -121,12 +167,12 @@ export default function SingleImageBlock({
                     }
                 >
                     {block.files && block.files.map((file) => (
-                        <div id={file.id} key={file.id} className="w-full m-auto">
+                        <div id={file.id} key={file.id} className={`${sizeClasses[size]} ${alignClasses[alignment]}`}>
                             <img
                                 id={"photo-img-" + file.id}
                                 src={file.url}
                                 alt=""
-                                className="max-h-80 mx-auto"
+                                className="w-full"
                             />
                             {adminMode && canDelete && (
                                 <div className="flex justify-center mt-1">
@@ -142,6 +188,46 @@ export default function SingleImageBlock({
                         </div>
                     ))}
                 </div>
+
+                {/* Settings bar */}
+                {adminMode && (
+                    <div className="flex items-center gap-4 px-4 py-1.5 bg-(--accent) border-x border-t border-(--outline-brown)/50 text-sm flex-wrap">
+                        <div className="flex items-center gap-1">
+                            <span className="text-(--text-color) mr-1">Size:</span>
+                            {["small", "medium", "large", "full"].map((s) => (
+                                <button
+                                    key={s}
+                                    type="button"
+                                    onClick={() => saveSetting("size", s)}
+                                    className={`px-2 py-0.5 rounded capitalize cursor-pointer transition-colors ${
+                                        size === s
+                                            ? "bg-(--primary) text-white"
+                                            : "text-(--text-color) hover:bg-(--surface-background)"
+                                    }`}
+                                >
+                                    {s}
+                                </button>
+                            ))}
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <span className="text-(--text-color) mr-1">Align:</span>
+                            {["left", "center", "right"].map((a) => (
+                                <button
+                                    key={a}
+                                    type="button"
+                                    onClick={() => saveSetting("alignment", a)}
+                                    className={`px-2 py-0.5 rounded capitalize cursor-pointer transition-colors ${
+                                        alignment === a
+                                            ? "bg-(--primary) text-white"
+                                            : "text-(--text-color) hover:bg-(--surface-background)"
+                                    }`}
+                                >
+                                    {a}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 {/* Admin bottom bar */}
                 {adminMode && (
@@ -186,6 +272,14 @@ export default function SingleImageBlock({
                         >
                             {stagedFiles[0] === "No File Chosen" ? "Choose File" : stagedFiles[0]}
                         </label>
+                        <button
+                            type="button"
+                            onClick={() => setImagePickerOpen(true)}
+                            disabled={loading}
+                            className="flex items-center justify-center w-full h-full text-center"
+                        >
+                            From Pool
+                        </button>
                         {canDelete && (
                             <button
                                 type="button"
@@ -201,6 +295,16 @@ export default function SingleImageBlock({
                     </form>
                 )}
             </div>
+            {imagePickerOpen && (
+                <ImagePickerModal
+                    gameId={gameId}
+                    onSelect={(url) => {
+                        addFileFromPool(url);
+                        setImagePickerOpen(false);
+                    }}
+                    onClose={() => setImagePickerOpen(false)}
+                />
+            )}
             <PendingReviewNotification
                 visible={showNotification}
                 onDismiss={() => setShowNotification(false)}
