@@ -1,4 +1,4 @@
-import { useState, Fragment } from "react";
+import { useState } from "react";
 import { currentAPI } from "../../config/api";
 import { useRouteLoaderData } from "react-router";
 import PendingReviewNotification from "../notifications/PendingReviewNotification";
@@ -99,113 +99,106 @@ export default function SingleImageBlock({
         );
     }
 
-    let showFileText =
-        imgUrls[0] == undefined || stagedFiles[0] != "No File Chosen";
-
     return (
         <>
             <div
-                className={`text-(--text-color) mt-2 ${adminMode && "bg-black/10 border-b border-(--primary) mb-0"}`}
                 id={"image-block-" + block.id}
+                className={`relative content-block bg-(--surface-background) w-full text-(--text-color) ${
+                    adminMode && "border-b border-(--primary) mb-0 bg-black/3 md:rounded"
+                }`}
             >
-                <div className="flex justify-stretch">
-                    {block.files &&
-                        block.files.map((file) => {
-                            return (
-                                <div
-                                    id={file.id}
-                                    key={file.id}
-                                    className="w-full m-auto"
-                                >
-                                    <img
-                                        id={"photo-img-" + file.id}
-                                        src={file.url}
-                                        alt=""
-                                        className="max-h-80 mx-auto"
-                                    />
-                                    {adminMode && canDelete && (
-                                        <button
-                                            className="text-amber-50 bg-(--primary) rounded px-2 py-0.5 h-7 cursor-pointer hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                                            onClick={() =>
-                                                deleteFileById(file.id)
-                                            }
-                                            disabled={loading}
-                                        >
-                                            Delete
-                                        </button>
-                                    )}
-                                </div>
-                            );
-                        })}
-                </div>
                 {adminMode && (
-                    <Fragment>
-                        <form
-                            onSubmit={uploadFile}
-                            method="post"
-                            encType="multipart/form-data"
-                            className={`flex flex-col`}
-                        >
-                            <div className="flex justify-center items-center gap-2">
-                                <label
-                                    className="text-amber-50 bg-(--primary) rounded px-2 py-0.5 h-7 cursor-pointer hover:opacity-90"
-                                    htmlFor={"upload-file" + block.id}
-                                >
-                                    Choose a file
-                                </label>
-                                <input
-                                    type="hidden"
-                                    name="id"
-                                    value="<%= folder.id %>"
-                                />
-                                <input
-                                    type="file"
-                                    name={"upload-file" + block.id}
-                                    id={"upload-file" + block.id}
-                                    className="hidden"
-                                    onChange={(e) => {
-                                        const file = e.target.files?.[0];
-                                        const newFiles = [...stagedFiles];
-                                        newFiles[0] = file
-                                            ? file.name
-                                            : "No file chosen";
-                                        setStagedFiles(newFiles);
-                                    }}
-                                    disabled={loading}
-                                />
-                                {showFileText && (
-                                    <p
-                                        className={`${stagedFiles[0] != "No File Chosen" && "px-3"}`}
-                                    >
-                                        {stagedFiles[0]}
-                                    </p>
-                                )}
-                                {stagedFiles[0] != "No File Chosen" && (
+                    <div className="sticky top-7 h-10 bg-(--accent) border-b border-t sm:border border-(--outline-brown)/50 rounded-t flex justify-center items-center text-xl z-1">
+                        Image Block
+                    </div>
+                )}
+
+                {/* Images */}
+                <div
+                    className={
+                        `flex justify-stretch px-8 py-1` +
+                        (adminMode ? ` bg-(--accent) border-x border-(--outline-brown)/50` : "")
+                    }
+                >
+                    {block.files && block.files.map((file) => (
+                        <div id={file.id} key={file.id} className="w-full m-auto">
+                            <img
+                                id={"photo-img-" + file.id}
+                                src={file.url}
+                                alt=""
+                                className="max-h-80 mx-auto"
+                            />
+                            {adminMode && canDelete && (
+                                <div className="flex justify-center mt-1">
                                     <button
-                                        className="text-amber-50 bg-(--primary) rounded px-2 py-0.5 h-7 cursor-pointer hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                                        type="submit"
+                                        className="text-red-700/70 text-sm cursor-pointer hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        onClick={() => deleteFileById(file.id)}
                                         disabled={loading}
                                     >
-                                        Upload
+                                        Delete
                                     </button>
-                                )}
-                            </div>
-                        </form>
-                        {canDelete && (
-                            <div
-                                id="lower-buttons"
-                                className="flex gap-2 m-2 justify-center"
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                </div>
+
+                {/* Admin bottom bar */}
+                {adminMode && (
+                    <form
+                        onSubmit={uploadFile}
+                        method="post"
+                        encType="multipart/form-data"
+                        className="py-1.5
+                            sticky bottom-14 lg:bottom-0
+                            divide-x divide-x-reverse divide-(--outline-brown)/25
+                            border-t border-(--outline-brown)/50 sm:border-x
+                            flex flex-row-reverse
+                            w-full justify-between
+                            h-10
+                            rounded-b
+                            bg-(--accent)"
+                    >
+                        <input type="hidden" name="id" value="<%= folder.id %>" />
+                        <input
+                            type="file"
+                            name={"upload-file" + block.id}
+                            id={"upload-file" + block.id}
+                            className="hidden"
+                            onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                setStagedFiles([file ? file.name : "No File Chosen"]);
+                            }}
+                            disabled={loading}
+                        />
+                        {stagedFiles[0] !== "No File Chosen" && (
+                            <button
+                                className="flex items-center justify-center w-full h-full text-center"
+                                type="submit"
+                                disabled={loading}
                             >
-                                <button
-                                    onClick={() => deleteAllFiles()}
-                                    className="text-amber-50 bg-red-700 rounded px-3 py-1 font-semibold cursor-pointer hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    disabled={loading}
-                                >
-                                    Delete All
-                                </button>
-                            </div>
+                                Upload
+                            </button>
                         )}
-                    </Fragment>
+                        <label
+                            className="flex items-center justify-center w-full h-full text-center cursor-pointer"
+                            htmlFor={"upload-file" + block.id}
+                        >
+                            {stagedFiles[0] === "No File Chosen" ? "Choose File" : stagedFiles[0]}
+                        </label>
+                        {canDelete && (
+                            <button
+                                type="button"
+                                onClick={deleteAllFiles}
+                                disabled={loading}
+                                className="text-red-700/70
+                                    flex items-center justify-center text-center
+                                    w-full h-full"
+                            >
+                                Delete All
+                            </button>
+                        )}
+                    </form>
                 )}
             </div>
             <PendingReviewNotification
