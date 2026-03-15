@@ -6,6 +6,7 @@ import SingleImageBlock from "./blocks/SingleImageBlock";
 import { useAuth } from "../hooks/useAuth.js";
 import { Pencil } from "lucide-react";
 import PendingReviewNotification from "./notifications/PendingReviewNotification";
+import Comments from "./comments/Comments";
 
 export default function PageBuilder() {
     const { pageData, gameData, isLDG } = useRouteLoaderData("main");
@@ -302,6 +303,7 @@ export default function PageBuilder() {
                     </Link>
                 </div>
             )}
+            <Comments pageId={pageData?.page?.id} />
         </div>
         </Fragment>
     );
