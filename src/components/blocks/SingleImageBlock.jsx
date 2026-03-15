@@ -22,6 +22,7 @@ export default function SingleImageBlock({
     const contentSettings = block.content ?? {};
     const alignment = contentSettings.alignment ?? "center";
     const size = contentSettings.size ?? "full";
+    const verticalAlign = contentSettings.verticalAlign ?? "center";
 
     const sizeClasses = {
         small:  "max-w-48",
@@ -33,6 +34,11 @@ export default function SingleImageBlock({
         left:   "mr-auto",
         center: "mx-auto",
         right:  "ml-auto",
+    };
+    const verticalAlignClasses = {
+        top:    "justify-start",
+        center: "justify-center",
+        bottom: "justify-end",
     };
 
     async function saveSetting(key, value) {
@@ -162,7 +168,7 @@ export default function SingleImageBlock({
                 {/* Images */}
                 <div
                     className={
-                        `flex justify-stretch px-8 py-1` +
+                        `flex ${verticalAlignClasses[verticalAlign]} px-8 py-4 min-h-24` +
                         (adminMode ? ` bg-(--accent) border-x border-(--outline-brown)/50` : "")
                     }
                 >
@@ -223,6 +229,23 @@ export default function SingleImageBlock({
                                     }`}
                                 >
                                     {a}
+                                </button>
+                            ))}
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <span className="text-(--text-color) mr-1">Vertical:</span>
+                            {["top", "center", "bottom"].map((v) => (
+                                <button
+                                    key={v}
+                                    type="button"
+                                    onClick={() => saveSetting("verticalAlign", v)}
+                                    className={`px-2 py-0.5 rounded capitalize cursor-pointer transition-colors ${
+                                        verticalAlign === v
+                                            ? "bg-(--primary) text-white"
+                                            : "text-(--text-color) hover:bg-(--surface-background)"
+                                    }`}
+                                >
+                                    {v}
                                 </button>
                             ))}
                         </div>
