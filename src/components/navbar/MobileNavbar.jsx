@@ -46,6 +46,14 @@ export default function MobileNavbar({ toggleNav, navOpen }) {
         actualSections[0].pages = [...navbarItems, ...actualSections[0].pages];
     }
 
+    const lastSection = actualSections[actualSections.length - 1];
+    if (lastSection) {
+        lastSection.pages = [
+            ...lastSection.pages,
+            { id: "leaderboard", slug: "leaderboard", title: "Leaderboard" },
+        ];
+    }
+
     async function handleLogout() {
         const res = await logout();
         //navigate("/");
