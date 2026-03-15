@@ -577,7 +577,7 @@ export default function NavigationPanel() {
         if (!pageId) return;
 
         try {
-            await fetch(currentAPI + "/sections/" + pageId, {
+            await fetch(currentAPI + "/games/" + gameId + "/pages/by-id/" + pageId, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
