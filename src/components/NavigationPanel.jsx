@@ -837,164 +837,170 @@ export default function NavigationPanel() {
 
     return (
         <>
-            {/* Game settings bar */}
-            <div className="mt-8 max-w-4xl mb-4 flex flex-col gap-2">
+        <div className="px-4 sm:px-0">
+            {/* ── Game Settings ─────────────────────────────────────────────── */}
+            <div className="mt-8 max-w-4xl mb-6 border border-(--outline)/40 rounded-lg overflow-hidden">
+                <div className="bg-(--primary) px-4 py-2">
+                    <h2 className="text-white font-semibold text-sm uppercase tracking-wide">Game Settings</h2>
+                </div>
+                <div className="p-4 flex flex-col gap-3 bg-(--accent)">
+                    {/* Discord URL */}
+                    <div className="flex gap-2">
+                        <input
+                            type="url"
+                            value={discordUrl}
+                            onChange={(e) => setDiscordUrl(e.target.value)}
+                            placeholder="Discord invite URL"
+                            className="bg-(--surface-background) text-(--accent-text) placeholder-(--text-color) px-3 py-2 rounded flex-1 min-w-0 text-sm"
+                        />
+                        <button
+                            onClick={saveDiscordUrl}
+                            className="bg-(--primary) text-white px-4 py-2 rounded cursor-pointer hover:opacity-90 shrink-0 text-sm font-semibold"
+                        >
+                            Save
+                        </button>
+                    </div>
+
+                    {/* Theme + Image Pool buttons */}
+                    <div className="flex gap-2 flex-wrap">
+                        <button
+                            onClick={openThemeEditor}
+                            className="flex items-center gap-2 bg-(--surface-background) text-(--accent-text) border border-(--outline)/40 px-4 py-2 rounded cursor-pointer hover:bg-(--primary) hover:text-white transition-colors text-sm font-semibold"
+                        >
+                            <Palette size={15} />
+                            Game Theme
+                        </button>
+                        <button
+                            onClick={() => setImagePoolOpen((o) => !o)}
+                            className="flex items-center gap-2 bg-(--surface-background) text-(--accent-text) border border-(--outline)/40 px-4 py-2 rounded cursor-pointer hover:bg-(--primary) hover:text-white transition-colors text-sm font-semibold"
+                        >
+                            {imagePoolOpen ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
+                            Image Pool
+                            <span className="opacity-60 text-xs">({images.length})</span>
+                        </button>
+                    </div>
+
+                    {/* Image Pool expanded */}
+                    {imagePoolOpen && (
+                        <div className="border border-(--outline)/40 rounded-lg p-4 flex flex-col gap-4 bg-(--surface-background)">
+                            <div className="flex flex-col gap-2">
+                                <p className="text-sm font-semibold text-(--accent-text)">Upload Image</p>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => setImageUploadFile(e.target.files[0] ?? null)}
+                                    className="text-sm text-(--text-color)"
+                                />
+                                <div className="flex gap-2 flex-wrap">
+                                    <input
+                                        type="text"
+                                        value={imageUploadTitle}
+                                        onChange={(e) => setImageUploadTitle(e.target.value)}
+                                        placeholder="Title (optional)"
+                                        className="bg-(--accent) text-(--accent-text) px-3 py-1.5 rounded text-sm flex-1 min-w-0"
+                                    />
+                                    <input
+                                        type="text"
+                                        value={imageUploadCategory}
+                                        onChange={(e) => setImageUploadCategory(e.target.value)}
+                                        placeholder="Category (optional)"
+                                        className="bg-(--accent) text-(--accent-text) px-3 py-1.5 rounded text-sm flex-1 min-w-0"
+                                    />
+                                </div>
+                                <button
+                                    onClick={uploadImage}
+                                    disabled={!imageUploadFile || imageUploading}
+                                    className="bg-(--primary) text-white px-4 py-1.5 rounded text-sm cursor-pointer hover:opacity-90 disabled:opacity-50 self-start font-semibold"
+                                >
+                                    {imageUploading ? "Uploading…" : "Upload"}
+                                </button>
+                            </div>
+                            {images.length === 0 && (
+                                <p className="text-sm text-(--text-color) italic">No images yet.</p>
+                            )}
+                            {(() => {
+                                const categories = ["", ...new Set(images.map((img) => img.category).filter(Boolean))];
+                                return categories.map((cat) => {
+                                    const group = images.filter((img) =>
+                                        cat === "" ? !img.category : img.category === cat,
+                                    );
+                                    if (group.length === 0) return null;
+                                    return (
+                                        <div key={cat || "__uncategorized"}>
+                                            <p className="text-xs font-semibold text-(--text-color) uppercase mb-2">
+                                                {cat || "Uncategorized"}
+                                            </p>
+                                            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                                                {group.map((img) => (
+                                                    <div
+                                                        key={img.id}
+                                                        className="relative group border border-(--outline)/30 rounded overflow-hidden"
+                                                    >
+                                                        <img
+                                                            src={img.url}
+                                                            alt={img.title}
+                                                            className="w-full h-16 object-contain bg-white"
+                                                        />
+                                                        <p className="text-xs text-(--text-color) px-1 py-0.5 truncate">
+                                                            {img.title}
+                                                        </p>
+                                                        <button
+                                                            onClick={() => deleteImage(img.id)}
+                                                            className="absolute top-1 right-1 bg-black/60 text-white rounded p-0.5 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                                                        >
+                                                            <Trash size={12} />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    );
+                                });
+                            })()}
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* ── Add Section / Add Page ─────────────────────────────────────── */}
+            <div className="max-w-4xl mb-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="flex gap-2">
                     <input
-                        type="url"
-                        value={discordUrl}
-                        onChange={(e) => setDiscordUrl(e.target.value)}
-                        placeholder="Discord invite URL"
-                        className="bg-(--red-brown) text-white placeholder-white/60 px-3 py-2 rounded flex-1 min-w-0"
+                        type="text"
+                        value={newSectionName}
+                        onChange={(e) => setNewSectionName(e.target.value)}
+                        placeholder="New section name"
+                        className="bg-(--red-brown) text-white placeholder-white/70 px-3 py-2 rounded flex-1 min-w-0 text-sm"
+                        onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); createSection(); } }}
                     />
                     <button
-                        onClick={saveDiscordUrl}
-                        className="bg-(--red-brown) text-white px-4 py-2 rounded cursor-pointer hover:opacity-90 shrink-0"
+                        onClick={createSection}
+                        className="bg-(--red-brown) text-white px-3 py-2 rounded cursor-pointer hover:opacity-90 shrink-0 text-sm font-semibold"
                     >
-                        Save Discord URL
+                        + Section
                     </button>
                 </div>
-                <button
-                    onClick={openThemeEditor}
-                    className="flex items-center justify-center gap-2 bg-(--red-brown) text-white px-4 py-2 rounded cursor-pointer hover:opacity-90 w-full sm:w-auto sm:self-start"
-                >
-                    <Palette size={16} />
-                    Game Theme
-                </button>
-            </div>
-
-            {/* Image Pool */}
-            <div className="max-w-4xl mb-4">
-                <button
-                    onClick={() => setImagePoolOpen((o) => !o)}
-                    className="flex items-center gap-2 bg-(--red-brown) text-white px-4 py-2 rounded cursor-pointer hover:opacity-90 w-full sm:w-auto"
-                >
-                    {imagePoolOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                    Image Pool
-                    <span className="text-white/70 text-sm">({images.length})</span>
-                </button>
-
-                {imagePoolOpen && (
-                    <div className="mt-2 border border-(--outline)/40 rounded-lg p-4 flex flex-col gap-4 bg-(--accent)">
-                        {/* Upload form */}
-                        <div className="flex flex-col gap-2">
-                            <p className="text-sm font-semibold text-(--accent-text)">Upload Image</p>
-                            <input
-                                type="file"
-                                accept="image/*"
-                                onChange={(e) => setImageUploadFile(e.target.files[0] ?? null)}
-                                className="text-sm text-(--text-color)"
-                            />
-                            <div className="flex gap-2 flex-wrap">
-                                <input
-                                    type="text"
-                                    value={imageUploadTitle}
-                                    onChange={(e) => setImageUploadTitle(e.target.value)}
-                                    placeholder="Title (optional)"
-                                    className="bg-(--surface-background) text-(--accent-text) px-3 py-1.5 rounded text-sm flex-1 min-w-0"
-                                />
-                                <input
-                                    type="text"
-                                    value={imageUploadCategory}
-                                    onChange={(e) => setImageUploadCategory(e.target.value)}
-                                    placeholder="Category (optional)"
-                                    className="bg-(--surface-background) text-(--accent-text) px-3 py-1.5 rounded text-sm flex-1 min-w-0"
-                                />
-                            </div>
-                            <button
-                                onClick={uploadImage}
-                                disabled={!imageUploadFile || imageUploading}
-                                className="bg-(--primary) text-white px-4 py-1.5 rounded text-sm cursor-pointer hover:opacity-90 disabled:opacity-50 self-start"
-                            >
-                                {imageUploading ? "Uploading…" : "Upload"}
-                            </button>
-                        </div>
-
-                        {/* Image grid grouped by category */}
-                        {images.length === 0 && (
-                            <p className="text-sm text-(--text-color) italic">No images yet.</p>
-                        )}
-                        {(() => {
-                            const categories = ["", ...new Set(images.map((img) => img.category).filter(Boolean))];
-                            return categories.map((cat) => {
-                                const group = images.filter((img) =>
-                                    cat === "" ? !img.category : img.category === cat,
-                                );
-                                if (group.length === 0) return null;
-                                return (
-                                    <div key={cat || "__uncategorized"}>
-                                        <p className="text-xs font-semibold text-(--text-color) uppercase mb-2">
-                                            {cat || "Uncategorized"}
-                                        </p>
-                                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                                            {group.map((img) => (
-                                                <div
-                                                    key={img.id}
-                                                    className="relative group border border-(--outline)/30 rounded overflow-hidden"
-                                                >
-                                                    <img
-                                                        src={img.url}
-                                                        alt={img.title}
-                                                        className="w-full h-16 object-contain bg-white"
-                                                    />
-                                                    <p className="text-xs text-(--text-color) px-1 py-0.5 truncate">
-                                                        {img.title}
-                                                    </p>
-                                                    <button
-                                                        onClick={() => deleteImage(img.id)}
-                                                        className="absolute top-1 right-1 bg-black/60 text-white rounded p-0.5 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                                                    >
-                                                        <Trash size={12} />
-                                                    </button>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                );
-                            });
-                        })()}
-                    </div>
-                )}
-            </div>
-
-            {/* Add Section bar — stacks vertically on mobile, row on sm+ */}
-            <div className="max-w-4xl mb-4 flex flex-col sm:flex-row gap-2">
-                <input
-                    type="text"
-                    value={newSectionName}
-                    onChange={(e) => setNewSectionName(e.target.value)}
-                    placeholder="New section name"
-                    className="bg-(--red-brown) text-white px-3 py-2 rounded w-full sm:flex-1"
-                />
-                <button
-                    onClick={createSection}
-                    className="bg-(--red-brown) text-white px-4 py-2 rounded hover: cursor-pointer w-full sm:w-auto"
-                >
-                    Add Section
-                </button>
-            </div>
-
-            {/* Add Page bar */}
-            <div className="max-w-4xl mb-4 flex flex-col sm:flex-row gap-2">
-                <input
-                    type="text"
-                    value={newPageTitle}
-                    onChange={(e) => setNewPageTitle(e.target.value)}
-                    placeholder="New page title"
-                    className="bg-(--red-brown) text-white px-3 py-2 rounded w-full sm:flex-1"
-                    onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                            e.preventDefault();
-                            createPage();
-                        }
-                    }}
-                />
-                <button
-                    onClick={createPage}
-                    className="bg-(--red-brown) text-white px-4 py-2 rounded hover:cursor-pointer w-full sm:w-auto"
-                >
-                    Add Page
-                </button>
+                <div className="flex gap-2">
+                    <input
+                        type="text"
+                        value={newPageTitle}
+                        onChange={(e) => setNewPageTitle(e.target.value)}
+                        placeholder="New page title"
+                        className="bg-(--red-brown) text-white placeholder-white/70 px-3 py-2 rounded flex-1 min-w-0 text-sm"
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                e.preventDefault();
+                                createPage();
+                            }
+                        }}
+                    />
+                    <button
+                        onClick={createPage}
+                        className="bg-(--red-brown) text-white px-3 py-2 rounded cursor-pointer hover:opacity-90 shrink-0 text-sm font-semibold"
+                    >
+                        + Page
+                    </button>
+                </div>
             </div>
 
             {/* ── EXPAND / COLLAPSE ALL button ─────────────────────────────── */}
@@ -1997,6 +2003,8 @@ export default function NavigationPanel() {
                 </div>
             )}
 
+        </div>{/* end px-4 sm:px-0 wrapper */}
+
             {/* Theme editor modal */}
             {themeOpen && editingTheme && (
                 <div
@@ -2170,4 +2178,5 @@ export default function NavigationPanel() {
         </>
     );
 }
+
 
