@@ -334,7 +334,7 @@ export default function Navbar({
                 }
 
                 // Add pages under this section
-                section.pages.forEach((page) => {
+                [...section.pages].sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0)).forEach((page) => {
                     navbarItems.push({
                         id: page.id,
                         slug: page.slug,

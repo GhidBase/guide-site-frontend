@@ -8,7 +8,7 @@ export default function MobileNavbarCategory({
     setOpenedSection,
 }) {
     const title = section.title;
-    const pages = section.pages;
+    const pages = [...section.pages].sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0));
     const linksRef = useRef(null);
     const { gameData, isLDG } = useLoaderData();
 
