@@ -6,7 +6,7 @@ import "../src/tailwind.css";
 
 export function Layout({ children }) {
     return (
-        <html lang="en">
+        <html lang="en" translate="no">
             <head>
                 <meta charSet="UTF-8" />
                 <link rel="icon" type="image/png" href="/LDG_Logo.png" />
