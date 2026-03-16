@@ -59,17 +59,14 @@ const TextBlock = forwardRef(function TextBlock({
             }`}
         >
             {adminMode && (
-                <div className="sticky top-7 h-10 bg-(--accent) border-b border-t sm:border border-(--outline-brown)/50 rounded-t flex items-center z-1">
-                    <div className="flex-1 flex justify-center items-center text-xl">
-                        Text Block
-                        {isDirty && (
-                            <span className="ml-2 text-xs text-(--primary) font-normal opacity-70">• unsaved</span>
-                        )}
-                    </div>
+                <div className="absolute top-2 right-3 flex items-center gap-2 z-10 pointer-events-none">
+                    {isDirty && (
+                        <span className="text-xs text-(--primary) opacity-70 pointer-events-none">unsaved</span>
+                    )}
                     {canDelete && (
                         <button
                             onClick={checkDeletion}
-                            className="flex items-center justify-center px-4 h-full text-sm text-red-700/70 border-l border-(--outline-brown)/25 shrink-0"
+                            className="text-xs text-red-700/60 hover:text-red-700 pointer-events-auto cursor-pointer"
                         >
                             Delete
                         </button>

@@ -246,7 +246,7 @@ export default function PageBuilder() {
                     // block values: id, pageId, content
                     let blockType;
                     const buttons = adminMode && isAdmin ? (
-                        <div className="flex w-full bg-(--accent) border border-(--outline-brown)/50 md:rounded-b -mt-px mb-4">
+                        <div className="flex w-full bg-(--accent) border border-t-0 border-(--outline-brown)/50 md:rounded-b mb-4">
                             <button
                                 onClick={async () => { await addBlock({ nextOrder: block.order + 1 }); }}
                                 className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer"

@@ -175,9 +175,16 @@ export default function SingleImageBlock({
                     adminMode && "border-b border-(--primary) mb-0 bg-black/3 md:rounded"
                 }`}
             >
-                {adminMode && (
-                    <div className="sticky top-7 h-10 bg-(--accent) border-b border-t sm:border border-(--outline-brown)/50 rounded-t flex justify-center items-center text-xl z-1">
-                        Image Block
+                {adminMode && canDelete && (
+                    <div className="absolute top-2 right-3 z-10">
+                        <button
+                            type="button"
+                            onClick={deleteAllFiles}
+                            disabled={loading}
+                            className="text-xs text-red-700/60 hover:text-red-700 cursor-pointer disabled:opacity-50"
+                        >
+                            Delete
+                        </button>
                     </div>
                 )}
 
@@ -185,7 +192,7 @@ export default function SingleImageBlock({
                 <div
                     className={
                         `flex ${verticalAlignClasses[verticalAlign]} px-8 py-4 min-h-24` +
-                        (adminMode ? ` bg-(--accent) border-x border-(--outline-brown)/50` : "")
+                        (adminMode ? ` bg-(--accent) border-x border-t border-(--outline-brown)/50 rounded-t` : "")
                     }
                 >
                     {block.files && block.files.map((file) => (
@@ -231,57 +238,62 @@ export default function SingleImageBlock({
 
                 {/* Settings bar */}
                 {adminMode && (
-                    <div className="flex items-center gap-4 px-4 py-1.5 bg-(--accent) border-x border-t border-(--outline-brown)/50 text-sm flex-wrap">
-                        <div className="flex items-center gap-1">
-                            <span className="text-(--text-color) mr-1">Size:</span>
-                            {["small", "medium", "large", "full"].map((s) => (
-                                <button
-                                    key={s}
-                                    type="button"
-                                    onClick={() => saveSetting("size", s)}
-                                    className={`px-2 py-0.5 rounded capitalize cursor-pointer transition-colors ${
-                                        size === s
-                                            ? "bg-(--primary) text-white"
-                                            : "text-(--text-color) hover:bg-(--surface-background)"
-                                    }`}
-                                >
-                                    {s}
-                                </button>
-                            ))}
+                    <div className="flex flex-wrap justify-center gap-x-5 gap-y-2 px-4 py-2 bg-(--accent) border-x border-t border-(--outline-brown)/50 text-sm items-center">
+                        <div className="flex items-center gap-2">
+                            <div className="flex rounded overflow-hidden border border-(--outline-brown)/40">
+                                {[["small","S"],["medium","M"],["large","L"],["full","Full"]].map(([s, label]) => (
+                                    <button
+                                        key={s}
+                                        type="button"
+                                        onClick={() => saveSetting("size", s)}
+                                        className={`px-2.5 py-0.5 text-xs cursor-pointer transition-colors border-r last:border-r-0 border-(--outline-brown)/40 ${
+                                            size === s
+                                                ? "bg-(--primary) text-white"
+                                                : "text-(--text-color) hover:bg-(--surface-background)"
+                                        }`}
+                                    >
+                                        {label}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
-                        <div className="flex items-center gap-1">
-                            <span className="text-(--text-color) mr-1">Align:</span>
-                            {["left", "center", "right"].map((a) => (
-                                <button
-                                    key={a}
-                                    type="button"
-                                    onClick={() => saveSetting("alignment", a)}
-                                    className={`px-2 py-0.5 rounded capitalize cursor-pointer transition-colors ${
-                                        alignment === a
-                                            ? "bg-(--primary) text-white"
-                                            : "text-(--text-color) hover:bg-(--surface-background)"
-                                    }`}
-                                >
-                                    {a}
-                                </button>
-                            ))}
+                        <div className="flex items-center gap-2">
+                            <div className="flex rounded overflow-hidden border border-(--outline-brown)/40">
+                                {[["left","←"],["center","↔"],["right","→"]].map(([a, icon]) => (
+                                    <button
+                                        key={a}
+                                        type="button"
+                                        onClick={() => saveSetting("alignment", a)}
+                                        title={a}
+                                        className={`px-3 py-0.5 cursor-pointer transition-colors border-r last:border-r-0 border-(--outline-brown)/40 ${
+                                            alignment === a
+                                                ? "bg-(--primary) text-white"
+                                                : "text-(--text-color) hover:bg-(--surface-background)"
+                                        }`}
+                                    >
+                                        {icon}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
-                        <div className="flex items-center gap-1">
-                            <span className="text-(--text-color) mr-1">Vertical:</span>
-                            {["top", "center", "bottom"].map((v) => (
-                                <button
-                                    key={v}
-                                    type="button"
-                                    onClick={() => saveSetting("verticalAlign", v)}
-                                    className={`px-2 py-0.5 rounded capitalize cursor-pointer transition-colors ${
-                                        verticalAlign === v
-                                            ? "bg-(--primary) text-white"
-                                            : "text-(--text-color) hover:bg-(--surface-background)"
-                                    }`}
-                                >
-                                    {v}
-                                </button>
-                            ))}
+                        <div className="flex items-center gap-2">
+                            <div className="flex rounded overflow-hidden border border-(--outline-brown)/40">
+                                {[["top","↑"],["center","↕"],["bottom","↓"]].map(([v, icon]) => (
+                                    <button
+                                        key={v}
+                                        type="button"
+                                        onClick={() => saveSetting("verticalAlign", v)}
+                                        title={v}
+                                        className={`px-3 py-0.5 cursor-pointer transition-colors border-r last:border-r-0 border-(--outline-brown)/40 ${
+                                            verticalAlign === v
+                                                ? "bg-(--primary) text-white"
+                                                : "text-(--text-color) hover:bg-(--surface-background)"
+                                        }`}
+                                    >
+                                        {icon}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
                     </div>
                 )}
@@ -299,7 +311,6 @@ export default function SingleImageBlock({
                             flex flex-row-reverse
                             w-full justify-between
                             h-10
-                            rounded-b
                             bg-(--accent)"
                     >
                         <input type="hidden" name="id" value="<%= folder.id %>" />
@@ -337,18 +348,6 @@ export default function SingleImageBlock({
                         >
                             From Pool
                         </button>
-                        {canDelete && (
-                            <button
-                                type="button"
-                                onClick={deleteAllFiles}
-                                disabled={loading}
-                                className="text-red-700/70
-                                    flex items-center justify-center text-center
-                                    w-full h-full"
-                            >
-                                Delete All
-                            </button>
-                        )}
                     </form>
                 )}
             </div>
