@@ -14,9 +14,14 @@ export default function Main() {
     usePageTracking();
     const [navOpen, setNavOpen] = useState(false);
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+    const [navbarLayout, setNavbarLayout] = useState("vertical");
 
     function toggleSidebar() {
         setSidebarCollapsed((prev) => !prev);
+    }
+
+    function toggleNavbarLayout() {
+        setNavbarLayout((prev) => (prev === "vertical" ? "horizontal" : "vertical"));
     }
     const { gameData } = useLoaderData();
     const { theme, setTheme } = useTheme();
@@ -65,7 +70,7 @@ export default function Main() {
             className="h-full w-full flex flex-col grow box-border custom-background"
             style={themeToStyle(theme)}
         >
-            <Title></Title>
+            <Title navbarLayout={navbarLayout} toggleNavbarLayout={toggleNavbarLayout} />
             {
                 // title is partially styled in the file tailwind.css
             }
@@ -74,9 +79,9 @@ export default function Main() {
                 className={`relative w-full box-border border-t-4 border-(--outline) flex flex-1
                 bg-(--surface-background)
                 transition-[padding] duration-300 ease-in-out
-                ${gameData && !sidebarCollapsed && "xl:pr-30 2xl:pr-60"} `}
+                ${gameData && !sidebarCollapsed && navbarLayout === "vertical" && "xl:pr-30 2xl:pr-60"} `}
             >
-                {gameData && (
+                {gameData && navbarLayout === "vertical" && (
                     <Navbar
                         className={`
                             w-60 max-w-60 min-w-60 lg:min-w-0 z-3 lg:h-full
@@ -97,7 +102,7 @@ export default function Main() {
                             bg-(--primary) border-4 border-t-0 border-(--outline)`}
                     ></Navbar>
                 )}
-                {gameData && (
+                {gameData && navbarLayout === "vertical" && (
                     <div className="hidden lg:block w-0 overflow-visible self-start sticky top-3 z-10">
                         <button
                             onClick={toggleSidebar}
