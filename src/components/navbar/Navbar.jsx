@@ -10,6 +10,7 @@ export default function Navbar({
     obstructorClassName,
     toggleNav,
     closeClassName,
+    toggleSidebar,
 }) {
     const { gameData, sectionsMap, isLDG } = useLoaderData();
     const { isAuthenticated, user, logout, isLoading } = useAuth();

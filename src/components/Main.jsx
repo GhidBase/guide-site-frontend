@@ -7,10 +7,16 @@ import MobileNavbar from "./navbar/MobileNavbar.jsx";
 import { useEffect, useState } from "react";
 import { usePageTracking } from "../hooks/usePageTracking.js";
 import { useTheme, themeToStyle } from "../contexts/ThemeProvider.jsx";
+import { PanelLeftOpen, PanelLeftClose } from "lucide-react";
 
 export default function Main() {
     usePageTracking();
     const [navOpen, setNavOpen] = useState(false);
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+    function toggleSidebar() {
+        setSidebarCollapsed((prev) => !prev);
+    }
     const { gameData } = useLoaderData();
     const { theme, setTheme } = useTheme();
 
@@ -64,7 +70,7 @@ export default function Main() {
             }
             <div
                 id="side-bar-and-content"
-                className={`w-full box-border border-t-4 border-(--outline) flex flex-1
+                className={`relative w-full box-border border-t-4 border-(--outline) flex flex-1
                 bg-(--surface-background)
                 ${gameData && "xl:pr-30 2xl:pr-60"} `}
             >
@@ -73,19 +79,32 @@ export default function Main() {
                         className={`
                             w-60 max-w-60 min-w-60 z-3 lg:h-full
                             ${navOpen ? "fixed" : "hidden"} right-[50%] top-4 bottom-20 translate-x-1/2 lg:static lg:translate-0
-                            hidden lg:fixed
+                            hidden ${sidebarCollapsed ? "lg:hidden" : "lg:flex lg:flex-col"}
                             border-4 border-(--outline) lg:border-t-0 lg:border-b-0 lg:border-l-0 lg:border-r-4
-                            bg-(--primary)   
-                            lg:flex lg:flex-col
+                            bg-(--primary)
                             overflow-y-auto overflow-x-hidden`}
                         obstructorClassName={`z-1 ${navOpen ? "fixed" : "hidden"} top-0 w-full h-full bg-black/30`}
                         toggleNav={toggleNav}
                         navOpen={navOpen}
+                        toggleSidebar={toggleSidebar}
                         closeClassName={`
                             ${navOpen ? "fixed" : "hidden"}
                             w-60 max-w-100 bottom-4 h-16 z-2 right-[50%] translate-x-1/2
                             bg-(--primary) border-4 border-t-0 border-(--outline)`}
                     ></Navbar>
+                )}
+                {gameData && (
+                    <button
+                        onClick={toggleSidebar}
+                        className={`hidden lg:flex items-center justify-center absolute top-3 z-10 p-1.5 rounded border-2 border-(--outline) bg-(--primary) cursor-pointer hover:opacity-80
+                            ${sidebarCollapsed ? "left-3" : "left-[calc(15rem+0.75rem)]"}`}
+                        title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                    >
+                        {sidebarCollapsed
+                            ? <PanelLeftOpen className="w-5 h-5 text-amber-50" />
+                            : <PanelLeftClose className="w-5 h-5 text-amber-50" />
+                        }
+                    </button>
                 )}
                 <div
                     id="page-outer-bounds"
