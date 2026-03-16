@@ -86,7 +86,7 @@ function HorizontalSearch({ gameData, isLDG }) {
     );
 }
 
-export default function HorizontalNavbar({ toggleNavbarLayout }) {
+export default function HorizontalNavbar({ toggleNavbarLayout, title, isLDGHomepage, ldgLogo }) {
     const { gameData, sectionsMap, isLDG } = useRouteLoaderData("main");
     const { isAuthenticated, user, logout } = useAuth();
     const navigate = useNavigate();
@@ -116,17 +116,22 @@ export default function HorizontalNavbar({ toggleNavbarLayout }) {
     return (
         <div className="flex flex-col h-full w-full">
 
-            {/* Top area: big game name centered, auth top-right, toggle top-right */}
-            <div className="flex-1 relative flex items-center justify-center">
-                <button
-                    onClick={() => navigateTo(isLDG ? "/" : "/games/" + gameData?.slug)}
-                    className="text-amber-50 font-bold text-3xl md:text-5xl text-center hover:opacity-80 transition-opacity"
-                >
-                    {gameData?.title}
-                </button>
+            {/* Top area: 3-column — spacer | title | auth+toggle */}
+            <div className="flex-1 flex items-center px-4 gap-4">
+                {/* Left spacer — mirrors auth width so title stays truly centered */}
+                <div className="flex-1" />
 
-                {/* Auth + toggle — overlaid top-right */}
-                <div className="absolute right-4 inset-y-0 flex items-center gap-2" style={{ textShadow: "none" }}>
+                {/* Title — centered, styled same as vertical mode */}
+                <div className="flex items-center justify-center text-4xl md:text-7xl">
+                    {isLDGHomepage && ldgLogo ? (
+                        <img src={ldgLogo} className="object-cover md:h-30 lg:h-35" alt={gameData?.title} />
+                    ) : (
+                        title || gameData?.title
+                    )}
+                </div>
+
+                {/* Right — auth + toggle */}
+                <div className="flex-1 flex items-center justify-end gap-2" style={{ textShadow: "none" }}>
                     {isAuthenticated ? (
                         <>
                             <span className="text-amber-50/90 text-base font-semibold hidden md:block">{user?.username}</span>

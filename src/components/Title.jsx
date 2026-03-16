@@ -19,11 +19,19 @@ export default function Title({ navbarLayout, toggleNavbarLayout }) {
 
     if (navbarLayout === "horizontal" && gameData) {
         return (
-            <div
-                id="page-builder-title"
-                className="title flex flex-col h-30 md:h-45 relative z-20"
-            >
-                <HorizontalNavbar toggleNavbarLayout={toggleNavbarLayout} />
+            <div id="page-builder-title" className="title relative z-20 !px-0">
+                {/* Horizontal navbar — desktop only */}
+                <div className="hidden md:flex flex-col h-45 w-full">
+                    <HorizontalNavbar toggleNavbarLayout={toggleNavbarLayout} title={title} isLDGHomepage={isLDGHomepage} ldgLogo={ldgLogo} />
+                </div>
+                {/* Normal title — mobile only */}
+                <div className="md:hidden relative flex items-center justify-center text-4xl h-30">
+                    {isLDGHomepage ? (
+                        <img src={ldgLogo} className="object-cover h-20" alt="" />
+                    ) : (
+                        title
+                    )}
+                </div>
             </div>
         );
     }
