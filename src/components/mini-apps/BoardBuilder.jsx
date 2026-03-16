@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import html2canvas from "html2canvas";
 import { currentAPI } from "../../config/api";
 import { useRouteLoaderData } from "react-router";
 import { useAuth } from "../../hooks/useAuth";
@@ -161,6 +162,7 @@ export default function BoardBuilder() {
     const [editBoardBgPicker, setEditBoardBgPicker] = useState(false);
 
     const dragUnitRef = useRef(null);
+    const boardRef = useRef(null);
     const storageKey = `board-cells-${gameId}`;
 
     // Load cells from localStorage
@@ -257,68 +259,10 @@ export default function BoardBuilder() {
     }
 
     async function saveAsPng() {
-        const board = effectiveBoard;
-        const EXPORT_W = 1200;
-        const EXPORT_H = Math.round(EXPORT_W * board.rows * (board.heightScale ?? 1) / board.cols);
-
-        const canvas = document.createElement("canvas");
-        canvas.width = EXPORT_W;
-        canvas.height = EXPORT_H;
-        const ctx = canvas.getContext("2d");
-
-        // Draw background image
-        if (board.bgImage) {
-            const img = new Image();
-            img.crossOrigin = "anonymous";
-            await new Promise(r => { img.onload = r; img.onerror = r; img.src = board.bgImage; });
-
-            const bgSize = board.bgSize || "cover";
-            let drawW, drawH;
-            if (bgSize === "contain") {
-                const scale = Math.min(EXPORT_W / img.width, EXPORT_H / img.height);
-                drawW = img.width * scale; drawH = img.height * scale;
-            } else if (bgSize.endsWith("%")) {
-                drawW = EXPORT_W * parseInt(bgSize) / 100;
-                drawH = (drawW / img.width) * img.height;
-            } else { // cover
-                const scale = Math.max(EXPORT_W / img.width, EXPORT_H / img.height);
-                drawW = img.width * scale; drawH = img.height * scale;
-            }
-            const drawX = (EXPORT_W - drawW) / 2 + (board.bgX ?? 0);
-            const drawY = (EXPORT_H - drawH) / 2 + (board.bgY ?? 0);
-            ctx.drawImage(img, drawX, drawY, drawW, drawH);
-        }
-
-        // Calculate grid area
-        const gridLeft   = EXPORT_W * ((board.bgPaddingX ?? 0) + (board.gridOffsetX ?? 0)) / 100;
-        const gridRight  = EXPORT_W * (1 - ((board.bgPaddingX ?? 0) - (board.gridOffsetX ?? 0)) / 100);
-        const gridTop    = EXPORT_H * ((board.bgPaddingY ?? 0) + (board.gridOffsetY ?? 0)) / 100;
-        const gridBottom = EXPORT_H * (1 - ((board.bgPaddingY ?? 0) - (board.gridOffsetY ?? 0)) / 100);
-        const cellW = (gridRight - gridLeft) / board.cols;
-        const cellH = (gridBottom - gridTop) / board.rows;
-
-        // Draw units
-        const boardCells = getCells(board.id, board.rows, board.cols);
-        for (let row = 0; row < board.rows; row++) {
-            for (let col = 0; col < board.cols; col++) {
-                const unitId = boardCells[row]?.[col];
-                if (!unitId) continue;
-                const unit = unitsById[unitId];
-                if (!unit) continue;
-                const img = new Image();
-                img.crossOrigin = "anonymous";
-                await new Promise(r => { img.onload = r; img.onerror = r; img.src = unit.imageUrl; });
-                const pad = 0.1;
-                ctx.drawImage(img,
-                    gridLeft + col * cellW + cellW * pad,
-                    gridTop  + row * cellH + cellH * pad,
-                    cellW * 0.8, cellH * 0.8
-                );
-            }
-        }
-
+        if (!boardRef.current) return;
+        const canvas = await html2canvas(boardRef.current, { backgroundColor: null });
         const link = document.createElement("a");
-        link.download = `${board.name || "board"}.png`;
+        link.download = `${effectiveBoard.name || "board"}.png`;
         link.href = canvas.toDataURL("image/png");
         link.click();
     }
@@ -498,6 +442,7 @@ export default function BoardBuilder() {
                         {/* Board */}
                         <div className="w-full min-w-0 flex flex-col items-center">
                             <div
+                                ref={boardRef}
                                 className="relative select-none rounded overflow-hidden"
                                 style={{
                                     width: `${(effectiveBoard.widthScale ?? 1) * 100}%`,
