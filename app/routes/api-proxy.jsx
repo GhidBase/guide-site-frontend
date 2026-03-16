@@ -1,4 +1,4 @@
-const BACKEND = process.env.VITE_SERVER;
+const BACKEND = import.meta.env.VITE_SERVER;
 
 async function proxy(request, params) {
     const path = params["*"];
