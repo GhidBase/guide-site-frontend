@@ -72,17 +72,20 @@ export default function Main() {
                 id="side-bar-and-content"
                 className={`relative w-full box-border border-t-4 border-(--outline) flex flex-1
                 bg-(--surface-background)
+                transition-[padding] duration-300 ease-in-out
                 ${gameData && !sidebarCollapsed && "xl:pr-30 2xl:pr-60"} `}
             >
                 {gameData && (
                     <Navbar
                         className={`
-                            w-60 max-w-60 min-w-60 z-3 lg:h-full
-                            ${navOpen ? "fixed" : "hidden"} right-[50%] top-4 bottom-20 translate-x-1/2 lg:static lg:translate-0
-                            hidden ${sidebarCollapsed ? "lg:hidden" : "lg:flex lg:flex-col"}
-                            border-4 border-(--outline) lg:border-t-0 lg:border-b-0 lg:border-l-0 lg:border-r-4
+                            w-60 max-w-60 min-w-60 lg:min-w-0 z-3 lg:h-full
+                            ${navOpen ? "fixed" : "hidden"} right-[50%] top-4 bottom-20 translate-x-1/2 lg:static lg:translate-x-0
+                            hidden lg:flex lg:flex-col
+                            ${sidebarCollapsed ? "lg:w-0 lg:border-r-0" : "lg:w-60 lg:border-r-4"}
+                            border-4 border-(--outline) lg:border-t-0 lg:border-b-0 lg:border-l-0
                             bg-(--primary)
-                            overflow-y-auto overflow-x-hidden`}
+                            overflow-y-auto overflow-x-hidden whitespace-nowrap
+                            transition-[width] duration-300 ease-in-out`}
                         obstructorClassName={`z-1 ${navOpen ? "fixed" : "hidden"} top-0 w-full h-full bg-black/30`}
                         toggleNav={toggleNav}
                         navOpen={navOpen}
