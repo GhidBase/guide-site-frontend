@@ -1,1 +1,0 @@
-import{j as t}from"./jsx-runtime-D_zvdyIk.js";import"./index-CBUVxBP-.js";function n(){return t.jsxs("div",{className:"content-block",children:[t.jsx("h1",{children:"404"}),t.jsx("p",{children:"This page doesn't exist"})]})}const o={title:"404"};export{n as default,o as handle};

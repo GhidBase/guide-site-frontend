@@ -5,8 +5,10 @@ export const handle = { title: "Dashboard" };
 
 export default function Dashboard() {
     return (
-        <ProtectedRoute requiredRole="EDITOR">
-            <DashboardContent />
-        </ProtectedRoute>
+        <div style={{ viewTransitionName: "page-content" }}>
+            <ProtectedRoute requiredRole="EDITOR">
+                <DashboardContent />
+            </ProtectedRoute>
+        </div>
     );
 }

@@ -1,18 +1,18 @@
 import NavbarButton from "./NavbarButton";
-import { useLoaderData, Link, useNavigate } from "react-router";
+import { useRouteLoaderData, Link, useNavigate } from "react-router";
 import { Fragment, useState } from "react";
 import NavbarSection from "./NavbarSection";
 import NavbarEditButton from "./NavbarEditButton";
 import { useAuth } from "@/hooks/useAuth";
+import SearchBar from "../SearchBar";
 
 export default function Navbar({
     className,
     obstructorClassName,
     toggleNav,
     closeClassName,
-    toggleSidebar,
 }) {
-    const { gameData, sectionsMap, isLDG } = useLoaderData();
+    const { gameData, sectionsMap, isLDG } = useRouteLoaderData("main");
     const { isAuthenticated, user, logout, isLoading } = useAuth();
     const isAdmin = user?.role == "ADMIN";
     const navigate = useNavigate();
@@ -25,7 +25,7 @@ export default function Navbar({
     }
 
     async function handleLogout() {
-        const res = await logout();
+        await logout();
         //navigate("/");
         toggleNav(false);
     }
@@ -345,6 +345,11 @@ export default function Navbar({
                 <div className="w-full flex flex-col">
                     {!isLoading && (
                         <div className="w-full border-b-4 border-(--outline)">
+                            {sectionsMap && (
+                                <div className="px-3 py-2 bg-(--surface-background)">
+                                    <SearchBar />
+                                </div>
+                            )}
                             {isAuthenticated ? (
                                 <div className="w-full flex flex-col p-4 bg-(--surface-background)">
                                     <p className="text-xl text-(--text-color) text-center font-semibold mb-3">

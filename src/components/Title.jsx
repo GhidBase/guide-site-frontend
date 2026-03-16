@@ -14,6 +14,7 @@ export default function Title() {
     }, [pageSlug]);
 
     title = !!hardCodedTitle ? hardCodedTitle : pageData?.page?.title;
+    const isLDGHomepage = title == "LD Homepage";
 
     return (
         <div
@@ -21,7 +22,7 @@ export default function Title() {
             className="title flex items-center justify-center text-4xl md:text-7xl h-30 md:h-45"
             // title is partially styled in tailwind.css
         >
-            {title == "LD Homepage" ? (
+            {isLDGHomepage ? (
                 <img
                     src={ldgLogo}
                     className=" object-cover md:h-30 lg:h-35"

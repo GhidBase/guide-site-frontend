@@ -1,4 +1,4 @@
-import { useLoaderData, Link } from "react-router";
+import { useLoaderData, useNavigate } from "react-router";
 import { useRef } from "react";
 
 export default function MobileNavbarCategory({
@@ -11,6 +11,7 @@ export default function MobileNavbarCategory({
     const pages = [...section.pages].sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0));
     const linksRef = useRef(null);
     const { gameData, isLDG } = useLoaderData();
+    const navigate = useNavigate();
 
     return (
         <div id="mobile-menu-category" className="mb-[8px] w-full ">
@@ -45,15 +46,18 @@ export default function MobileNavbarCategory({
                             "/games/" + gameData.slug + "/" + page.slug;
                     }
                     return (
-                        <Link
+                        <button
                             key={page.id}
-                            className="block px-[12px] py-[10px] border-t-[1px] border-(--outline-brown) text-black "
-                            to={actualSlug}
-                            onClick={toggleNav}
-                            viewTransition
+                            className="block w-full text-left px-[12px] py-[10px] border-t-[1px] border-(--outline-brown) text-black cursor-pointer"
+                            onClick={() => {
+                                toggleNav(false);
+                                setTimeout(() => {
+                                    navigate(actualSlug, { viewTransition: true });
+                                }, 250);
+                            }}
                         >
                             {page.title}
-                        </Link>
+                        </button>
                     );
                 })}
             </div>

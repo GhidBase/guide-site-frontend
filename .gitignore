@@ -30,3 +30,6 @@ bugs.txt
 
 # React Router auto-generated types
 .react-router/
+
+# Build output
+build/

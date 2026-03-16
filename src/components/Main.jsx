@@ -72,7 +72,7 @@ export default function Main() {
                 id="side-bar-and-content"
                 className={`relative w-full box-border border-t-4 border-(--outline) flex flex-1
                 bg-(--surface-background)
-                ${gameData && "xl:pr-30 2xl:pr-60"} `}
+                ${gameData && !sidebarCollapsed && "xl:pr-30 2xl:pr-60"} `}
             >
                 {gameData && (
                     <Navbar
@@ -94,17 +94,23 @@ export default function Main() {
                     ></Navbar>
                 )}
                 {gameData && (
-                    <button
-                        onClick={toggleSidebar}
-                        className={`hidden lg:flex items-center justify-center absolute top-3 z-10 p-1.5 rounded border-2 border-(--outline) bg-(--primary) cursor-pointer hover:opacity-80
-                            ${sidebarCollapsed ? "left-3" : "left-[calc(15rem+0.75rem)]"}`}
-                        title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-                    >
-                        {sidebarCollapsed
-                            ? <PanelLeftOpen className="w-5 h-5 text-amber-50" />
-                            : <PanelLeftClose className="w-5 h-5 text-amber-50" />
-                        }
-                    </button>
+                    <div className="hidden lg:block w-0 overflow-visible self-start sticky top-3 z-10">
+                        <button
+                            onClick={toggleSidebar}
+                            className="flex items-center justify-center ml-3 mt-3 p-1.5 rounded border-2 border-(--outline) bg-(--primary) cursor-pointer hover:opacity-80"
+                            title={
+                                sidebarCollapsed
+                                    ? "Expand sidebar"
+                                    : "Collapse sidebar"
+                            }
+                        >
+                            {sidebarCollapsed ? (
+                                <PanelLeftOpen className="w-5 h-5 text-amber-50" />
+                            ) : (
+                                <PanelLeftClose className="w-5 h-5 text-amber-50" />
+                            )}
+                        </button>
+                    </div>
                 )}
                 <div
                     id="page-outer-bounds"
