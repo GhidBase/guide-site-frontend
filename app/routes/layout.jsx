@@ -12,7 +12,7 @@ export function meta({ data, location }) {
     const pageTitle = data?.pageData?.page?.title;
     const isHomepage = !pageTitle || pageTitle === "LD Homepage";
     const title = isHomepage ? siteName : `${pageTitle} | ${siteName}`;
-    const description = data?.pageData?.page?.description || SITE_DESCRIPTION;
+    const description = data?.pageData?.page?.description || (isHomepage ? SITE_DESCRIPTION : "");
     const base = import.meta.env.VITE_PUBLIC_URL || data?.origin || "";
     const ogImage = `${base}${OG_IMAGE}`;
     const ogUrl = `${base}${location.pathname}`;
