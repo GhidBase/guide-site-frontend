@@ -29,14 +29,6 @@ export default function MobileNavbar({ toggleNav, navOpen }) {
         );
     }
 
-    if (gameData.title == "Lucky Defense") {
-        navbarItems.push({
-            id: 32,
-            slug: "immortal-guardians",
-            title: "Immortal Guardians",
-        });
-    }
-
     const actualSections = sections.map((section) => ({
         ...section,
         pages: [...section.pages],

@@ -31,12 +31,6 @@ export default function Navbar({
 
     const navbar = [
         {
-            id: 32,
-            slug: gameSlug + "/immortal-guardians",
-            navbarTitle: "Immortal Guardians",
-            type: "page",
-        },
-        {
             id: 2,
             slug: gameSlug,
             navbarTitle: "Homepage",
@@ -283,15 +277,6 @@ export default function Navbar({
                 //nonEditable: true,
             },
         );
-    }
-
-    if (gameData.title == "Lucky Defense") {
-        navbarItems.push({
-            id: 32,
-            slug: "immortal-guardians",
-            navbarTitle: "Immortal Guardians",
-            type: "page",
-        });
     }
 
     const dynamicNav = true;

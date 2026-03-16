@@ -43,11 +43,6 @@ type Pages = {
       "gameSlug": string;
     };
   };
-  "/games/:gameSlug/immortal-guardians": {
-    params: {
-      "gameSlug": string;
-    };
-  };
   "/games/:gameSlug/flea-guide": {
     params: {
       "gameSlug": string;
@@ -74,9 +69,6 @@ type Pages = {
     };
   };
   "/guardian-upgrade-costs": {
-    params: {};
-  };
-  "/immortal-guardians": {
     params: {};
   };
   "/login": {
@@ -116,7 +108,7 @@ type Pages = {
 type RouteFiles = {
   "root.jsx": {
     id: "root";
-    page: "/" | "/ads.txt" | "/pages/:page" | "/:pageSlug" | "/games/:gameSlug" | "/games/:gameSlug/:pageSlug" | "/games/:gameSlug/guardian-upgrade-costs" | "/games/:gameSlug/immortal-guardians" | "/games/:gameSlug/flea-guide" | "/games/:gameSlug/page-manager" | "/games/:gameSlug/game-manager" | "/games/:gameSlug/navigation-panel" | "/games/:gameSlug/leaderboard" | "/guardian-upgrade-costs" | "/immortal-guardians" | "/login" | "/signup" | "/dashboard" | "/access-denied" | "/page-manager" | "/game-manager" | "/navigation-panel" | "/leaderboard" | "/404" | "/*";
+    page: "/" | "/ads.txt" | "/pages/:page" | "/:pageSlug" | "/games/:gameSlug" | "/games/:gameSlug/:pageSlug" | "/games/:gameSlug/guardian-upgrade-costs" | "/games/:gameSlug/flea-guide" | "/games/:gameSlug/page-manager" | "/games/:gameSlug/game-manager" | "/games/:gameSlug/navigation-panel" | "/games/:gameSlug/leaderboard" | "/guardian-upgrade-costs" | "/login" | "/signup" | "/dashboard" | "/access-denied" | "/page-manager" | "/game-manager" | "/navigation-panel" | "/leaderboard" | "/404" | "/*";
   };
   "routes/ads-txt.jsx": {
     id: "routes/ads-txt";
@@ -128,7 +120,7 @@ type RouteFiles = {
   };
   "routes/layout.jsx": {
     id: "main";
-    page: "/" | "/:pageSlug" | "/games/:gameSlug" | "/games/:gameSlug/:pageSlug" | "/games/:gameSlug/guardian-upgrade-costs" | "/games/:gameSlug/immortal-guardians" | "/games/:gameSlug/flea-guide" | "/games/:gameSlug/page-manager" | "/games/:gameSlug/game-manager" | "/games/:gameSlug/navigation-panel" | "/games/:gameSlug/leaderboard" | "/guardian-upgrade-costs" | "/immortal-guardians" | "/login" | "/signup" | "/dashboard" | "/access-denied" | "/page-manager" | "/game-manager" | "/navigation-panel" | "/leaderboard" | "/404" | "/*";
+    page: "/" | "/:pageSlug" | "/games/:gameSlug" | "/games/:gameSlug/:pageSlug" | "/games/:gameSlug/guardian-upgrade-costs" | "/games/:gameSlug/flea-guide" | "/games/:gameSlug/page-manager" | "/games/:gameSlug/game-manager" | "/games/:gameSlug/navigation-panel" | "/games/:gameSlug/leaderboard" | "/guardian-upgrade-costs" | "/login" | "/signup" | "/dashboard" | "/access-denied" | "/page-manager" | "/game-manager" | "/navigation-panel" | "/leaderboard" | "/404" | "/*";
   };
   "routes/home.jsx": {
     id: "routes/home";
@@ -140,7 +132,7 @@ type RouteFiles = {
   };
   "routes/game-layout.jsx": {
     id: "routes/game-layout";
-    page: "/games/:gameSlug" | "/games/:gameSlug/:pageSlug" | "/games/:gameSlug/guardian-upgrade-costs" | "/games/:gameSlug/immortal-guardians" | "/games/:gameSlug/flea-guide" | "/games/:gameSlug/page-manager" | "/games/:gameSlug/game-manager" | "/games/:gameSlug/navigation-panel" | "/games/:gameSlug/leaderboard";
+    page: "/games/:gameSlug" | "/games/:gameSlug/:pageSlug" | "/games/:gameSlug/guardian-upgrade-costs" | "/games/:gameSlug/flea-guide" | "/games/:gameSlug/page-manager" | "/games/:gameSlug/game-manager" | "/games/:gameSlug/navigation-panel" | "/games/:gameSlug/leaderboard";
   };
   "routes/game-home.jsx": {
     id: "routes/game-home";
@@ -156,13 +148,6 @@ type RouteFiles = {
   } | {
     id: "top-guardian-costs";
     page: "/guardian-upgrade-costs";
-  };
-  "routes/immortal-guardians.jsx": {
-    id: "game-immortal-guardians";
-    page: "/games/:gameSlug/immortal-guardians";
-  } | {
-    id: "top-immortal-guardians";
-    page: "/immortal-guardians";
   };
   "routes/flea-guide.jsx": {
     id: "routes/flea-guide";
@@ -232,14 +217,12 @@ type RouteModules = {
   "routes/game-home": typeof import("./app/routes/game-home.jsx");
   "game-page-slug": typeof import("./app/routes/game-page.jsx");
   "game-guardian-costs": typeof import("./app/routes/guardian-costs.jsx");
-  "game-immortal-guardians": typeof import("./app/routes/immortal-guardians.jsx");
   "routes/flea-guide": typeof import("./app/routes/flea-guide.jsx");
   "game-page-manager": typeof import("./app/routes/page-manager.jsx");
   "game-game-manager": typeof import("./app/routes/game-manager.jsx");
   "game-navigation-panel": typeof import("./app/routes/navigation-panel.jsx");
   "game-leaderboard": typeof import("./app/routes/leaderboard.jsx");
   "top-guardian-costs": typeof import("./app/routes/guardian-costs.jsx");
-  "top-immortal-guardians": typeof import("./app/routes/immortal-guardians.jsx");
   "routes/login": typeof import("./app/routes/login.jsx");
   "routes/signup": typeof import("./app/routes/signup.jsx");
   "routes/dashboard": typeof import("./app/routes/dashboard.jsx");

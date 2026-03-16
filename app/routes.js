@@ -14,7 +14,6 @@ export default [
             index("routes/game-home.jsx"),
             route(":pageSlug", "routes/game-page.jsx", { id: "game-page-slug" }),
             route("guardian-upgrade-costs", "routes/guardian-costs.jsx", { id: "game-guardian-costs" }),
-            route("immortal-guardians", "routes/immortal-guardians.jsx", { id: "game-immortal-guardians" }),
             route("flea-guide", "routes/flea-guide.jsx"),
             route("page-manager", "routes/page-manager.jsx", { id: "game-page-manager" }),
             route("game-manager", "routes/game-manager.jsx", { id: "game-game-manager" }),
@@ -24,7 +23,6 @@ export default [
 
         // Top-level LDG-mode special routes
         route("guardian-upgrade-costs", "routes/guardian-costs.jsx", { id: "top-guardian-costs" }),
-        route("immortal-guardians", "routes/immortal-guardians.jsx", { id: "top-immortal-guardians" }),
 
         route("login", "routes/login.jsx"),
         route("signup", "routes/signup.jsx"),
