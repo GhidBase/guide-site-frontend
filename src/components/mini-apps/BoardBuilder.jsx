@@ -252,32 +252,34 @@ export default function BoardBuilder() {
                 </p>
             )}
 
+            {/* Admin toggle — always visible to admins */}
+            {isAdmin && (
+                <div className="flex justify-end">
+                    <button
+                        onClick={() => setAdminOpen(o => !o)}
+                        className="px-3 py-1.5 text-sm bg-(--primary) text-amber-50 rounded cursor-pointer hover:opacity-90"
+                    >
+                        {adminOpen ? "Close Admin" : "Manage"}
+                    </button>
+                </div>
+            )}
+
             {currentBoard && (
                 <>
                     {/* Board toolbar */}
-                    <div className="flex flex-wrap gap-2 items-center justify-between">
-                        <div className="flex gap-2 flex-wrap items-center">
-                            <span className="text-sm font-medium text-(--text-color) opacity-70">
-                                {currentBoard.name}
-                            </span>
-                            <span className="text-xs text-(--text-color) opacity-40">
-                                {currentBoard.rows}×{currentBoard.cols}
-                            </span>
-                            <button
-                                onClick={clearBoard}
-                                className="px-3 py-1.5 text-sm bg-(--accent) border border-(--outline-brown)/50 text-(--text-color) rounded cursor-pointer hover:bg-(--surface-background)"
-                            >
-                                Clear
-                            </button>
-                        </div>
-                        {isAdmin && (
-                            <button
-                                onClick={() => setAdminOpen(o => !o)}
-                                className="px-3 py-1.5 text-sm bg-(--primary) text-amber-50 rounded cursor-pointer hover:opacity-90"
-                            >
-                                {adminOpen ? "Close Admin" : "Manage"}
-                            </button>
-                        )}
+                    <div className="flex flex-wrap gap-2 items-center">
+                        <span className="text-sm font-medium text-(--text-color) opacity-70">
+                            {currentBoard.name}
+                        </span>
+                        <span className="text-xs text-(--text-color) opacity-40">
+                            {currentBoard.rows}×{currentBoard.cols}
+                        </span>
+                        <button
+                            onClick={clearBoard}
+                            className="px-3 py-1.5 text-sm bg-(--accent) border border-(--outline-brown)/50 text-(--text-color) rounded cursor-pointer hover:bg-(--surface-background)"
+                        >
+                            Clear
+                        </button>
                     </div>
 
                     {/* Board + Unit panel */}
