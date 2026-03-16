@@ -68,6 +68,9 @@ export default function NavigationPanel() {
     const [imageUploadTitle, setImageUploadTitle] = useState("");
     const [imageUploadCategory, setImageUploadCategory] = useState("");
     const [imageUploading, setImageUploading] = useState(false);
+    const [bulkFiles, setBulkFiles] = useState([]);
+    const [bulkCategory, setBulkCategory] = useState("");
+    const [bulkProgress, setBulkProgress] = useState(null); // null | { done, total }
 
     useEffect(() => {
         if (!gameId) return;
@@ -102,6 +105,53 @@ export default function NavigationPanel() {
         } finally {
             setImageUploading(false);
         }
+    }
+
+    async function bulkUploadImages(category) {
+        if (bulkFiles.length === 0) return;
+        setBulkProgress({ done: 0, total: bulkFiles.length });
+        const uploaded = [];
+        for (let i = 0; i < bulkFiles.length; i++) {
+            const file = bulkFiles[i];
+            const formData = new FormData();
+            formData.append("image", file);
+            formData.append("title", file.name.replace(/\.[^.]+$/, ""));
+            if (category.trim()) formData.append("category", category.trim());
+            try {
+                const res = await fetch(currentAPI + "/games/" + gameId + "/images", {
+                    method: "POST",
+                    credentials: "include",
+                    body: formData,
+                });
+                if (res.ok) {
+                    const newImage = await res.json();
+                    uploaded.push(newImage);
+                }
+            } catch (err) {
+                console.error("Failed to upload", file.name, err);
+            }
+            setBulkProgress({ done: i + 1, total: bulkFiles.length });
+        }
+        setImages((prev) => [...prev, ...uploaded]);
+        setBulkFiles([]);
+        setBulkCategory("");
+        setBulkProgress(null);
+    }
+
+    async function deleteImagesByCategory(cat) {
+        const group = images.filter((img) => cat === "" ? !img.category : img.category === cat);
+        if (!confirm(`Delete all ${group.length} image${group.length !== 1 ? "s" : ""} in "${cat || "Uncategorized"}"?`)) return;
+        for (const img of group) {
+            try {
+                await fetch(currentAPI + "/games/" + gameId + "/images/" + img.id, {
+                    method: "DELETE",
+                    credentials: "include",
+                });
+            } catch (err) {
+                console.error("Failed to delete", img.id, err);
+            }
+        }
+        setImages((prev) => prev.filter((img) => cat === "" ? img.category : img.category !== cat));
     }
 
     async function deleteImage(imageId) {
@@ -908,6 +958,38 @@ export default function NavigationPanel() {
                     {/* Image Pool expanded */}
                     {imagePoolOpen && (
                         <div className="border border-(--outline)/40 rounded-lg p-4 flex flex-col gap-4 bg-(--surface-background)">
+                            {/* Bulk upload */}
+                            <div className="flex flex-col gap-2">
+                                <p className="text-sm font-semibold text-(--accent-text)">Bulk Import</p>
+                                <div className="flex gap-2 items-center flex-wrap">
+                                    <input
+                                        type="text"
+                                        value={bulkCategory}
+                                        onChange={(e) => setBulkCategory(e.target.value)}
+                                        placeholder="Category for all (optional)"
+                                        className="bg-(--accent) text-(--accent-text) px-3 py-1.5 rounded text-sm flex-1 min-w-0"
+                                        disabled={bulkProgress !== null}
+                                    />
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        multiple
+                                        onChange={(e) => setBulkFiles(Array.from(e.target.files))}
+                                        className="text-sm text-(--text-color) flex-1 min-w-0"
+                                        disabled={bulkProgress !== null}
+                                    />
+                                    <button
+                                        onClick={() => bulkUploadImages(bulkCategory)}
+                                        disabled={bulkFiles.length === 0 || bulkProgress !== null}
+                                        className="bg-(--primary) text-white px-4 py-1.5 rounded text-sm cursor-pointer hover:opacity-90 disabled:opacity-50 font-semibold shrink-0"
+                                    >
+                                        {bulkProgress
+                                                ? `Uploading ${bulkProgress.done}/${bulkProgress.total}…`
+                                                : `Upload ${bulkFiles.length} file${bulkFiles.length !== 1 ? "s" : ""}`}
+                                    </button>
+                                </div>
+                            </div>
+
                             <div className="flex flex-col gap-2">
                                 <p className="text-sm font-semibold text-(--accent-text)">Upload Image</p>
                                 <input
@@ -952,9 +1034,17 @@ export default function NavigationPanel() {
                                     if (group.length === 0) return null;
                                     return (
                                         <div key={cat || "__uncategorized"}>
-                                            <p className="text-xs font-semibold text-(--text-color) uppercase mb-2">
-                                                {cat || "Uncategorized"}
-                                            </p>
+                                            <div className="flex items-center justify-between mb-2">
+                                                <p className="text-xs font-semibold text-(--text-color) uppercase">
+                                                    {cat || "Uncategorized"} ({group.length})
+                                                </p>
+                                                <button
+                                                    onClick={() => deleteImagesByCategory(cat)}
+                                                    className="text-xs text-(--danger-text-color) hover:opacity-70 cursor-pointer"
+                                                >
+                                                    Delete all
+                                                </button>
+                                            </div>
                                             <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                                                 {group.map((img) => (
                                                     <div
