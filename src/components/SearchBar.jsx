@@ -103,7 +103,7 @@ export default function SearchBar() {
                     onChange={(e) => setQuery(e.target.value)}
                     onFocus={() => results.length > 0 && setOpen(true)}
                     onKeyDown={handleKeyDown}
-                    className="flex-1 bg-transparent text-(--text-color) text-sm outline-none border-0 placeholder:text-(--primary) placeholder:opacity-100 placeholder:font-semibold"
+                    className="flex-1 min-w-0 bg-transparent text-(--text-color) text-sm outline-none border-0 placeholder:text-(--primary) placeholder:opacity-100 placeholder:font-semibold"
                     style={{ textShadow: "none" }}
                 />
                 {query && (
