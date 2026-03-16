@@ -74,16 +74,18 @@ export default function BundledEditor({ imagePickerTriggerRef, ...props }) {
                     "media",
                 ],
                 toolbar:
-                    "undo redo | blocks | " +
+                    "imagepicker | blocks | " +
                     "bold italic forecolor | alignleft aligncenter " +
                     "alignright alignjustify | bullist numlist outdent indent | " +
                     "removeformat | help" +
-                    "| link image media | imagepicker",
+                    "| link image media | ",
 
                 menubar: false,
                 promotion: false,
                 onboarding: false,
                 statusbar: false,
+                toolbar_sticky: true,
+                toolbar_sticky_offset: 68,
 
                 content_css: "/editor-content.css",
                 content_style: "body { padding: 0px 26px }",

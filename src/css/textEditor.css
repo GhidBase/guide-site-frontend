@@ -19,20 +19,19 @@ body #root .tox-toolbar__overflow {
     background-color: var(--accent) !important;
 }
 
-body #root .tox-tinymce,
-body #root .tox-editor-container {
-    overflow: visible;
+.tox-tinymce,
+.tox-editor-container,
+.tox-sidebar-wrap {
+    overflow: visible !important;
 }
 
-body #root .tox-editor-header {
-    position: sticky;
-    top: 50;
+.tox .tox-editor-header {
+    position: sticky !important;
+    top: 68px !important;
+    z-index: 999 !important;
     border-bottom: 1px solid var(--primary);
     border-left: 1px solid var(--primary);
     border-right: 1px solid var(--primary);
-    position: sticky;
-    top: 68px;
-    z-index: 999;
 }
 
 /* Toolbar buttons */
