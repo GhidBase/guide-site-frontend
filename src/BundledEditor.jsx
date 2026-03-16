@@ -51,9 +51,19 @@ import "tinymce/plugins/emoticons/js/emojis";
 import "tinymce/skins/content/default/content";
 import "tinymce/skins/ui/oxide/content";
 
-export default function BundledEditor({ imagePickerTriggerRef, ...props }) {
-    const height = props.height + 150;
+const TOOLBAR_FULL =
+    "imagepicker | blocks | " +
+    "bold italic forecolor | alignleft aligncenter " +
+    "alignright alignjustify | bullist numlist outdent indent | " +
+    "removeformat | link image media | help";
 
+const TOOLBAR_MOBILE =
+    "imagepicker | blocks | " +
+    "bold italic | forecolor alignleft aligncenter " +
+    "alignright alignjustify bullist numlist outdent indent " +
+    "removeformat link image media help";
+
+export default function BundledEditor({ imagePickerTriggerRef, ...props }) {
     return (
         <Editor
             licenseKey="gpl"
@@ -73,12 +83,12 @@ export default function BundledEditor({ imagePickerTriggerRef, ...props }) {
                     "wordcount",
                     "media",
                 ],
-                toolbar:
-                    "imagepicker | blocks | " +
-                    "bold italic forecolor | alignleft aligncenter " +
-                    "alignright alignjustify | bullist numlist outdent indent | " +
-                    "removeformat | help" +
-                    "| link image media | ",
+                toolbar: TOOLBAR_FULL,
+                toolbar_mode: "sliding",
+                mobile: {
+                    toolbar: TOOLBAR_MOBILE,
+                    toolbar_mode: "sliding",
+                },
 
                 menubar: false,
                 promotion: false,
