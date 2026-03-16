@@ -283,9 +283,9 @@ export default function BoardBuilder() {
                     </div>
 
                     {/* Board + Unit panel */}
-                    <div className="flex flex-col lg:flex-row gap-4">
+                    <div className="flex flex-col gap-4">
                         {/* Board */}
-                        <div className="flex-1 min-w-0">
+                        <div className="w-full min-w-0">
                             <div
                                 className="relative w-full select-none rounded border-2 border-(--outline)"
                                 style={{
@@ -318,7 +318,7 @@ export default function BoardBuilder() {
                                                 onDragOver={e => e.preventDefault()}
                                                 onDrop={e => handleDrop(e, row, col)}
                                                 style={{ border: "1px dashed rgba(255,255,255,0.3)" }}
-                                                className="flex items-center justify-center cursor-pointer hover:bg-white/10 transition-colors"
+                                                className="flex items-center justify-center cursor-pointer hover:bg-white/10 transition-colors overflow-hidden min-w-0 min-h-0"
                                             >
                                                 {unit && (
                                                     <img
@@ -339,7 +339,7 @@ export default function BoardBuilder() {
                         </div>
 
                         {/* Unit panel */}
-                        <div className="lg:w-64 xl:w-72 flex flex-col gap-2">
+                        <div className="w-full flex flex-col gap-2">
                             <div className="flex items-center gap-2 px-3 py-1.5 rounded bg-(--surface-background) border border-(--outline-brown)/40">
                                 <Search className="w-4 h-4 text-(--text-color) opacity-50 shrink-0" />
                                 <input
@@ -356,7 +356,7 @@ export default function BoardBuilder() {
                                 )}
                             </div>
 
-                            <div className="flex flex-col gap-3 overflow-y-auto max-h-72 lg:max-h-[calc(100vh-360px)]">
+                            <div className="flex flex-col gap-3">
                                 {displayCategories.map(cat => (
                                     <div key={cat.id}>
                                         <p className="text-xs font-bold uppercase tracking-wider text-(--text-color) opacity-50 mb-1.5">
