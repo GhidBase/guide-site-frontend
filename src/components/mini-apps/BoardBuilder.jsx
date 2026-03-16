@@ -260,7 +260,7 @@ export default function BoardBuilder() {
 
     async function saveAsPng() {
         if (!boardRef.current) return;
-        const canvas = await html2canvas(boardRef.current, { backgroundColor: null });
+        const canvas = await html2canvas(boardRef.current, { backgroundColor: null, useCORS: true, allowTaint: false });
         const link = document.createElement("a");
         link.download = `${effectiveBoard.name || "board"}.png`;
         link.href = canvas.toDataURL("image/png");
@@ -429,12 +429,12 @@ export default function BoardBuilder() {
                         >
                             Clear
                         </button>
-                        <button
+                        {false && <button
                             onClick={saveAsPng}
                             className="px-3 py-1.5 text-sm bg-(--accent) border border-(--outline-brown)/50 text-(--text-color) rounded cursor-pointer hover:bg-(--surface-background)"
                         >
                             Save PNG
-                        </button>
+                        </button>}
                     </div>
 
                     {/* Board + Unit panel */}

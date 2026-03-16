@@ -14,7 +14,7 @@ export default function Main() {
     usePageTracking();
     const [navOpen, setNavOpen] = useState(false);
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-    const [navbarLayout, setNavbarLayout] = useState("vertical");
+    const [navbarLayout, setNavbarLayout] = useState("horizontal");
 
     function toggleSidebar() {
         setSidebarCollapsed((prev) => !prev);
