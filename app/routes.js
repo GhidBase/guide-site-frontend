@@ -1,6 +1,8 @@
 import { route, index, layout } from "@react-router/dev/routes";
 
 export default [
+    route("api/*", "routes/api-proxy.jsx"),
+
     route("ads.txt", "routes/ads-txt.jsx"),
 
     // Legacy .html URL redirects (301 server-side)
