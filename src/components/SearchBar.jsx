@@ -94,7 +94,7 @@ export default function SearchBar() {
     return (
         <div ref={containerRef} className="relative w-full max-w-sm mx-auto" style={{ textShadow: "none" }}>
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-(--surface-background) border border-(--outline-brown)/40">
-                <Search className="w-4 h-4 text-(--text-color) opacity-50 shrink-0" />
+                <Search className="w-4 h-4 text-(--text-color) opacity-70 shrink-0" />
                 <input
                     ref={inputRef}
                     type="text"
@@ -103,7 +103,7 @@ export default function SearchBar() {
                     onChange={(e) => setQuery(e.target.value)}
                     onFocus={() => results.length > 0 && setOpen(true)}
                     onKeyDown={handleKeyDown}
-                    className="flex-1 bg-transparent text-(--text-color) text-sm outline-none border-0 placeholder:text-(--text-color) placeholder:opacity-40"
+                    className="flex-1 min-w-0 bg-transparent text-(--text-color) text-sm outline-none border-0 placeholder:text-(--primary) placeholder:opacity-100 placeholder:font-semibold"
                     style={{ textShadow: "none" }}
                 />
                 {query && (

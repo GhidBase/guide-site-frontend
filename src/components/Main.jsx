@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { usePageTracking } from "../hooks/usePageTracking.js";
 import { useTheme, themeToStyle } from "../contexts/ThemeProvider.jsx";
 import { PanelLeftOpen, PanelLeftClose } from "lucide-react";
+import Footer from "./Footer.jsx";
 
 export default function Main() {
     usePageTracking();
@@ -122,6 +123,8 @@ export default function Main() {
                     <Outlet />
                 </div>
             </div>
+
+            <Footer />
 
             {gameData && (
                 <MobileNavbar
