@@ -12,15 +12,11 @@ body .tox-tinymce {
 /* Toolbar background */
 body #root .tox-editor-header,
 body #root .tox-toolbar-overlord,
-body #root .tox-toolbar__primary {
-    background-color: var(--accent);
-}
-
-body #root .tox-toolbar-overlord {
-}
-
-body #root .tox-toolbar--scrolling {
-    background-color: var(--accent);
+body #root .tox-toolbar__primary,
+body #root .tox-toolbar--scrolling,
+body #root .tox-toolbar,
+body #root .tox-toolbar__overflow {
+    background-color: var(--accent) !important;
 }
 
 body #root .tox-tinymce,
@@ -41,19 +37,18 @@ body #root .tox-editor-header {
 
 /* Toolbar buttons */
 body #root .tox-toolbar__group button {
-    background-color: rgb(from var(--primary) r g b / 20%);
+    background-color: rgb(from var(--primary) r g b / 20%) !important;
     padding: 10px;
-    /* color: red; */
 }
 
 /* Toolbar hover colors */
 body #root .tox-toolbar__group button:hover {
-    background-color: rgb(from var(--primary) r g b / 60%);
+    background-color: rgb(from var(--primary) r g b / 60%) !important;
 }
 
 /* The color of highlighted toolbar options */
 body #root .tox-toolbar__group button.tox-tbtn--enabled {
-    background-color: rgb(from var(--primary) r g b / 70%);
+    background-color: rgb(from var(--primary) r g b / 70%) !important;
 }
 
 body #root .tox .tox-edit-area {
@@ -83,4 +78,62 @@ body #root .tox-tinymce {
     to {
         opacity: 1;
     }
+}
+
+/* Toolbar icons */
+body #root .tox .tox-tbtn svg {
+    fill: var(--text-color);
+}
+body #root .tox .tox-tbtn:hover svg,
+body #root .tox .tox-tbtn--enabled svg {
+    fill: var(--outline-brown);
+}
+
+/* Block format selector ("Paragraph", "Heading 1", etc.) */
+body #root .tox .tox-tbtn--select {
+    color: var(--text-color);
+}
+body #root .tox .tox-tbtn__select-label {
+    color: var(--text-color);
+}
+body #root .tox .tox-tbtn--select:hover {
+    background-color: rgb(from var(--primary) r g b / 40%);
+}
+
+/* Toolbar group separators */
+body #root .tox .tox-toolbar__group {
+    border-color: rgb(from var(--outline-brown) r g b / 20%) !important;
+}
+
+/* Dropdown menus (appended to body, outside #root) */
+body .tox-tinymce-aux .tox-menu,
+body .tox-tinymce-aux .tox-dialog,
+body .tox-tinymce-aux .tox-pop__dialog {
+    background-color: var(--accent);
+    border-color: rgb(from var(--outline-brown) r g b / 30%);
+}
+body .tox-tinymce-aux .tox-collection__item {
+    color: var(--text-color);
+}
+body .tox-tinymce-aux .tox-collection__item--active,
+body .tox-tinymce-aux .tox-collection__item:hover {
+    background-color: var(--surface-background) !important;
+    color: var(--accent-text) !important;
+}
+body .tox-tinymce-aux .tox-collection__item-label,
+body .tox-tinymce-aux .tox-collection__item-label * {
+    color: var(--text-color);
+}
+body .tox-tinymce-aux .tox-collection--toolbar .tox-collection__item--active {
+    background-color: rgb(from var(--primary) r g b / 40%) !important;
+}
+
+/* Split buttons (like color picker) */
+body #root .tox .tox-split-button:hover,
+body #root .tox .tox-split-button:focus {
+    background-color: rgb(from var(--primary) r g b / 40%);
+    box-shadow: none;
+}
+body #root .tox .tox-split-button__chevron svg {
+    fill: var(--text-color);
 }

@@ -1,4 +1,4 @@
-import { useState, Fragment, useEffect } from "react";
+import { useState, Fragment, useEffect, useRef } from "react";
 import { currentAPI } from "../config/api";
 import TextBlock from "./blocks/TextBlock";
 import { Link, useRouteLoaderData } from "react-router";
@@ -17,6 +17,30 @@ export default function PageBuilder() {
     const isContributor = isAuthenticated && !isAdmin;
     const [adminMode, setAdminMode] = useState(false);
     const [showPendingNotification, setShowPendingNotification] = useState(false);
+    const [dirtyBlocks, setDirtyBlocks] = useState(new Set());
+    const blockRefs = useRef({});
+
+    function handleDirtyChange(blockId, dirty) {
+        setDirtyBlocks((prev) => {
+            const next = new Set(prev);
+            dirty ? next.add(blockId) : next.delete(blockId);
+            return next;
+        });
+    }
+
+    async function saveAllChanges() {
+        for (const id of dirtyBlocks) {
+            await blockRefs.current[id]?.save();
+        }
+    }
+
+    function handleToggleAdminMode() {
+        if (adminMode && dirtyBlocks.size > 0) {
+            if (!window.confirm("You have unsaved changes. Exit edit mode anyway?")) return;
+            setDirtyBlocks(new Set());
+        }
+        setAdminMode((m) => !m);
+    }
     const pageId = pageData?.page?.id;
 
     const pageManagerSlug =
@@ -172,12 +196,20 @@ export default function PageBuilder() {
                 >
                     <button
                         className=" text-amber-50 w-50 px-2 py-0.5 flex justify-center items-center border-r border-(--outline-brown)/25 "
-                        onClick={() => setAdminMode(!adminMode)}
+                        onClick={handleToggleAdminMode}
                     >
                         {adminMode
                             ? "View Mode"
                             : isAdmin ? "Edit Mode" : "Suggest Edit"}
                     </button>
+                    {adminMode && dirtyBlocks.size > 0 && (
+                        <button
+                            className="text-amber-50 font-semibold px-4 py-0.5 flex justify-center items-center border-r border-(--outline-brown)/25 bg-green-800/40 hover:bg-green-700/50"
+                            onClick={saveAllChanges}
+                        >
+                            Save Changes ({dirtyBlocks.size})
+                        </button>
+                    )}
                     {isAdmin && (
                         <Link
                             className="text-amber-50 w-50 px-2 py-0.5 flex justify-center items-center text-center"
@@ -193,25 +225,16 @@ export default function PageBuilder() {
                 onDismiss={() => setShowPendingNotification(false)}
             />
             {adminMode && isAdmin && (
-                <div className="flex justify-center gap-2 mt-4">
+                <div className="flex w-full bg-(--accent) border border-(--outline-brown)/50 md:rounded-t mt-4 mb-4">
                     <button
-                        onClick={async () => {
-                            await addBlock({
-                                nextOrder: 0,
-                            });
-                        }}
-                        className="text-amber-50 bg-(--primary) w-37 rounded px-2 py-0.5"
+                        onClick={async () => { await addBlock({ nextOrder: 0 }); }}
+                        className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer"
                     >
                         + Text Block
                     </button>
                     <button
-                        onClick={async () => {
-                            await addBlock({
-                                nextOrder: 0,
-                                type: "single-image",
-                            });
-                        }}
-                        className="text-amber-50 bg-(--primary) w-37 rounded px-2 py-0.5"
+                        onClick={async () => { await addBlock({ nextOrder: 0, type: "single-image" }); }}
+                        className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) cursor-pointer"
                     >
                         + Image Block
                     </button>
@@ -223,25 +246,16 @@ export default function PageBuilder() {
                     // block values: id, pageId, content
                     let blockType;
                     const buttons = adminMode && isAdmin ? (
-                        <div className="flex justify-center gap-2">
+                        <div className="flex w-full bg-(--accent) border border-(--outline-brown)/50 md:rounded-b -mt-px mb-4">
                             <button
-                                onClick={async () => {
-                                    await addBlock({
-                                        nextOrder: block.order + 1,
-                                    });
-                                }}
-                                className="text-amber-50 bg-(--primary) w-37 rounded px-2 py-0.5"
+                                onClick={async () => { await addBlock({ nextOrder: block.order + 1 }); }}
+                                className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer"
                             >
                                 + Text Block
                             </button>
                             <button
-                                onClick={async () => {
-                                    await addBlock({
-                                        nextOrder: block.order + 1,
-                                        type: "single-image",
-                                    });
-                                }}
-                                className="text-amber-50 bg-(--primary) w-37 rounded px-2 py-0.5"
+                                onClick={async () => { await addBlock({ nextOrder: block.order + 1, type: "single-image" }); }}
+                                className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) cursor-pointer"
                             >
                                 + Image Block
                             </button>
@@ -252,14 +266,13 @@ export default function PageBuilder() {
                             blockType = (
                                 <Fragment key={block.id}>
                                     <TextBlock
+                                        ref={(el) => { blockRefs.current[block.id] = el; }}
                                         deleteBlock={() => deleteBlock(block)}
                                         block={block}
-                                        updateBlockWithEditorData={
-                                            updateBlockWithEditorData
-                                        }
+                                        updateBlockWithEditorData={updateBlockWithEditorData}
                                         adminMode={adminMode}
-                                        addBlock={addBlock}
                                         canDelete={isAdmin}
+                                        onDirty={handleDirtyChange}
                                     />
                                     {buttons}
                                 </Fragment>

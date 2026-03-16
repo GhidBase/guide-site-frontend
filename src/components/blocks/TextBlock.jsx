@@ -1,48 +1,52 @@
-import { lazy, Suspense, useRef, useState, useEffect } from "react";
+import { lazy, Suspense, useRef, useState, forwardRef, useImperativeHandle } from "react";
 import { useRouteLoaderData } from "react-router";
 import ImagePickerModal from "../ImagePickerModal.jsx";
 
 const TextEditor = lazy(() => import("../TextEditor.jsx"));
 
-export default function TextBlock({
+const TextBlock = forwardRef(function TextBlock({
     deleteBlock,
     block,
     updateBlockWithEditorData,
     adminMode,
-    addBlock,
     canDelete,
-}) {
+    onDirty,
+}, ref) {
     const { gameData } = useRouteLoaderData("main");
     const editorRef = useRef(null);
     const imagePickerTriggerRef = useRef(null);
-    const [editMode, setEditMode] = useState(false);
+    const [isDirty, setIsDirty] = useState(false);
     const [imagePickerOpen, setImagePickerOpen] = useState(false);
-    const contentRef = useRef(null);
-    const [height, setHeight] = useState(0);
 
     imagePickerTriggerRef.current = () => setImagePickerOpen(true);
 
-    let content;
+    // Always-fresh save function via ref so useImperativeHandle stays stable
+    const saveRef = useRef(null);
+    saveRef.current = async () => {
+        await updateBlockWithEditorData(block, editorRef);
+        editorRef.current?.setDirty(false);
+        setIsDirty(false);
+        onDirty?.(block.id, false);
+    };
 
-    if (block && block.content && block.content.content) {
-        content = block.content.content;
-    }
+    useImperativeHandle(ref, () => ({
+        async save() {
+            return saveRef.current?.();
+        },
+    }), []);
 
-    useEffect(() => {
-        if (contentRef.current) {
-            setHeight(contentRef.current.offsetHeight);
-        }
-    }, [content, adminMode]);
+    const content = block?.content?.content;
 
-    function toggleEditorMode() {
-        setEditMode(!editMode);
+    function handleEditorChange(_content, editor) {
+        const dirty = editor.isDirty();
+        setIsDirty((prev) => {
+            if (dirty !== prev) onDirty?.(block.id, dirty);
+            return dirty;
+        });
     }
 
     function checkDeletion() {
-        const confirmedDelete = window.confirm(
-            "Are you sure you want to delete this block?",
-        );
-        if (confirmedDelete) {
+        if (window.confirm("Are you sure you want to delete this block?")) {
             deleteBlock();
         }
     }
@@ -51,106 +55,58 @@ export default function TextBlock({
         <div
             id={"text-block-" + block.id}
             className={`relative content-block bg-(--surface-background) w-full text-(--text-color) ${
-                adminMode &&
-                "border-b border-(--primary) mb-0 bg-black/3 md:rounded "
+                adminMode && "border-b border-(--primary) mb-0 bg-black/3 md:rounded"
             }`}
         >
             {adminMode && (
-                <div
-                    id={"text-block-header-" + block.id}
-                    className="sticky top-7
-                h-10
-                bg-(--accent)
-                border-b border-t sm:border border-(--outline-brown)/50 rounded-t
-                flex justify-center items-center
-                text-xl z-1 "
-                >
-                    Text Block
-                </div>
-            )}
-            {editMode && (
-                <Suspense fallback={null}>
-                    <TextEditor
-                        height={height}
-                        editorRef={editorRef}
-                        content={content}
-                        imagePickerTriggerRef={imagePickerTriggerRef}
-                    ></TextEditor>
-                </Suspense>
-            )}
-            {imagePickerOpen && (
-                <ImagePickerModal
-                    gameId={gameData?.id}
-                    onSelect={(url) => {
-                        editorRef.current?.insertContent(
-                            `<img src="${url}" />`,
-                        );
-                        setImagePickerOpen(false);
-                    }}
-                    onClose={() => setImagePickerOpen(false)}
-                />
-            )}
-            {!editMode && (
-                <div
-                    id={"text-content-" + block.id}
-                    ref={contentRef}
-                    className={
-                        `text-left px-8 py-1` +
-                        (adminMode &&
-                            ` bg-(--accent) border-x border-(--outline-brown)/50 `)
-                    }
-                    dangerouslySetInnerHTML={{ __html: content }}
-                />
-            )}
-            {adminMode && (
-                <div
-                    id="lower-buttons"
-                    //className="flex flex-row-reverse sticky bottom-15 md:bottom-2 divide-x divide-x-reverse divide-(--outline-brown)/25 m-2 gap-2 justify-center"
-                    className=" py-1.5
-                    sticky bottom-14 lg:bottom-0
-                    divide-x divide-x-reverse divide-(--outline-brown)/25
-                    border-t border-(--outline-brown)/50 sm:border-x
-                    flex flex-row-reverse
-                    w-full justify-between
-                    h-10
-                    rounded-b
-                    bg-(--accent)"
-                >
-                    {editMode && (
-                        <button
-                            onClick={async () => {
-                                await updateBlockWithEditorData(
-                                    block,
-                                    editorRef,
-                                );
-                                toggleEditorMode();
-                            }}
-                            //className="text-amber-50 bg-(--primary) w-25 rounded px-2 py-0.5"
-                            className="flex items-center justify-center w-full h-full text-center"
-                        >
-                            Save
-                        </button>
-                    )}
-                    <button
-                        onClick={() => toggleEditorMode()}
-                        className="flex items-center justify-center w-full h-full text-center"
-                        //className="text-amber-50 bg-(--primary) w-25 rounded px-2 py-0.5"
-                    >
-                        {!editMode && "Edit"}
-                        {editMode && "Cancel"}
-                    </button>
+                <div className="sticky top-7 h-10 bg-(--accent) border-b border-t sm:border border-(--outline-brown)/50 rounded-t flex items-center z-1">
+                    <div className="flex-1 flex justify-center items-center text-xl">
+                        Text Block
+                        {isDirty && (
+                            <span className="ml-2 text-xs text-(--primary) font-normal opacity-70">• unsaved</span>
+                        )}
+                    </div>
                     {canDelete && (
                         <button
                             onClick={checkDeletion}
-                            className="text-red-700/70
-                            flex items-center justify-center text-center
-                            w-full h-full "
+                            className="flex items-center justify-center px-4 h-full text-sm text-red-700/70 border-l border-(--outline-brown)/25 shrink-0"
                         >
                             Delete
                         </button>
                     )}
                 </div>
             )}
+
+            {adminMode ? (
+                <Suspense fallback={null}>
+                    <TextEditor
+                        editorRef={editorRef}
+                        content={content}
+                        imagePickerTriggerRef={imagePickerTriggerRef}
+                        onEditorChange={handleEditorChange}
+                    />
+                </Suspense>
+            ) : (
+                <div
+                    id={"text-content-" + block.id}
+                    className="text-left px-8 py-1"
+                    dangerouslySetInnerHTML={{ __html: content }}
+                />
+            )}
+
+            {imagePickerOpen && (
+                <ImagePickerModal
+                    gameId={gameData?.id}
+                    onSelect={(url) => {
+                        editorRef.current?.insertContent(`<img src="${url}" />`);
+                        setImagePickerOpen(false);
+                    }}
+                    onClose={() => setImagePickerOpen(false)}
+                />
+            )}
+
         </div>
     );
-}
+});
+
+export default TextBlock;
