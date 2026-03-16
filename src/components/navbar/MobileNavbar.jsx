@@ -1,4 +1,5 @@
 import { useState } from "react";
+import SearchBar from "../SearchBar";
 import discordLogo from "../../assets/icons8-discord-50.png";
 import MobileNavbarCategory from "./MobileNavbarCategory";
 import { useLoaderData, Link, useNavigate } from "react-router";
@@ -73,22 +74,13 @@ export default function MobileNavbar({ toggleNav, navOpen }) {
                 <div
                     id="mobile-menu-header"
                     //className=" w-full text-left border-b-[2px] px-[12px] py-[12px] flex gap-[8px] border-(--outline-brown) "
-                    className=" w-full text-left border-b-[2px] px-[12px] flex gap-[8px] border-(--outline-brown) "
+                    className=" w-full text-left border-b-[2px] px-[12px] flex flex-col gap-[8px] border-(--outline-brown) "
                 >
-                    {/*
-                        <input
-                            type="text"
-                            className="flex w-full px-[12px] py-[12px] border-b-[2px] bg-(--primary) text-white border-(--outline-brown) border-[2px] "
-                            //placeholder="Search articles..."
-                            placeholder="Search doesn't work yet"
-                        />
-                            <button
-                            className="px-[12px] py-[12px] bg-(--primary) border-(--outline-brown) border-[2px] "
-                                onClick={toggleNav}
-                                >
-                                    Close
-                                    </button>
-                    */}
+                    {sectionsMap && (
+                        <div className="w-full pt-3 pb-1">
+                            <SearchBar />
+                        </div>
+                    )}
                     {isAuthenticated ? (
                         <div className="w-full flex flex-col pt-3 bg-(--surface-background)">
                             <p className="text-xl text-(--text-color) text-center font-semibold mb-3">
