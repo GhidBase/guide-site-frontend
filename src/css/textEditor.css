@@ -1,118 +1,108 @@
-/* Editor outer container */
-body .tox-tinymce {
-    border-radius: 0.25rem 0.25rem 0 0;
-    /* border: 1px solid #444; */
+/* ── Outer container ──────────────────────────────────────────── */
+.tox.tox-tinymce {
     border: none;
+    border-radius: 0.25rem 0.25rem 0 0;
     background-color: var(--surface-background);
-    /* background-color: var(--primary); */
-    /*border: 3px solid rgb(from var(--primary) r g b / 70%);*/
-    /*border-radius: .75rem;*/
+    animation: fadeIn 500ms ease forwards;
 }
 
-/* Toolbar background */
-body #root .tox-editor-header,
-body #root .tox-toolbar-overlord,
-body #root .tox-toolbar__primary,
-body #root .tox-toolbar--scrolling,
-body #root .tox-toolbar,
-body #root .tox-toolbar__overflow {
-    background-color: var(--accent) !important;
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
 }
 
-.tox-tinymce,
-.tox-editor-container,
-.tox-sidebar-wrap {
+/* ── Overflow (needed for sticky toolbar) ─────────────────────── */
+.tox.tox-tinymce,
+.tox .tox-editor-container,
+.tox .tox-sidebar-wrap {
     overflow: visible !important;
 }
 
+/* ── Toolbar background ───────────────────────────────────────── */
+.tox .tox-editor-header,
+.tox .tox-toolbar-overlord,
+.tox .tox-toolbar__primary,
+.tox .tox-toolbar,
+.tox .tox-toolbar--scrolling,
+.tox .tox-toolbar__overflow {
+    background-color: var(--accent) !important;
+}
+
+/* ── Sticky toolbar ───────────────────────────────────────────── */
 .tox .tox-editor-header {
     position: sticky !important;
     top: 68px !important;
     z-index: 999 !important;
-    border-bottom: 1px solid var(--primary);
-    border-left: 1px solid var(--primary);
-    border-right: 1px solid var(--primary);
+    border-bottom: 1px solid var(--primary) !important;
+    border-left: 1px solid var(--primary) !important;
+    border-right: 1px solid var(--primary) !important;
 }
 
-/* Toolbar buttons */
-body #root .tox-toolbar__group button {
+/* ── Toolbar buttons ──────────────────────────────────────────── */
+.tox .tox-toolbar__group button {
     background-color: rgb(from var(--primary) r g b / 20%) !important;
-    padding: 10px;
 }
-
-/* Toolbar hover colors */
-body #root .tox-toolbar__group button:hover {
-    background-color: rgb(from var(--primary) r g b / 60%) !important;
+.tox .tox-toolbar__group button:hover {
+    background-color: rgb(from var(--primary) r g b / 50%) !important;
 }
-
-/* The color of highlighted toolbar options */
-body #root .tox-toolbar__group button.tox-tbtn--enabled {
+.tox .tox-toolbar__group button.tox-tbtn--enabled {
     background-color: rgb(from var(--primary) r g b / 70%) !important;
 }
 
-body #root .tox .tox-edit-area {
-    border: 1px solid var(--primary);
-    border-top: none; /* optional if toolbar already has a border */
+/* ── Toolbar icons ────────────────────────────────────────────── */
+.tox .tox-tbtn svg {
+    fill: var(--text-color) !important;
+}
+.tox .tox-tbtn:hover svg,
+.tox .tox-tbtn--enabled svg {
+    fill: var(--outline-brown) !important;
 }
 
-/* Kill TinyMCE focus ring (real source) */
-.tox .tox-editor-container .tox-edit-area::before {
-    border: 3px solid rgb(from var(--primary) r g b / 70%);
-    border-radius: 0;
+/* ── Block format selector ────────────────────────────────────── */
+.tox .tox-tbtn--select,
+.tox .tox-tbtn__select-label {
+    color: var(--text-color) !important;
+}
+.tox .tox-tbtn--select:hover {
+    background-color: rgb(from var(--primary) r g b / 40%) !important;
 }
 
-body #root .tox-tinymce {
-    opacity: 1;
-
-    animation-name: fadeIn;
-    animation-duration: 500ms;
-    animation-iteration-count: 1;
-    animation-fill-mode: forwards;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
-}
-
-/* Toolbar icons */
-body #root .tox .tox-tbtn svg {
-    fill: var(--text-color);
-}
-body #root .tox .tox-tbtn:hover svg,
-body #root .tox .tox-tbtn--enabled svg {
-    fill: var(--outline-brown);
-}
-
-/* Block format selector ("Paragraph", "Heading 1", etc.) */
-body #root .tox .tox-tbtn--select {
-    color: var(--text-color);
-}
-body #root .tox .tox-tbtn__select-label {
-    color: var(--text-color);
-}
-body #root .tox .tox-tbtn--select:hover {
-    background-color: rgb(from var(--primary) r g b / 40%);
-}
-
-/* Toolbar group separators */
-body #root .tox .tox-toolbar__group {
+/* ── Toolbar group separators ─────────────────────────────────── */
+.tox .tox-toolbar__group {
     border-color: rgb(from var(--outline-brown) r g b / 20%) !important;
 }
 
-/* Dropdown menus (appended to body, outside #root) */
+/* ── Split buttons ────────────────────────────────────────────── */
+.tox .tox-split-button:hover,
+.tox .tox-split-button:focus {
+    background-color: rgb(from var(--primary) r g b / 40%) !important;
+    box-shadow: none !important;
+}
+.tox .tox-split-button__chevron svg {
+    fill: var(--text-color) !important;
+}
+
+/* ── Edit area border ─────────────────────────────────────────── */
+.tox .tox-edit-area {
+    border: 1px solid var(--primary) !important;
+    border-top: none !important;
+}
+
+/* ── Focus ring ───────────────────────────────────────────────── */
+.tox .tox-editor-container .tox-edit-area::before {
+    border: 3px solid rgb(from var(--primary) r g b / 70%) !important;
+    border-radius: 0 !important;
+}
+
+/* ── Dropdown menus (appended to body outside #root) ─────────── */
 body .tox-tinymce-aux .tox-menu,
 body .tox-tinymce-aux .tox-dialog,
 body .tox-tinymce-aux .tox-pop__dialog {
-    background-color: var(--accent);
-    border-color: rgb(from var(--outline-brown) r g b / 30%);
+    background-color: var(--accent) !important;
+    border-color: rgb(from var(--outline-brown) r g b / 30%) !important;
 }
 body .tox-tinymce-aux .tox-collection__item {
-    color: var(--text-color);
+    color: var(--text-color) !important;
 }
 body .tox-tinymce-aux .tox-collection__item--active,
 body .tox-tinymce-aux .tox-collection__item:hover {
@@ -121,18 +111,8 @@ body .tox-tinymce-aux .tox-collection__item:hover {
 }
 body .tox-tinymce-aux .tox-collection__item-label,
 body .tox-tinymce-aux .tox-collection__item-label * {
-    color: var(--text-color);
+    color: var(--text-color) !important;
 }
 body .tox-tinymce-aux .tox-collection--toolbar .tox-collection__item--active {
     background-color: rgb(from var(--primary) r g b / 40%) !important;
-}
-
-/* Split buttons (like color picker) */
-body #root .tox .tox-split-button:hover,
-body #root .tox .tox-split-button:focus {
-    background-color: rgb(from var(--primary) r g b / 40%);
-    box-shadow: none;
-}
-body #root .tox .tox-split-button__chevron svg {
-    fill: var(--text-color);
 }
