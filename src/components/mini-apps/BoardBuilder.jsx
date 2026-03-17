@@ -585,10 +585,7 @@ export default function BoardBuilder() {
                     </div>
 
                     {/* Card: board left, unit picker right */}
-                    <div
-                        className="flex rounded-lg border border-(--outline-brown)/40 overflow-hidden bg-(--surface-background)"
-                        style={{ height: "calc(50dvh)" }}
-                    >
+                    <div className="flex flex-col lg:flex-row rounded-lg border border-(--outline-brown)/40 overflow-hidden bg-(--surface-background) lg:h-[calc(50dvh)]">
                         {/* Left: board */}
                         <div className="flex-1 min-w-0 flex flex-col items-center justify-center p-6">
                             {/* Board */}
@@ -1241,7 +1238,7 @@ export default function BoardBuilder() {
                                         </div>
                                     </div>
                                 )}
-                                <p className="text-xs text-(--text-color) opacity-40 mt-1 text-center">
+                                <p className="text-xs text-(--text-color) opacity-40 mt-1 text-center hidden lg:block">
                                     Click or drag to place · Right-click to
                                     remove
                                 </p>
@@ -1250,7 +1247,7 @@ export default function BoardBuilder() {
                         {/* end left column */}
 
                         {/* Right: unit picker */}
-                        <div className="w-72 shrink-0 flex flex-col gap-2 overflow-y-auto border-l border-(--outline-brown)/30 p-3">
+                        <div className="w-full lg:w-72 shrink-0 flex flex-col gap-2 overflow-y-auto border-t lg:border-t-0 lg:border-l border-(--outline-brown)/30 p-3 lg:max-h-none">
                             {/* Selected unit */}
                             {selectedUnit ? (
                                 <div className="flex items-center gap-2 px-2 py-1.5 rounded bg-(--primary)/10 border border-(--primary)/40">
