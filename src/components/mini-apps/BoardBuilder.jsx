@@ -4,68 +4,43 @@ import { currentAPI } from "../../config/api";
 import { useRouteLoaderData } from "react-router";
 import { useAuth } from "../../hooks/useAuth";
 import ImagePickerModal from "../ImagePickerModal.jsx";
-import { Search, X, Plus } from "lucide-react";
+import { Search, X, Plus, ChevronUp, ChevronDown } from "lucide-react";
 
-function BgControls({ bgImage, bgSize, bgX, bgY, heightScale, widthScale, bgPaddingX, bgPaddingY, gridOffsetX, gridOffsetY, onChange }) {
-    if (!bgImage) return null;
-    const position = `calc(50% + ${bgX ?? 0}px) calc(50% + ${bgY ?? 0}px)`;
+function BgControls({ bgImage, bgSize, heightScale, widthScale, onChange }) {
+    if (!bgImage && (widthScale ?? 1) === 1 && (heightScale ?? 1) === 1) return null;
     return (
         <div className="flex flex-wrap gap-4 items-start pt-2 border-t border-(--outline-brown)/20">
-            {/* Offset */}
-            <div className="flex flex-col gap-1">
-                <span className="text-xs opacity-50">Offset</span>
-                <div className="flex items-center gap-2">
-                    <label className="flex items-center gap-1 text-xs text-(--text-color)">
-                        <span className="opacity-50">X</span>
-                        <input type="number" value={bgX ?? 0}
-                            onChange={e => onChange({ bgX: Number(e.target.value) })}
-                            className="w-16 px-1.5 py-0.5 rounded border border-(--outline-brown)/40 bg-(--surface-background) text-(--text-color) outline-none text-center text-xs" />
-                    </label>
-                    <label className="flex items-center gap-1 text-xs text-(--text-color)">
-                        <span className="opacity-50">Y</span>
-                        <input type="number" value={bgY ?? 0}
-                            onChange={e => onChange({ bgY: Number(e.target.value) })}
-                            className="w-16 px-1.5 py-0.5 rounded border border-(--outline-brown)/40 bg-(--surface-background) text-(--text-color) outline-none text-center text-xs" />
-                    </label>
-                    <button onClick={() => onChange({ bgX: 0, bgY: 0 })}
-                        className="text-xs opacity-40 hover:opacity-80 cursor-pointer px-1.5 py-0.5 rounded border border-(--outline-brown)/30">
-                        Reset
-                    </button>
+            {bgImage && (
+                <div className="flex flex-col gap-1">
+                    <span className="text-xs opacity-50">BG size</span>
+                    <div className="flex gap-1">
+                        {["cover", "contain"].map(s => (
+                            <button key={s} onClick={() => onChange({ bgSize: s })}
+                                className={`px-2 py-1 text-xs rounded border cursor-pointer capitalize transition-colors ${
+                                    bgSize === s
+                                        ? "bg-(--primary) border-(--primary) text-amber-50"
+                                        : "bg-(--surface-background) border-(--outline-brown)/30 text-(--text-color) hover:border-(--primary)/50"
+                                }`}>
+                                {s}
+                            </button>
+                        ))}
+                    </div>
+                    <div className="flex items-center gap-1 mt-1">
+                        <span className="text-xs opacity-50">Scale</span>
+                        <input
+                            type="range" min={50} max={300} step={5}
+                            value={bgSize?.endsWith("%") ? parseInt(bgSize) : 100}
+                            onChange={e => onChange({ bgSize: e.target.value + "%" })}
+                            className="w-24 accent-(--primary)"
+                        />
+                        <span className="text-xs opacity-50 w-8">
+                            {bgSize?.endsWith("%") ? bgSize : bgSize === "contain" ? "fit" : "fill"}
+                        </span>
+                    </div>
                 </div>
-            </div>
-
-            {/* Size */}
+            )}
             <div className="flex flex-col gap-1">
-                <span className="text-xs opacity-50">Size</span>
-                <div className="flex gap-1">
-                    {["cover", "contain"].map(s => (
-                        <button key={s} onClick={() => onChange({ bgSize: s })}
-                            className={`px-2 py-1 text-xs rounded border cursor-pointer capitalize transition-colors ${
-                                bgSize === s
-                                    ? "bg-(--primary) border-(--primary) text-amber-50"
-                                    : "bg-(--surface-background) border-(--outline-brown)/30 text-(--text-color) hover:border-(--primary)/50"
-                            }`}>
-                            {s}
-                        </button>
-                    ))}
-                </div>
-                <div className="flex items-center gap-1 mt-1">
-                    <span className="text-xs opacity-50">Scale</span>
-                    <input
-                        type="range" min={50} max={300} step={5}
-                        value={bgSize?.endsWith("%") ? parseInt(bgSize) : 100}
-                        onChange={e => onChange({ bgSize: e.target.value + "%" })}
-                        className="w-24 accent-(--primary)"
-                    />
-                    <span className="text-xs opacity-50 w-8">
-                        {bgSize?.endsWith("%") ? bgSize : bgSize === "contain" ? "fit" : "fill"}
-                    </span>
-                </div>
-            </div>
-
-            {/* Width + Height scale */}
-            <div className="flex flex-col gap-1">
-                <span className="text-xs opacity-50">Size</span>
+                <span className="text-xs opacity-50">Board scale</span>
                 {[["Width", "widthScale", widthScale], ["Height", "heightScale", heightScale]].map(([label, key, val]) => (
                     <div key={key} className="flex items-center gap-2">
                         <span className="text-xs opacity-40 w-10">{label}</span>
@@ -84,50 +59,6 @@ function BgControls({ bgImage, bgSize, bgX, bgY, heightScale, widthScale, bgPadd
                         )}
                     </div>
                 ))}
-            </div>
-
-            {/* Grid inset + offset */}
-            <div className="flex flex-col gap-1">
-                <span className="text-xs opacity-50">Grid inset</span>
-                {[["X (sides)", "bgPaddingX", bgPaddingX, 0, 40], ["Y (top/bot)", "bgPaddingY", bgPaddingY, 0, 40]].map(([label, key, val, min, max]) => (
-                    <div key={key} className="flex items-center gap-2">
-                        <span className="text-xs opacity-40 w-14">{label}</span>
-                        <input type="range" min={min} max={max} step={1} value={val ?? 0}
-                            onChange={e => onChange({ [key]: Number(e.target.value) })}
-                            className="w-24 accent-(--primary)" />
-                        <span className="text-xs opacity-50 w-8">{val ?? 0}%</span>
-                        {(val ?? 0) !== 0 && <button onClick={() => onChange({ [key]: 0 })} className="text-xs opacity-40 hover:opacity-80 cursor-pointer px-1.5 py-0.5 rounded border border-(--outline-brown)/30">Reset</button>}
-                    </div>
-                ))}
-            </div>
-
-            {/* Grid offset */}
-            <div className="flex flex-col gap-1">
-                <span className="text-xs opacity-50">Grid offset</span>
-                {[["X", "gridOffsetX", gridOffsetX], ["Y", "gridOffsetY", gridOffsetY]].map(([label, key, val]) => (
-                    <div key={key} className="flex items-center gap-2">
-                        <span className="text-xs opacity-40 w-14">{label}</span>
-                        <input type="range" min={-40} max={40} step={1} value={val ?? 0}
-                            onChange={e => onChange({ [key]: Number(e.target.value) })}
-                            className="w-24 accent-(--primary)" />
-                        <span className="text-xs opacity-50 w-8">{val ?? 0}%</span>
-                        {(val ?? 0) !== 0 && <button onClick={() => onChange({ [key]: 0 })} className="text-xs opacity-40 hover:opacity-80 cursor-pointer px-1.5 py-0.5 rounded border border-(--outline-brown)/30">Reset</button>}
-                    </div>
-                ))}
-            </div>
-
-            {/* Live preview */}
-            <div className="flex flex-col gap-1">
-                <span className="text-xs opacity-50">Preview</span>
-                <div
-                    className="w-24 h-16 rounded border border-(--outline-brown)/30"
-                    style={{
-                        backgroundImage: `url(${bgImage})`,
-                        backgroundSize: bgSize || "cover",
-                        backgroundPosition: position,
-                        backgroundRepeat: "no-repeat",
-                    }}
-                />
             </div>
         </div>
     );
@@ -215,7 +146,8 @@ export default function BoardBuilder() {
 
     const currentBoard = boards.find(b => b.id === currentBoardId) ?? null;
     // Merge editingBoard overrides so visual changes are live while editing
-    const effectiveBoard = (editingBoard && currentBoard && editingBoard.id === currentBoard.id)
+    const isCurrentlyEditing = editingBoard?.id === currentBoard?.id;
+    const effectiveBoard = isCurrentlyEditing
         ? { ...currentBoard, ...editingBoard }
         : currentBoard;
 
@@ -313,6 +245,46 @@ export default function BoardBuilder() {
         if (res.ok) {
             setEditingBoard(null);
             await loadBoards();
+        }
+    }
+
+    async function moveBoard(boardId, direction) {
+        const idx = boards.findIndex(b => b.id === boardId);
+        const swapIdx = idx + direction;
+        if (swapIdx < 0 || swapIdx >= boards.length) return;
+        const a = boards[idx], b = boards[swapIdx];
+        await Promise.all([
+            fetch(currentAPI + "/games/" + gameId + "/boards/" + a.id, {
+                method: "PUT", headers: { "Content-Type": "application/json" }, credentials: "include",
+                body: JSON.stringify({ order: b.order }),
+            }),
+            fetch(currentAPI + "/games/" + gameId + "/boards/" + b.id, {
+                method: "PUT", headers: { "Content-Type": "application/json" }, credentials: "include",
+                body: JSON.stringify({ order: a.order }),
+            }),
+        ]);
+        await loadBoards();
+    }
+
+    async function copyBoard(b) {
+        const res = await fetch(currentAPI + "/games/" + gameId + "/boards", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({
+                name: b.name + " (copy)",
+                rows: b.rows, cols: b.cols,
+                bgImage: b.bgImage, bgSize: b.bgSize,
+                bgX: b.bgX, bgY: b.bgY,
+                heightScale: b.heightScale, widthScale: b.widthScale,
+                bgPaddingX: b.bgPaddingX, bgPaddingY: b.bgPaddingY,
+                gridOffsetX: b.gridOffsetX, gridOffsetY: b.gridOffsetY,
+            }),
+        });
+        if (res.ok) {
+            const data = await res.json();
+            await loadBoards();
+            setCurrentBoardId(data.id);
         }
     }
 
@@ -423,81 +395,237 @@ export default function BoardBuilder() {
                         <span className="text-xs text-(--text-color) opacity-40">
                             {effectiveBoard.rows}×{effectiveBoard.cols}
                         </span>
-                        <button
-                            onClick={clearBoard}
-                            className="px-3 py-1.5 text-sm bg-(--accent) border border-(--outline-brown)/50 text-(--text-color) rounded cursor-pointer hover:bg-(--surface-background)"
-                        >
-                            Clear
-                        </button>
-                        {false && <button
-                            onClick={saveAsPng}
-                            className="px-3 py-1.5 text-sm bg-(--accent) border border-(--outline-brown)/50 text-(--text-color) rounded cursor-pointer hover:bg-(--surface-background)"
-                        >
-                            Save PNG
-                        </button>}
+                        {!isCurrentlyEditing && (
+                            <button onClick={clearBoard}
+                                className="px-3 py-1.5 text-sm bg-(--accent) border border-(--outline-brown)/50 text-(--text-color) rounded cursor-pointer hover:bg-(--surface-background)">
+                                Clear
+                            </button>
+                        )}
+                        {isAdmin && adminOpen && !isCurrentlyEditing && (
+                            <button
+                                onClick={() => setEditingBoard({ id: currentBoard.id, name: currentBoard.name, rows: currentBoard.rows, cols: currentBoard.cols, bgImage: currentBoard.bgImage, bgSize: currentBoard.bgSize || "cover", bgX: currentBoard.bgX ?? 0, bgY: currentBoard.bgY ?? 0, heightScale: currentBoard.heightScale ?? 1, widthScale: currentBoard.widthScale ?? 1, bgPaddingX: currentBoard.bgPaddingX ?? 0, bgPaddingY: currentBoard.bgPaddingY ?? 0, gridOffsetX: currentBoard.gridOffsetX ?? 0, gridOffsetY: currentBoard.gridOffsetY ?? 0 })}
+                                className="px-3 py-1.5 text-sm bg-(--accent) border border-(--outline-brown)/50 text-(--text-color) rounded cursor-pointer hover:bg-(--surface-background)">
+                                Edit Board
+                            </button>
+                        )}
+                        {isCurrentlyEditing && (
+                            <>
+                                <button onClick={updateBoard}
+                                    className="px-3 py-1.5 text-sm bg-green-700/80 text-white rounded cursor-pointer hover:bg-green-700">
+                                    Save
+                                </button>
+                                <button onClick={() => setEditingBoard(null)}
+                                    className="px-3 py-1.5 text-sm bg-(--accent) border border-(--outline-brown)/50 text-(--text-color) rounded cursor-pointer hover:bg-(--surface-background)">
+                                    Cancel
+                                </button>
+                            </>
+                        )}
                     </div>
 
                     {/* Board + Unit panel */}
                     <div className="flex flex-col gap-4">
                         {/* Board */}
-                        <div className="w-full min-w-0 flex flex-col items-center">
-                            <div
-                                ref={boardRef}
-                                className="relative select-none rounded overflow-hidden"
-                                style={{
-                                    width: `${(effectiveBoard.widthScale ?? 1) * 100}%`,
-                                    aspectRatio: `${effectiveBoard.cols} / ${effectiveBoard.rows * (effectiveBoard.heightScale ?? 1)}`,
-                                    backgroundImage: effectiveBoard.bgImage ? `url(${effectiveBoard.bgImage})` : undefined,
-                                    backgroundSize: effectiveBoard.bgSize || "cover",
-                                    backgroundPosition: `calc(50% + ${effectiveBoard.bgX ?? 0}px) calc(50% + ${effectiveBoard.bgY ?? 0}px)`,
-                                    backgroundColor: effectiveBoard.bgImage ? undefined : "#4a7830",
-                                    backgroundRepeat: "no-repeat",
-                                }}
-                            >
-                                <div
-                                    style={{
-                                        position: "absolute",
-                                        top: `${(effectiveBoard.bgPaddingY ?? 0) + (effectiveBoard.gridOffsetY ?? 0)}%`,
-                                        bottom: `${(effectiveBoard.bgPaddingY ?? 0) - (effectiveBoard.gridOffsetY ?? 0)}%`,
-                                        left: `${(effectiveBoard.bgPaddingX ?? 0) + (effectiveBoard.gridOffsetX ?? 0)}%`,
-                                        right: `${(effectiveBoard.bgPaddingX ?? 0) - (effectiveBoard.gridOffsetX ?? 0)}%`,
-                                        display: "grid",
-                                        gridTemplateColumns: `repeat(${effectiveBoard.cols}, 1fr)`,
-                                        gridTemplateRows: `repeat(${effectiveBoard.rows}, 1fr)`,
-                                    }}
-                                >
-                                    {Array.from({ length: currentBoard.rows * currentBoard.cols }, (_, i) => {
-                                        const row = Math.floor(i / currentBoard.cols);
-                                        const col = i % currentBoard.cols;
-                                        const unitId = cells[row]?.[col] ?? null;
-                                        const unit = unitId ? unitsById[unitId] : null;
-                                        return (
-                                            <div
-                                                key={`${row}-${col}`}
-                                                onClick={() => handleCellClick(row, col)}
-                                                onContextMenu={e => handleCellRightClick(e, row, col)}
-                                                onDragOver={e => e.preventDefault()}
-                                                onDrop={e => handleDrop(e, row, col)}
-                                                style={{
-                                                    borderRight: col < effectiveBoard.cols - 1 ? "1px dashed rgba(255,255,255,0.3)" : undefined,
-                                                    borderBottom: row < effectiveBoard.rows - 1 ? "1px dashed rgba(255,255,255,0.3)" : undefined,
-                                                }}
-                                                className="flex items-center justify-center cursor-pointer hover:bg-white/10 transition-colors overflow-hidden min-w-0 min-h-0"
-                                            >
-                                                {unit && (
-                                                    <img
-                                                        src={unit.imageUrl}
-                                                        alt={unit.name}
-                                                        draggable={false}
-                                                        className="w-4/5 h-4/5 object-contain pointer-events-none drop-shadow-md"
-                                                    />
-                                                )}
+                        <div className="w-full min-w-0">
+                            {isCurrentlyEditing ? (
+                                /* Edit mode: positional sliders around the board */
+                                <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gridTemplateRows: "auto 1fr auto" }}>
+                                    {/* Row 1 Col 1: spacer */}
+                                    <div style={{ gridRow: 1, gridColumn: 1 }} />
+                                    {/* Row 1 Col 2: X sliders */}
+                                    <div style={{ gridRow: 1, gridColumn: 2 }} className="flex flex-col gap-0.5 pb-1 pl-2">
+                                        {[
+                                            ["BG X", "bgX", editingBoard.bgX ?? 0, -50, 50],
+                                            ["Grid X", "gridOffsetX", editingBoard.gridOffsetX ?? 0, -40, 40],
+                                            ["Pad X", "bgPaddingX", editingBoard.bgPaddingX ?? 0, 0, 40],
+                                        ].map(([label, key, val, min, max]) => (
+                                            <div key={key} className="flex items-center gap-1.5">
+                                                <span className="text-[10px] opacity-40 w-10 text-right shrink-0">{label}</span>
+                                                <input type="range" min={min} max={max} step={0.1} value={val}
+                                                    onChange={e => setEditingBoard(p => ({ ...p, [key]: Number(e.target.value) }))}
+                                                    className="flex-1 accent-(--primary)" />
+                                                <input type="number" min={min} max={max} step={0.1} value={val}
+                                                    onChange={e => setEditingBoard(p => ({ ...p, [key]: Number(e.target.value) }))}
+                                                    className="w-12 px-1 py-0 text-[10px] text-right tabular-nums shrink-0 rounded border border-(--outline-brown)/30 bg-(--surface-background) text-(--text-color) outline-none" />
                                             </div>
-                                        );
-                                    })}
+                                        ))}
+                                    </div>
+                                    {/* Row 2 Col 1: Y sliders (vertical) */}
+                                    <div style={{ gridRow: 2, gridColumn: 1 }} className="flex gap-1 items-stretch pr-2 py-1">
+                                        {[
+                                            ["BG Y", "bgY", editingBoard.bgY ?? 0, -50, 50],
+                                            ["Grid Y", "gridOffsetY", editingBoard.gridOffsetY ?? 0, -40, 40],
+                                            ["Pad Y", "bgPaddingY", editingBoard.bgPaddingY ?? 0, 0, 40],
+                                        ].map(([label, key, val, min, max]) => (
+                                            <div key={key} className="flex flex-col items-center gap-0.5 self-stretch">
+                                                <span className="text-[10px] opacity-40 whitespace-nowrap">{label}</span>
+                                                <div className="flex-1 flex items-center justify-center" style={{ minHeight: "60px", overflow: "hidden" }}>
+                                                    <input type="range" min={min} max={max} step={0.1} value={val}
+                                                        onChange={e => setEditingBoard(p => ({ ...p, [key]: Number(e.target.value) }))}
+                                                        style={{ writingMode: "vertical-lr", width: "clamp(60px, 100%, 160px)" }}
+                                                        className="accent-(--primary)" />
+                                                </div>
+                                                <input type="number" min={min} max={max} step={0.1} value={val}
+                                                    onChange={e => setEditingBoard(p => ({ ...p, [key]: Number(e.target.value) }))}
+                                                    className="w-10 px-1 py-0 text-[10px] text-center tabular-nums rounded border border-(--outline-brown)/30 bg-(--surface-background) text-(--text-color) outline-none" />
+                                            </div>
+                                        ))}
+                                    </div>
+                                    {/* Row 3: size/scale controls — spans both columns */}
+                                    {editingBoard.bgImage && (
+                                        <div style={{ gridRow: 3, gridColumn: "1 / -1" }} className="flex flex-wrap gap-4 items-start pt-1.5 mt-1 border-t border-(--outline-brown)/20">
+                                            <div className="flex flex-col gap-1">
+                                                <span className="text-[10px] opacity-50">BG size</span>
+                                                <div className="flex gap-1 mb-0.5">
+                                                    {["cover", "contain"].map(s => (
+                                                        <button key={s} onClick={() => setEditingBoard(p => ({ ...p, bgSize: s }))}
+                                                            className={`px-2 py-0.5 text-[10px] rounded border cursor-pointer capitalize transition-colors ${
+                                                                editingBoard.bgSize === s
+                                                                    ? "bg-(--primary) border-(--primary) text-amber-50"
+                                                                    : "bg-(--surface-background) border-(--outline-brown)/30 text-(--text-color) hover:border-(--primary)/50"
+                                                            }`}>{s}</button>
+                                                    ))}
+                                                </div>
+                                                <div className="flex items-center gap-1.5">
+                                                    <span className="text-[10px] opacity-40 shrink-0">Scale</span>
+                                                    <input type="range" min={50} max={300} step={1}
+                                                        value={editingBoard.bgSize?.endsWith("%") ? parseInt(editingBoard.bgSize) : 100}
+                                                        onChange={e => setEditingBoard(p => ({ ...p, bgSize: e.target.value + "%" }))}
+                                                        className="w-24 accent-(--primary)" />
+                                                    <input type="number" min={50} max={300} step={1}
+                                                        value={editingBoard.bgSize?.endsWith("%") ? parseInt(editingBoard.bgSize) : 100}
+                                                        onChange={e => setEditingBoard(p => ({ ...p, bgSize: e.target.value + "%" }))}
+                                                        className="w-14 px-1 py-0 text-[10px] rounded border border-(--outline-brown)/30 bg-(--surface-background) text-(--text-color) outline-none" />
+                                                </div>
+                                            </div>
+                                            <div className="flex flex-col gap-1">
+                                                <span className="text-[10px] opacity-50">Board scale</span>
+                                                {[["Width", "widthScale", editingBoard.widthScale], ["Height", "heightScale", editingBoard.heightScale]].map(([label, key, val]) => (
+                                                    <div key={key} className="flex items-center gap-1.5">
+                                                        <span className="text-[10px] opacity-40 w-10 shrink-0">{label}</span>
+                                                        <input type="range" min={0.25} max={3} step={0.01}
+                                                            value={val ?? 1}
+                                                            onChange={e => setEditingBoard(p => ({ ...p, [key]: Number(e.target.value) }))}
+                                                            className="w-24 accent-(--primary)" />
+                                                        <input type="number" min={0.25} max={3} step={0.01}
+                                                            value={val ?? 1}
+                                                            onChange={e => setEditingBoard(p => ({ ...p, [key]: Number(e.target.value) }))}
+                                                            className="w-14 px-1 py-0 text-[10px] rounded border border-(--outline-brown)/30 bg-(--surface-background) text-(--text-color) outline-none" />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Row 2 Col 2: board */}
+                                    <div
+                                        ref={boardRef}
+                                        className="relative select-none rounded overflow-hidden"
+                                        style={{
+                                            gridRow: 2,
+                                            gridColumn: 2,
+                                            width: "100%",
+                                            aspectRatio: `${effectiveBoard.cols} / ${effectiveBoard.rows * (effectiveBoard.heightScale ?? 1)}`,
+                                            backgroundImage: effectiveBoard.bgImage ? `url(${effectiveBoard.bgImage})` : undefined,
+                                            backgroundSize: effectiveBoard.bgSize || "cover",
+                                            backgroundPosition: `calc(50% + ${effectiveBoard.bgX ?? 0}%) calc(50% + ${effectiveBoard.bgY ?? 0}%)`,
+                                            backgroundColor: effectiveBoard.bgImage ? undefined : "#4a7830",
+                                            backgroundRepeat: "no-repeat",
+                                        }}
+                                    >
+                                        <div style={{
+                                            position: "absolute",
+                                            top: `${(effectiveBoard.bgPaddingY ?? 0) + (effectiveBoard.gridOffsetY ?? 0)}%`,
+                                            bottom: `${(effectiveBoard.bgPaddingY ?? 0) - (effectiveBoard.gridOffsetY ?? 0)}%`,
+                                            left: `${(effectiveBoard.bgPaddingX ?? 0) + (effectiveBoard.gridOffsetX ?? 0)}%`,
+                                            right: `${(effectiveBoard.bgPaddingX ?? 0) - (effectiveBoard.gridOffsetX ?? 0)}%`,
+                                            display: "grid",
+                                            gridTemplateColumns: `repeat(${effectiveBoard.cols}, 1fr)`,
+                                            gridTemplateRows: `repeat(${effectiveBoard.rows}, 1fr)`,
+                                        }}>
+                                            {Array.from({ length: currentBoard.rows * currentBoard.cols }, (_, i) => {
+                                                const row = Math.floor(i / currentBoard.cols);
+                                                const col = i % currentBoard.cols;
+                                                const unitId = cells[row]?.[col] ?? null;
+                                                const unit = unitId ? unitsById[unitId] : null;
+                                                return (
+                                                    <div
+                                                        key={`${row}-${col}`}
+                                                        onClick={() => handleCellClick(row, col)}
+                                                        onContextMenu={e => handleCellRightClick(e, row, col)}
+                                                        onDragOver={e => e.preventDefault()}
+                                                        onDrop={e => handleDrop(e, row, col)}
+                                                        style={{
+                                                            borderRight: col < effectiveBoard.cols - 1 ? "1px dashed rgba(255,255,255,0.3)" : undefined,
+                                                            borderBottom: row < effectiveBoard.rows - 1 ? "1px dashed rgba(255,255,255,0.3)" : undefined,
+                                                        }}
+                                                        className="flex items-center justify-center cursor-pointer hover:bg-white/10 transition-colors overflow-hidden min-w-0 min-h-0"
+                                                    >
+                                                        {unit && (
+                                                            <img src={unit.imageUrl} alt={unit.name} draggable={false}
+                                                                className="w-4/5 h-4/5 object-contain pointer-events-none drop-shadow-md" />
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                            <p className="text-xs text-(--text-color) opacity-40 mt-1">
+                            ) : (
+                                /* Normal view */
+                                <div className="flex flex-col items-center">
+                                    <div
+                                        ref={boardRef}
+                                        className="relative select-none rounded overflow-hidden"
+                                        style={{
+                                            width: `${(effectiveBoard.widthScale ?? 1) * 100}%`,
+                                            aspectRatio: `${effectiveBoard.cols} / ${effectiveBoard.rows * (effectiveBoard.heightScale ?? 1)}`,
+                                            backgroundImage: effectiveBoard.bgImage ? `url(${effectiveBoard.bgImage})` : undefined,
+                                            backgroundSize: effectiveBoard.bgSize || "cover",
+                                            backgroundPosition: `calc(50% + ${effectiveBoard.bgX ?? 0}%) calc(50% + ${effectiveBoard.bgY ?? 0}%)`,
+                                            backgroundColor: effectiveBoard.bgImage ? undefined : "#4a7830",
+                                            backgroundRepeat: "no-repeat",
+                                        }}
+                                    >
+                                        <div style={{
+                                            position: "absolute",
+                                            top: `${(effectiveBoard.bgPaddingY ?? 0) + (effectiveBoard.gridOffsetY ?? 0)}%`,
+                                            bottom: `${(effectiveBoard.bgPaddingY ?? 0) - (effectiveBoard.gridOffsetY ?? 0)}%`,
+                                            left: `${(effectiveBoard.bgPaddingX ?? 0) + (effectiveBoard.gridOffsetX ?? 0)}%`,
+                                            right: `${(effectiveBoard.bgPaddingX ?? 0) - (effectiveBoard.gridOffsetX ?? 0)}%`,
+                                            display: "grid",
+                                            gridTemplateColumns: `repeat(${effectiveBoard.cols}, 1fr)`,
+                                            gridTemplateRows: `repeat(${effectiveBoard.rows}, 1fr)`,
+                                        }}>
+                                            {Array.from({ length: currentBoard.rows * currentBoard.cols }, (_, i) => {
+                                                const row = Math.floor(i / currentBoard.cols);
+                                                const col = i % currentBoard.cols;
+                                                const unitId = cells[row]?.[col] ?? null;
+                                                const unit = unitId ? unitsById[unitId] : null;
+                                                return (
+                                                    <div
+                                                        key={`${row}-${col}`}
+                                                        onClick={() => handleCellClick(row, col)}
+                                                        onContextMenu={e => handleCellRightClick(e, row, col)}
+                                                        onDragOver={e => e.preventDefault()}
+                                                        onDrop={e => handleDrop(e, row, col)}
+                                                        style={{
+                                                            borderRight: col < effectiveBoard.cols - 1 ? "1px dashed rgba(255,255,255,0.3)" : undefined,
+                                                            borderBottom: row < effectiveBoard.rows - 1 ? "1px dashed rgba(255,255,255,0.3)" : undefined,
+                                                        }}
+                                                        className="flex items-center justify-center cursor-pointer hover:bg-white/10 transition-colors overflow-hidden min-w-0 min-h-0"
+                                                    >
+                                                        {unit && (
+                                                            <img src={unit.imageUrl} alt={unit.name} draggable={false}
+                                                                className="w-4/5 h-4/5 object-contain pointer-events-none drop-shadow-md" />
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                            <p className="text-xs text-(--text-color) opacity-40 mt-1 text-center">
                                 Click or drag to place · Right-click to remove
                             </p>
                         </div>
@@ -514,24 +642,34 @@ export default function BoardBuilder() {
                                         {boards.map(b => (
                                             <div key={b.id} className="bg-(--surface-background) rounded text-sm text-(--text-color)">
                                                 {editingBoard?.id === b.id ? (
-                                                    <div className="flex flex-col gap-2 px-3 py-2">
-                                                        <div className="flex flex-wrap items-center gap-2">
-                                                            <input value={editingBoard.name} onChange={e => setEditingBoard(p => ({ ...p, name: e.target.value }))} className="flex-1 min-w-0 px-2 py-0.5 rounded border border-(--outline-brown)/40 bg-(--accent) text-(--text-color) outline-none text-sm" />
-                                                            <input type="number" min={1} max={20} value={editingBoard.rows} onChange={e => setEditingBoard(p => ({ ...p, rows: Number(e.target.value) }))} className="w-12 px-1 py-0.5 rounded border border-(--outline-brown)/40 bg-(--accent) text-(--text-color) outline-none text-sm text-center" />
-                                                            <span className="opacity-40 text-xs">×</span>
-                                                            <input type="number" min={1} max={20} value={editingBoard.cols} onChange={e => setEditingBoard(p => ({ ...p, cols: Number(e.target.value) }))} className="w-12 px-1 py-0.5 rounded border border-(--outline-brown)/40 bg-(--accent) text-(--text-color) outline-none text-sm text-center" />
-                                                            <button onClick={() => setEditBoardBgPicker(true)} className="px-2 py-0.5 text-xs rounded border border-(--outline-brown)/40 bg-(--accent) cursor-pointer hover:opacity-80 shrink-0">{editingBoard.bgImage ? "Change BG" : "Set BG"}</button>
-                                                            {editingBoard.bgImage && <button onClick={() => setEditingBoard(p => ({ ...p, bgImage: null }))} className="text-xs opacity-40 hover:opacity-80 cursor-pointer shrink-0"><X className="w-3 h-3" /></button>}
-                                                            <button onClick={updateBoard} className="text-xs text-green-700 hover:text-green-600 cursor-pointer shrink-0">Save</button>
-                                                            <button onClick={() => setEditingBoard(null)} className="text-xs opacity-40 hover:opacity-80 cursor-pointer shrink-0">Cancel</button>
-                                                        </div>
-                                                        <BgControls bgImage={editingBoard.bgImage} bgSize={editingBoard.bgSize} bgX={editingBoard.bgX} bgY={editingBoard.bgY} heightScale={editingBoard.heightScale} widthScale={editingBoard.widthScale} bgPaddingX={editingBoard.bgPaddingX} bgPaddingY={editingBoard.bgPaddingY} gridOffsetX={editingBoard.gridOffsetX} gridOffsetY={editingBoard.gridOffsetY} onChange={v => setEditingBoard(p => ({ ...p, ...v }))} />
+                                                    <div className="flex flex-wrap items-center gap-2 px-3 py-2">
+                                                        <input value={editingBoard.name} onChange={e => setEditingBoard(p => ({ ...p, name: e.target.value }))} className="flex-1 min-w-0 px-2 py-0.5 rounded border border-(--outline-brown)/40 bg-(--accent) text-(--text-color) outline-none text-sm" />
+                                                        <input type="number" min={1} max={20} value={editingBoard.rows} onChange={e => setEditingBoard(p => ({ ...p, rows: Number(e.target.value) }))} className="w-12 px-1 py-0.5 rounded border border-(--outline-brown)/40 bg-(--accent) text-(--text-color) outline-none text-sm text-center" />
+                                                        <span className="opacity-40 text-xs">×</span>
+                                                        <input type="number" min={1} max={20} value={editingBoard.cols} onChange={e => setEditingBoard(p => ({ ...p, cols: Number(e.target.value) }))} className="w-12 px-1 py-0.5 rounded border border-(--outline-brown)/40 bg-(--accent) text-(--text-color) outline-none text-sm text-center" />
+                                                        <button onClick={() => setEditBoardBgPicker(true)} className="px-2 py-0.5 text-xs rounded border border-(--outline-brown)/40 bg-(--accent) cursor-pointer hover:opacity-80 shrink-0">{editingBoard.bgImage ? "Change BG" : "Set BG"}</button>
+                                                        {editingBoard.bgImage && <button onClick={() => setEditingBoard(p => ({ ...p, bgImage: null }))} className="text-xs opacity-40 hover:opacity-80 cursor-pointer shrink-0"><X className="w-3 h-3" /></button>}
+                                                        <span className="text-xs opacity-40 italic shrink-0">Use toolbar to save</span>
                                                     </div>
                                                 ) : (
                                                     <div className="flex items-center gap-2 px-3 py-1.5">
+                                                        <div className="flex flex-col shrink-0">
+                                                            <button onClick={() => moveBoard(b.id, -1)} disabled={boards.indexOf(b) === 0}
+                                                                className="opacity-40 hover:opacity-80 disabled:opacity-20 cursor-pointer p-0.5">
+                                                                <ChevronUp className="w-3 h-3" />
+                                                            </button>
+                                                            <button onClick={() => moveBoard(b.id, 1)} disabled={boards.indexOf(b) === boards.length - 1}
+                                                                className="opacity-40 hover:opacity-80 disabled:opacity-20 cursor-pointer p-0.5">
+                                                                <ChevronDown className="w-3 h-3" />
+                                                            </button>
+                                                        </div>
                                                         <span className="flex-1 truncate">{b.name}</span>
                                                         <span className="text-xs opacity-40 shrink-0">{b.rows}×{b.cols}</span>
-                                                        <button onClick={() => setEditingBoard({ id: b.id, name: b.name, rows: b.rows, cols: b.cols, bgImage: b.bgImage, bgSize: b.bgSize || "cover", bgX: b.bgX ?? 0, bgY: b.bgY ?? 0, heightScale: b.heightScale ?? 1, widthScale: b.widthScale ?? 1, bgPaddingX: b.bgPaddingX ?? 0, bgPaddingY: b.bgPaddingY ?? 0, gridOffsetX: b.gridOffsetX ?? 0, gridOffsetY: b.gridOffsetY ?? 0 })} className="text-xs opacity-50 hover:opacity-90 cursor-pointer shrink-0">Edit</button>
+                                                        {b.id !== currentBoardId && (
+                                                            <button onClick={() => setCurrentBoardId(b.id)} className="text-xs opacity-50 hover:opacity-90 cursor-pointer shrink-0">Select</button>
+                                                        )}
+                                                        <button onClick={() => { setCurrentBoardId(b.id); setEditingBoard({ id: b.id, name: b.name, rows: b.rows, cols: b.cols, bgImage: b.bgImage, bgSize: b.bgSize || "cover", bgX: b.bgX ?? 0, bgY: b.bgY ?? 0, heightScale: b.heightScale ?? 1, widthScale: b.widthScale ?? 1, bgPaddingX: b.bgPaddingX ?? 0, bgPaddingY: b.bgPaddingY ?? 0, gridOffsetX: b.gridOffsetX ?? 0, gridOffsetY: b.gridOffsetY ?? 0 }); }} className="text-xs opacity-50 hover:opacity-90 cursor-pointer shrink-0">Edit</button>
+                                                        <button onClick={() => copyBoard(b)} className="text-xs opacity-50 hover:opacity-90 cursor-pointer shrink-0">Copy</button>
                                                         <button onClick={() => deleteBoard(b.id)} className="text-red-700/60 hover:text-red-700 cursor-pointer text-xs shrink-0">Delete</button>
                                                     </div>
                                                 )}
@@ -547,7 +685,7 @@ export default function BoardBuilder() {
                                             {newBoard.bgImage && <button onClick={() => setNewBoard(p => ({ ...p, bgImage: null }))} className="opacity-40 hover:opacity-80 cursor-pointer"><X className="w-4 h-4" /></button>}
                                             <button onClick={createBoard} className="px-3 py-1 bg-(--primary) text-amber-50 rounded cursor-pointer hover:opacity-90">Create</button>
                                             <button onClick={() => { setShowNewBoard(false); setNewBoard({ name: "", rows: 5, cols: 7, bgImage: null, bgSize: "cover", bgX: 0, bgY: 0, heightScale: 1, widthScale: 1, bgPaddingX: 0, bgPaddingY: 0, gridOffsetX: 0, gridOffsetY: 0 }); }} className="opacity-50 hover:opacity-80 cursor-pointer">Cancel</button>
-                                            <BgControls bgImage={newBoard.bgImage} bgSize={newBoard.bgSize} bgX={newBoard.bgX} bgY={newBoard.bgY} heightScale={newBoard.heightScale} widthScale={newBoard.widthScale} bgPaddingX={newBoard.bgPaddingX} bgPaddingY={newBoard.bgPaddingY} gridOffsetX={newBoard.gridOffsetX} gridOffsetY={newBoard.gridOffsetY} onChange={v => setNewBoard(p => ({ ...p, ...v }))} />
+                                            <BgControls bgImage={newBoard.bgImage} bgSize={newBoard.bgSize} heightScale={newBoard.heightScale} widthScale={newBoard.widthScale} onChange={v => setNewBoard(p => ({ ...p, ...v }))} />
                                         </div>
                                     ) : (
                                         <button onClick={() => setShowNewBoard(true)} className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-(--surface-background) border border-(--outline-brown)/40 text-(--text-color) rounded cursor-pointer hover:bg-(--accent)"><Plus className="w-4 h-4" /> New Board</button>
