@@ -358,13 +358,13 @@ export default function BoardBuilder() {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",
-                body: JSON.stringify({ order: b.order }),
+                body: JSON.stringify({ order: swapIdx }),
             }),
             fetch(currentAPI + "/games/" + gameId + "/boards/" + b.id, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",
-                body: JSON.stringify({ order: a.order }),
+                body: JSON.stringify({ order: idx }),
             }),
         ]);
         await loadBoards();
