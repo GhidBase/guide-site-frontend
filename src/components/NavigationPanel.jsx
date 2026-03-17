@@ -60,6 +60,7 @@ export default function NavigationPanel() {
     const [detailClosing, setDetailClosing] = useState(false);
 
     const [discordUrl, setDiscordUrl] = useState(gameData?.discordUrl ?? "");
+    const [showSupportButton, setShowSupportButton] = useState(gameData?.showSupportButton !== false);
 
     // ── IMAGE POOL ────────────────────────────────────────────────────────────
     const [images, setImages] = useState([]);
@@ -843,7 +844,7 @@ export default function NavigationPanel() {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",
-                body: JSON.stringify({ discordUrl }),
+                body: JSON.stringify({ discordUrl, showSupportButton }),
             });
         } catch (err) {
             console.error("Failed to save discord URL:", err);
@@ -935,6 +936,17 @@ export default function NavigationPanel() {
                             Save
                         </button>
                     </div>
+
+                    {/* Support button toggle */}
+                    <label className="flex items-center gap-2 cursor-pointer select-none w-fit">
+                        <input
+                            type="checkbox"
+                            checked={showSupportButton}
+                            onChange={e => setShowSupportButton(e.target.checked)}
+                            className="w-4 h-4 accent-(--primary) cursor-pointer"
+                        />
+                        <span className="text-sm text-(--text-color)">Show "Support the Developer" in footer</span>
+                    </label>
 
                     {/* Theme + Image Pool buttons */}
                     <div className="flex gap-2 flex-wrap">

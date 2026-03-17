@@ -1,6 +1,7 @@
 import "../css/tables.css";
 import { Outlet, useLoaderData } from "react-router";
 import Navbar from "./navbar/Navbar.jsx";
+import HorizontalNavbar from "./navbar/HorizontalNavbar.jsx";
 import Title from "./Title.jsx";
 import NavBarOpenButton from "./NavBarOpenButton.jsx";
 import MobileNavbar from "./navbar/MobileNavbar.jsx";
@@ -71,9 +72,11 @@ export default function Main() {
             style={themeToStyle(theme)}
         >
             <Title navbarLayout={navbarLayout} toggleNavbarLayout={toggleNavbarLayout} />
-            {
-                // title is partially styled in the file tailwind.css
-            }
+            {gameData && navbarLayout === "horizontal" && (
+                <div className="hidden md:block">
+                    <HorizontalNavbar />
+                </div>
+            )}
             <div
                 id="side-bar-and-content"
                 className={`relative w-full box-border border-t-4 border-(--outline) flex flex-1

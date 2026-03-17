@@ -16,6 +16,7 @@ export default [
             route("guardian-upgrade-costs", "routes/guardian-costs.jsx", { id: "game-guardian-costs" }),
             route("flea-guide", "routes/flea-guide.jsx"),
             route("board-builder", "routes/board-builder.jsx", { id: "game-board-builder" }),
+            route("tier-list", "routes/tier-list.jsx", { id: "game-tier-list" }),
             route("page-manager", "routes/page-manager.jsx", { id: "game-page-manager" }),
             route("game-manager", "routes/game-manager.jsx", { id: "game-game-manager" }),
             route("navigation-panel", "routes/navigation-panel.jsx", { id: "game-navigation-panel" }),
@@ -25,6 +26,7 @@ export default [
         // Top-level LDG-mode special routes
         route("guardian-upgrade-costs", "routes/guardian-costs.jsx", { id: "top-guardian-costs" }),
         route("board-builder", "routes/board-builder.jsx", { id: "top-board-builder" }),
+        route("tier-list", "routes/tier-list.jsx", { id: "top-tier-list" }),
 
         route("login", "routes/login.jsx"),
         route("signup", "routes/signup.jsx"),

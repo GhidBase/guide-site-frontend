@@ -28,20 +28,24 @@ export default function Footer() {
                 >
                     Privacy Policy
                 </a>
-                <span className="hidden sm:inline mx-2">|</span>
-                <a
-                    href="https://buymeacoffee.com/ghidward"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 px-3 py-1 rounded border border-amber-50/40 bg-amber-50/10 hover:bg-amber-50/20 text-amber-50 font-medium transition-colors"
-                >
-                    <img
-                        src="https://cdn.buymeacoffee.com/buttons/bmc-new-btn-logo.svg"
-                        alt="Buy me a coffee"
-                        className="w-4 h-4"
-                    />
-                    Support the Developer
-                </a>
+                {gameData?.showSupportButton !== false && (
+                    <>
+                        <span className="hidden sm:inline mx-2">|</span>
+                        <a
+                            href="https://buymeacoffee.com/ghidward"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1.5 px-3 py-1 rounded border border-amber-50/40 bg-amber-50/10 hover:bg-amber-50/20 text-amber-50 font-medium transition-colors"
+                        >
+                            <img
+                                src="https://cdn.buymeacoffee.com/buttons/bmc-new-btn-logo.svg"
+                                alt="Buy me a coffee"
+                                className="w-4 h-4"
+                            />
+                            Support the Developer
+                        </a>
+                    </>
+                )}
             </div>
         </footer>
     );

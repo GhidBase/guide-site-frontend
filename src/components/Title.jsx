@@ -2,7 +2,6 @@ import ldgLogo from "../assets/LDG_Title.webp";
 import { useMatches, useRouteLoaderData, useNavigate } from "react-router";
 import { useEffect } from "react";
 import { PanelTop } from "lucide-react";
-import HorizontalNavbar from "./navbar/HorizontalNavbar";
 
 export default function Title({ navbarLayout, toggleNavbarLayout }) {
     const navigate = useNavigate();
@@ -17,25 +16,6 @@ export default function Title({ navbarLayout, toggleNavbarLayout }) {
     const title = !!hardCodedTitle ? hardCodedTitle : pageData?.page?.title;
     const isLDGHomepage = title == "LD Homepage";
 
-    if (navbarLayout === "horizontal" && gameData) {
-        return (
-            <div id="page-builder-title" className="title relative z-20 !px-0">
-                {/* Horizontal navbar — desktop only */}
-                <div className="hidden md:flex flex-col h-45 w-full">
-                    <HorizontalNavbar toggleNavbarLayout={toggleNavbarLayout} title={title} isLDGHomepage={isLDGHomepage} ldgLogo={ldgLogo} />
-                </div>
-                {/* Normal title — mobile only */}
-                <div className="md:hidden relative flex items-center justify-center text-4xl h-30">
-                    {isLDGHomepage ? (
-                        <img src={ldgLogo} className="object-cover h-20" alt="" />
-                    ) : (
-                        title
-                    )}
-                </div>
-            </div>
-        );
-    }
-
     return (
         <div
             id="page-builder-title"
@@ -49,7 +29,7 @@ export default function Title({ navbarLayout, toggleNavbarLayout }) {
             {gameData && (
                 <button
                     onClick={toggleNavbarLayout}
-                    title="Switch to horizontal navbar"
+                    title={navbarLayout === "horizontal" ? "Switch to vertical sidebar" : "Switch to horizontal navbar"}
                     className="hidden lg:flex absolute right-4 top-4 p-1.5 rounded border-2 border-amber-50/30 bg-amber-50/10 hover:bg-amber-50/20 text-amber-50 transition-colors items-center justify-center"
                 >
                     <PanelTop className="w-5 h-5" />

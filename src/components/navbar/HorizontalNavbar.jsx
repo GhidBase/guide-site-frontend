@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from "react";
-import { useRouteLoaderData, useNavigate, Link } from "react-router";
-import { useAuth } from "@/hooks/useAuth";
-import { PanelLeft, ChevronDown, Search, X } from "lucide-react";
+import { useRouteLoaderData, useNavigate } from "react-router";
+import { ChevronDown, Search, X } from "lucide-react";
 import { currentAPI } from "../../config/api";
 
 function HorizontalSearch({ gameData, isLDG }) {
@@ -86,9 +85,8 @@ function HorizontalSearch({ gameData, isLDG }) {
     );
 }
 
-export default function HorizontalNavbar({ toggleNavbarLayout, title, isLDGHomepage, ldgLogo }) {
+export default function HorizontalNavbar() {
     const { gameData, sectionsMap, isLDG } = useRouteLoaderData("main");
-    const { isAuthenticated, user, logout } = useAuth();
     const navigate = useNavigate();
     const [openSection, setOpenSection] = useState(null);
     const dropdownRef = useRef(null);
@@ -114,92 +112,42 @@ export default function HorizontalNavbar({ toggleNavbarLayout, title, isLDGHomep
     }
 
     return (
-        <div className="flex flex-col h-full w-full">
-
-            {/* Top area: 3-column — spacer | title | auth+toggle */}
-            <div className="flex-1 flex items-center px-4 gap-4">
-                {/* Left spacer — mirrors auth width so title stays truly centered */}
-                <div className="flex-1" />
-
-                {/* Title — centered, styled same as vertical mode */}
-                <div className="flex items-center justify-center text-4xl md:text-7xl">
-                    {isLDGHomepage && ldgLogo ? (
-                        <img src={ldgLogo} className="object-cover md:h-30 lg:h-35" alt={gameData?.title} />
-                    ) : (
-                        title || gameData?.title
-                    )}
-                </div>
-
-                {/* Right — auth + toggle */}
-                <div className="flex-1 flex items-center justify-end gap-2" style={{ textShadow: "none" }}>
-                    {isAuthenticated ? (
-                        <>
-                            <span className="text-amber-50/90 text-base font-semibold hidden md:block">{user?.username}</span>
+        <div ref={dropdownRef} className="flex items-center gap-1 px-4 py-1.5 border-t-4 border-(--outline) bg-(--primary)">
+            <div className="flex items-center gap-1 flex-1 flex-wrap">
+                {sections.map((section) => {
+                    const pages = [...(section.pages ?? [])].sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0));
+                    return (
+                        <div key={section.id} className="relative shrink-0">
                             <button
-                                onClick={logout}
-                                className="text-xs px-3 py-1 rounded border border-red-400/50 bg-red-800/40 text-red-200 hover:bg-red-700/60 transition-colors cursor-pointer font-medium"
+                                onClick={() => setOpenSection(openSection === section.id ? null : section.id)}
+                                className={`flex items-center gap-1 px-3 py-1 text-sm text-amber-50 rounded-md transition-colors whitespace-nowrap font-medium
+                                    ${openSection === section.id ? "bg-amber-50/20" : "hover:bg-amber-50/10"}`}
+                                style={{ textShadow: "none" }}
                             >
-                                Logout
+                                {section.title}
+                                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${openSection === section.id ? "rotate-180" : ""}`} />
                             </button>
-                        </>
-                    ) : (
-                        <>
-                            <Link to="/login" className="text-xs px-3 py-1 rounded border border-amber-50/30 text-amber-50 hover:bg-amber-50/10 transition-colors">
-                                Log In
-                            </Link>
-                            <Link to="/signup" className="text-xs px-3 py-1 rounded bg-amber-50/20 border border-amber-50/30 text-amber-50 hover:bg-amber-50/30 transition-colors">
-                                Sign Up
-                            </Link>
-                        </>
-                    )}
-                    <button
-                        onClick={toggleNavbarLayout}
-                        title="Switch to vertical sidebar"
-                        className="p-1.5 rounded border border-amber-50/30 bg-amber-50/10 hover:bg-amber-50/20 text-amber-50 transition-colors cursor-pointer"
-                    >
-                        <PanelLeft className="w-4 h-4" />
-                    </button>
-                </div>
+
+                            {openSection === section.id && pages.length > 0 && (
+                                <div className="absolute top-full left-0 mt-1 z-50 bg-(--primary) border-2 border-(--outline) rounded-lg shadow-xl min-w-52 max-h-80 overflow-y-auto" style={{ animation: "dropdown-in 150ms ease forwards" }}>
+                                    {pages.map((page) => (
+                                        <button
+                                            key={page.id}
+                                            onClick={() => navigateTo(buildSlug(page.slug))}
+                                            className="w-full text-left px-4 py-2.5 text-sm text-amber-50 hover:bg-amber-50/10 border-b border-(--outline)/40 last:border-b-0 transition-colors"
+                                            style={{ textShadow: "none" }}
+                                        >
+                                            {page.navbarTitle || page.title}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
             </div>
 
-            {/* Bottom strip: sections left, search right */}
-            <div ref={dropdownRef} className="flex items-center gap-1 px-4 pb-2 border-t border-amber-50/10">
-                <div className="flex items-center gap-1 flex-1 flex-wrap">
-                    {sections.map((section) => {
-                        const pages = [...(section.pages ?? [])].sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0));
-                        return (
-                            <div key={section.id} className="relative shrink-0">
-                                <button
-                                    onClick={() => setOpenSection(openSection === section.id ? null : section.id)}
-                                    className={`flex items-center gap-1 px-3 py-1 text-sm text-amber-50 rounded-md transition-colors whitespace-nowrap font-medium
-                                        ${openSection === section.id ? "bg-amber-50/20" : "hover:bg-amber-50/10"}`}
-                                    style={{ textShadow: "none" }}
-                                >
-                                    {section.title}
-                                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${openSection === section.id ? "rotate-180" : ""}`} />
-                                </button>
-
-                                {openSection === section.id && pages.length > 0 && (
-                                    <div className="absolute top-full left-0 mt-1 z-50 bg-(--primary) border-2 border-(--outline) rounded-lg shadow-xl min-w-52 max-h-80 overflow-y-auto" style={{ animation: "dropdown-in 150ms ease forwards" }}>
-                                        {pages.map((page) => (
-                                            <button
-                                                key={page.id}
-                                                onClick={() => navigateTo(buildSlug(page.slug))}
-                                                className="w-full text-left px-4 py-2.5 text-sm text-amber-50 hover:bg-amber-50/10 border-b border-(--outline)/40 last:border-b-0 transition-colors"
-                                                style={{ textShadow: "none" }}
-                                            >
-                                                {page.navbarTitle || page.title}
-                                            </button>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        );
-                    })}
-                </div>
-
-                <HorizontalSearch gameData={gameData} isLDG={isLDG} />
-            </div>
+            <HorizontalSearch gameData={gameData} isLDG={isLDG} />
         </div>
     );
 }
