@@ -2,7 +2,7 @@ import "../css/tables.css";
 import { Outlet, useLoaderData } from "react-router";
 import Navbar from "./navbar/Navbar.jsx";
 import HorizontalNavbar from "./navbar/HorizontalNavbar.jsx";
-import Title from "./Title.jsx";
+import TopBar from "./TopBar.jsx";
 import NavBarOpenButton from "./NavBarOpenButton.jsx";
 import MobileNavbar from "./navbar/MobileNavbar.jsx";
 import { useEffect, useState } from "react";
@@ -70,10 +70,10 @@ export default function Main() {
         <EditModeProvider>
         <div
             id="main-page-sections"
-            className="h-full w-full flex flex-col grow box-border custom-background"
+            className="h-full w-full flex flex-col grow box-border bg-(--surface-background)"
             style={themeToStyle(theme)}
         >
-            <Title navbarLayout={navbarLayout} toggleNavbarLayout={toggleNavbarLayout} />
+            <TopBar navbarLayout={navbarLayout} toggleNavbarLayout={toggleNavbarLayout} />
             {gameData && navbarLayout === "horizontal" && (
                 <div className="hidden md:block">
                     <HorizontalNavbar />
