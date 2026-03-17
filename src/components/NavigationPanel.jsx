@@ -100,7 +100,6 @@ export default function NavigationPanel() {
             setImages((prev) => [...prev, newImage]);
             setImageUploadFile(null);
             setImageUploadTitle("");
-            setImageUploadCategory("");
         } catch (err) {
             console.error("Failed to upload image:", err);
         } finally {
@@ -135,7 +134,6 @@ export default function NavigationPanel() {
         }
         setImages((prev) => [...prev, ...uploaded]);
         setBulkFiles([]);
-        setBulkCategory("");
         setBulkProgress(null);
     }
 

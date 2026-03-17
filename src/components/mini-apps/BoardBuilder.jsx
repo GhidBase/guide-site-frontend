@@ -94,6 +94,7 @@ export default function BoardBuilder() {
 
     const dragUnitRef = useRef(null);
     const boardRef = useRef(null);
+    const addUnitBtnRef = useRef(null);
     const storageKey = `board-cells-${gameId}`;
 
     // Load cells from localStorage
@@ -330,7 +331,7 @@ export default function BoardBuilder() {
             credentials: "include",
             body: JSON.stringify(newUnit),
         });
-        if (res.ok) { setNewUnit({ name: "", imageUrl: "", categoryId: "" }); await loadCategories(); }
+        if (res.ok) { setNewUnit(p => ({ name: "", imageUrl: "", categoryId: p.categoryId })); await loadCategories(); }
     }
 
     async function deleteUnit(id) {
@@ -722,7 +723,7 @@ export default function BoardBuilder() {
                                             {newUnit.imageUrl && <img src={newUnit.imageUrl} className="w-8 h-8 object-contain rounded border border-(--outline-brown)/30" alt="" />}
                                             <button onClick={() => setShowUnitImagePicker(true)} className="px-2 py-1 text-sm rounded border border-(--outline-brown)/40 bg-(--surface-background) text-(--text-color) cursor-pointer hover:opacity-80">{newUnit.imageUrl ? "Change Image" : "Pick Image"}</button>
                                         </div>
-                                        <button onClick={createUnit} disabled={!newUnit.name.trim() || !newUnit.imageUrl || !newUnit.categoryId} className="px-3 py-1 text-sm bg-(--primary) text-amber-50 rounded cursor-pointer hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed">Add Unit</button>
+                                        <button ref={addUnitBtnRef} onClick={createUnit} disabled={!newUnit.name.trim() || !newUnit.imageUrl || !newUnit.categoryId} className="px-3 py-1 text-sm bg-(--primary) text-amber-50 rounded cursor-pointer hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed">Add Unit</button>
                                     </div>
                                     {allUnits.length > 0 && (
                                         <div className="mt-3 flex flex-col gap-1 max-h-56 overflow-y-auto">
@@ -819,7 +820,7 @@ export default function BoardBuilder() {
             {showUnitImagePicker && (
                 <ImagePickerModal
                     gameId={gameId}
-                    onSelect={url => { setNewUnit(p => ({ ...p, imageUrl: url })); setShowUnitImagePicker(false); }}
+                    onSelect={url => { setNewUnit(p => ({ ...p, imageUrl: url })); setShowUnitImagePicker(false); setTimeout(() => addUnitBtnRef.current?.focus(), 0); }}
                     onClose={() => setShowUnitImagePicker(false)}
                 />
             )}

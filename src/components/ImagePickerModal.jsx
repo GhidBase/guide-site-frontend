@@ -41,8 +41,10 @@ export default function ImagePickerModal({ gameId, onSelect, onClose }) {
 
                 <div className="px-3 py-2 flex gap-2 border-b border-(--outline)">
                     <input
+                        autoFocus
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Enter" && filtered.length > 0) onSelect(filtered[0].url); }}
                         placeholder="Search..."
                         className="flex-1 bg-(--accent) text-(--accent-text) px-3 py-1.5 rounded text-sm"
                     />
