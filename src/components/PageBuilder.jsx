@@ -190,27 +190,14 @@ export default function PageBuilder() {
     return (
         <Fragment>
         <div style={{ viewTransitionName: "page-content" }}>
-            {(isAdmin || isContributor) && (
-                <div
-                    id="dev-toolbar"
-                    className=" self-stretch flex justify-center sticky top-0 bg-(--primary) sm:rounded-b max-w-full z-2 "
-                >
+            {adminMode && dirtyBlocks.size > 0 && (
+                <div className="self-stretch flex justify-center sticky top-0 bg-(--primary) sm:rounded-b max-w-full z-2">
                     <button
-                        className=" text-amber-50 w-50 px-2 py-0.5 flex justify-center items-center border-r border-(--outline-brown)/25 "
-                        onClick={handleToggleAdminMode}
+                        className="text-amber-50 font-semibold px-4 py-0.5 flex justify-center items-center bg-green-800/40 hover:bg-green-700/50"
+                        onClick={saveAllChanges}
                     >
-                        {adminMode
-                            ? "View Mode"
-                            : isAdmin ? "Edit Mode" : "Suggest Edit"}
+                        Save Changes ({dirtyBlocks.size})
                     </button>
-                    {adminMode && dirtyBlocks.size > 0 && (
-                        <button
-                            className="text-amber-50 font-semibold px-4 py-0.5 flex justify-center items-center border-r border-(--outline-brown)/25 bg-green-800/40 hover:bg-green-700/50"
-                            onClick={saveAllChanges}
-                        >
-                            Save Changes ({dirtyBlocks.size})
-                        </button>
-                    )}
                 </div>
             )}
             <PendingReviewNotification
