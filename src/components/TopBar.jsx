@@ -69,12 +69,12 @@ export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
                     </>
                 )}
 
-                {/* Layout toggle */}
+                {/* Layout toggle — desktop only */}
                 {gameData && (
                     <button
                         onClick={toggleNavbarLayout}
                         title={navbarLayout === "horizontal" ? "Switch to vertical sidebar" : "Switch to horizontal navbar"}
-                        className="p-1.5 rounded border border-amber-50/30 bg-amber-50/10 hover:bg-amber-50/20 text-amber-50 transition-colors cursor-pointer"
+                        className="hidden lg:flex p-1.5 rounded border border-amber-50/30 bg-amber-50/10 hover:bg-amber-50/20 text-amber-50 transition-colors cursor-pointer"
                     >
                         {navbarLayout === "horizontal"
                             ? <PanelLeft className="w-4 h-4" />

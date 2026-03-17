@@ -264,13 +264,22 @@ export default function HorizontalNavbar() {
                     Leaderboard
                 </button>
                 {isAdmin && (
-                    <button
-                        onClick={() => navigateTo(buildSlug("navigation-panel"))}
-                        className="px-3 py-1 text-sm text-amber-50 rounded-md hover:bg-amber-50/10 transition-colors whitespace-nowrap font-medium"
-                        style={{ textShadow: "none" }}
-                    >
-                        Nav Panel
-                    </button>
+                    <>
+                        <button
+                            onClick={() => navigateTo("/dashboard")}
+                            className="px-3 py-1 text-sm text-amber-50 rounded-md hover:bg-amber-50/10 transition-colors whitespace-nowrap font-medium"
+                            style={{ textShadow: "none" }}
+                        >
+                            Dashboard
+                        </button>
+                        <button
+                            onClick={() => navigateTo(buildSlug("navigation-panel"))}
+                            className="px-3 py-1 text-sm text-amber-50 rounded-md hover:bg-amber-50/10 transition-colors whitespace-nowrap font-medium"
+                            style={{ textShadow: "none" }}
+                        >
+                            Nav Panel
+                        </button>
+                    </>
                 )}
 
                 <HorizontalSearch gameData={gameData} isLDG={isLDG} sectionsMap={sectionsMap} />

@@ -4,6 +4,7 @@ import discordLogo from "../../assets/icons8-discord-50.png";
 import MobileNavbarCategory from "./MobileNavbarCategory";
 import { useLoaderData, Link, useNavigate } from "react-router";
 import { useAuth } from "@/hooks/useAuth";
+import { useEditMode } from "../../contexts/EditModeContext.jsx";
 
 export default function MobileNavbar({ toggleNav, navOpen }) {
     console.log("navbar rendered");
@@ -12,7 +13,9 @@ export default function MobileNavbar({ toggleNav, navOpen }) {
     const [openedSection, setOpenedSection] = useState(sections[0]?.id);
     const { isAuthenticated, user, logout, isLoading } = useAuth();
     const isAdmin = user?.role == "ADMIN";
+    const isContributor = user?.role == "CONTRIBUTOR";
     const navigate = useNavigate();
+    const { adminMode, setAdminMode, dirtyBlocks } = useEditMode();
     const navbarItems = [];
 
     if (isAuthenticated && isAdmin) {
@@ -93,14 +96,28 @@ export default function MobileNavbar({ toggleNav, navOpen }) {
                                             navigate("/dashboard");
                                             toggleNav(false);
                                         }}
-                                        className="w-full text-amber-50 bg-(--primary) rounded px-2 py-1 font-semibold cursor-pointer hover:opacity-90 text-sm mb-2 h-8 "
+                                        className="flex-1 text-amber-50 bg-(--primary) rounded px-2 py-1 font-semibold cursor-pointer hover:opacity-90 text-sm mb-2 h-8"
                                     >
                                         Dashboard
                                     </button>
                                 )}
+                                {(isAdmin || isContributor) && (
+                                    <button
+                                        onClick={() => {
+                                            if (adminMode && dirtyBlocks.size > 0) {
+                                                if (!window.confirm("You have unsaved changes. Exit edit mode anyway?")) return;
+                                            }
+                                            setAdminMode(m => !m);
+                                            toggleNav(false);
+                                        }}
+                                        className={`flex-1 rounded px-2 py-1 font-semibold cursor-pointer hover:opacity-90 text-sm mb-2 h-8 ${adminMode ? "bg-amber-100/30 text-amber-50 border border-amber-50/40" : "bg-(--primary) text-amber-50"}`}
+                                    >
+                                        {adminMode ? "View Mode" : isAdmin ? "Edit Mode" : "Suggest Edit"}
+                                    </button>
+                                )}
                                 <button
                                     onClick={handleLogout}
-                                    className="w-full text-amber-50 bg-(--primary) rounded px-2 py-1 font-semibold cursor-pointer hover:opacity-90 text-sm h-8  "
+                                    className="flex-1 text-amber-50 bg-(--primary) rounded px-2 py-1 font-semibold cursor-pointer hover:opacity-90 text-sm h-8"
                                 >
                                     Logout
                                 </button>
