@@ -4,6 +4,7 @@ import TextBlock from "./blocks/TextBlock";
 import { Link, useRouteLoaderData } from "react-router";
 import SingleImageBlock from "./blocks/SingleImageBlock";
 import { useAuth } from "../hooks/useAuth.js";
+import { useEditMode } from "../contexts/EditModeContext.jsx";
 import { Pencil } from "lucide-react";
 import PendingReviewNotification from "./notifications/PendingReviewNotification";
 import Comments from "./comments/Comments";
@@ -16,9 +17,8 @@ export default function PageBuilder() {
     const [blocks, setBlocks] = useState(pageData?.blocks ?? []);
     const isAdmin = user?.role == "ADMIN";
     const isContributor = isAuthenticated && !isAdmin;
-    const [adminMode, setAdminMode] = useState(false);
+    const { adminMode, setAdminMode, dirtyBlocks, setDirtyBlocks } = useEditMode();
     const [showPendingNotification, setShowPendingNotification] = useState(false);
-    const [dirtyBlocks, setDirtyBlocks] = useState(new Set());
     const blockRefs = useRef({});
 
     function handleDirtyChange(blockId, dirty) {
@@ -210,14 +210,6 @@ export default function PageBuilder() {
                         >
                             Save Changes ({dirtyBlocks.size})
                         </button>
-                    )}
-                    {isAdmin && (
-                        <Link
-                            className="text-amber-50 w-50 px-2 py-0.5 flex justify-center items-center text-center"
-                            to={navigationPanelSlug}
-                        >
-                            Navigation Panel
-                        </Link>
                     )}
                 </div>
             )}

@@ -8,6 +8,7 @@ import MobileNavbar from "./navbar/MobileNavbar.jsx";
 import { useEffect, useState } from "react";
 import { usePageTracking } from "../hooks/usePageTracking.js";
 import { useTheme, themeToStyle } from "../contexts/ThemeProvider.jsx";
+import { EditModeProvider } from "../contexts/EditModeContext.jsx";
 import { PanelLeftOpen, PanelLeftClose } from "lucide-react";
 import Footer from "./Footer.jsx";
 
@@ -66,6 +67,7 @@ export default function Main() {
     }, [navOpen]);
 
     return (
+        <EditModeProvider>
         <div
             id="main-page-sections"
             className="h-full w-full flex flex-col grow box-border custom-background"
@@ -152,5 +154,6 @@ export default function Main() {
                 ></NavBarOpenButton>
             )}
         </div>
+        </EditModeProvider>
     );
 }

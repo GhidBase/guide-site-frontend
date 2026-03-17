@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouteLoaderData, useNavigate } from "react-router";
 import { useAuth } from "@/hooks/useAuth";
+import { useEditMode } from "../../contexts/EditModeContext.jsx";
 import { ChevronDown, Search, X } from "lucide-react";
 import { Link } from "react-router";
 import { currentAPI } from "../../config/api";
@@ -91,6 +92,8 @@ export default function HorizontalNavbar() {
     const { gameData, sectionsMap, isLDG } = useRouteLoaderData("main");
     const { user, isAuthenticated, logout } = useAuth();
     const isAdmin = user?.role === "ADMIN";
+    const isContributor = isAuthenticated && !isAdmin;
+    const { adminMode, setAdminMode, dirtyBlocks } = useEditMode();
     const navigate = useNavigate();
     const [openSection, setOpenSection] = useState(null);
     const dropdownRef = useRef(null);
@@ -170,6 +173,31 @@ export default function HorizontalNavbar() {
             )}
 
             <HorizontalSearch gameData={gameData} isLDG={isLDG} />
+
+            {/* Edit mode */}
+            {(isAdmin || isContributor) && (
+                <button
+                    onClick={() => {
+                        if (adminMode && dirtyBlocks.size > 0) {
+                            if (!window.confirm("You have unsaved changes. Exit edit mode anyway?")) return;
+                        }
+                        setAdminMode(m => !m);
+                    }}
+                    style={{ textShadow: "none" }}
+                    className={`px-3 py-1 text-sm font-medium rounded-md whitespace-nowrap shrink-0 transition-colors cursor-pointer ${
+                        adminMode
+                            ? "bg-amber-50/20 text-amber-50"
+                            : "text-amber-50 hover:bg-amber-50/10"
+                    }`}
+                >
+                    {adminMode ? "View Mode" : isAdmin ? "Edit Mode" : "Suggest Edit"}
+                    {adminMode && dirtyBlocks.size > 0 && (
+                        <span className="ml-1.5 text-xs bg-green-600/60 px-1.5 py-0.5 rounded">
+                            {dirtyBlocks.size} unsaved
+                        </span>
+                    )}
+                </button>
+            )}
 
             {/* Auth */}
             <div className="flex items-center gap-1.5 shrink-0" style={{ textShadow: "none" }}>
