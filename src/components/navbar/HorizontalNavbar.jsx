@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouteLoaderData, useNavigate } from "react-router";
+import { useAuth } from "@/hooks/useAuth";
 import { ChevronDown, Search, X } from "lucide-react";
+import { Link } from "react-router";
 import { currentAPI } from "../../config/api";
 
 function HorizontalSearch({ gameData, isLDG }) {
@@ -87,6 +89,8 @@ function HorizontalSearch({ gameData, isLDG }) {
 
 export default function HorizontalNavbar() {
     const { gameData, sectionsMap, isLDG } = useRouteLoaderData("main");
+    const { user, isAuthenticated, logout } = useAuth();
+    const isAdmin = user?.role === "ADMIN";
     const navigate = useNavigate();
     const [openSection, setOpenSection] = useState(null);
     const dropdownRef = useRef(null);
@@ -147,7 +151,49 @@ export default function HorizontalNavbar() {
                 })}
             </div>
 
+            {/* Hardcoded links */}
+            <button
+                onClick={() => navigateTo(buildSlug("leaderboard"))}
+                className="px-3 py-1 text-sm text-amber-50 rounded-md hover:bg-amber-50/10 transition-colors whitespace-nowrap font-medium shrink-0"
+                style={{ textShadow: "none" }}
+            >
+                Leaderboard
+            </button>
+            {isAdmin && (
+                <button
+                    onClick={() => navigateTo(buildSlug("navigation-panel"))}
+                    className="px-3 py-1 text-sm text-amber-50 rounded-md hover:bg-amber-50/10 transition-colors whitespace-nowrap font-medium shrink-0"
+                    style={{ textShadow: "none" }}
+                >
+                    Nav Panel
+                </button>
+            )}
+
             <HorizontalSearch gameData={gameData} isLDG={isLDG} />
+
+            {/* Auth */}
+            <div className="flex items-center gap-1.5 shrink-0" style={{ textShadow: "none" }}>
+                {isAuthenticated ? (
+                    <>
+                        <span className="text-amber-50/80 text-xs font-medium hidden lg:block">{user?.username}</span>
+                        <button
+                            onClick={logout}
+                            className="text-xs px-2.5 py-1 rounded border border-red-400/50 bg-red-800/40 text-red-200 hover:bg-red-700/60 transition-colors cursor-pointer font-medium"
+                        >
+                            Logout
+                        </button>
+                    </>
+                ) : (
+                    <>
+                        <Link to="/login" className="text-xs px-2.5 py-1 rounded border border-amber-50/30 text-amber-50 hover:bg-amber-50/10 transition-colors">
+                            Log In
+                        </Link>
+                        <Link to="/signup" className="text-xs px-2.5 py-1 rounded bg-amber-50/20 border border-amber-50/30 text-amber-50 hover:bg-amber-50/30 transition-colors">
+                            Sign Up
+                        </Link>
+                    </>
+                )}
+            </div>
         </div>
     );
 }
