@@ -22,17 +22,22 @@ export function Layout({ children }) {
                     crossOrigin="anonymous"
                 />
                 <script
+                    dangerouslySetInnerHTML={{
+                        __html: `window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+window.GA_ID = window.location.hostname.includes('luckydefenseguides')
+  ? 'G-X8KBQ5CE84'
+  : 'G-XR5P6T66LS';`,
+                    }}
+                />
+                <script
                     async
                     src="https://www.googletagmanager.com/gtag/js?id=G-X8KBQ5CE84"
                 />
                 <script
                     dangerouslySetInnerHTML={{
-                        __html: `window.dataLayer = window.dataLayer || [];
-function gtag(){dataLayer.push(arguments);}
-gtag('js', new Date());
-window.GA_ID = window.location.hostname.includes('luckydefenseguides')
-  ? 'G-X8KBQ5CE84'
-  : 'G-XR5P6T66LS';`,
+                        __html: `gtag('js', new Date());
+gtag('config', window.GA_ID, { send_page_view: false });`,
                     }}
                 />
             </head>
