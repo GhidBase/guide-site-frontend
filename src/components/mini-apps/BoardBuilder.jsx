@@ -478,6 +478,25 @@ export default function BoardBuilder() {
         ? getCells(currentBoard.id, currentBoard.rows, currentBoard.cols)
         : [];
 
+    function switchBoard(newBoardId) {
+        if (newBoardId === currentBoardId || !currentBoard) {
+            setCurrentBoardId(newBoardId);
+            return;
+        }
+        const newBoard = boards.find((b) => b.id === newBoardId);
+        if (!newBoard) { setCurrentBoardId(newBoardId); return; }
+        const currentCells = getCells(currentBoard.id, currentBoard.rows, currentBoard.cols);
+        const carried = Array.from({ length: newBoard.rows }, (_, row) =>
+            Array.from({ length: newBoard.cols }, (_, col) =>
+                row < currentBoard.rows && col < currentBoard.cols
+                    ? (currentCells[row]?.[col] ?? null)
+                    : null
+            )
+        );
+        setCells(newBoardId, carried);
+        setCurrentBoardId(newBoardId);
+    }
+
     return (
         <div className="flex flex-col gap-3 w-full max-w-6xl mx-auto p-4">
             {/* Board tabs */}
@@ -486,7 +505,7 @@ export default function BoardBuilder() {
                     {boards.map((b) => (
                         <button
                             key={b.id}
-                            onClick={() => setCurrentBoardId(b.id)}
+                            onClick={() => switchBoard(b.id)}
                             className={`px-3 py-1 text-sm rounded-t cursor-pointer transition-colors whitespace-nowrap shrink-0 ${
                                 b.id === currentBoardId
                                     ? "bg-(--primary) text-amber-50"
