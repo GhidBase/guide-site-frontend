@@ -587,7 +587,7 @@ export default function BoardBuilder() {
                     {/* Card: board left, unit picker right */}
                     <div
                         className="flex rounded-lg border border-(--outline-brown)/40 overflow-hidden bg-(--surface-background)"
-                        style={{ height: "calc(100vh - 25rem)" }}
+                        style={{ height: "calc(50dvh)" }}
                     >
                         {/* Left: board */}
                         <div className="flex-1 min-w-0 flex flex-col items-center justify-center p-6">

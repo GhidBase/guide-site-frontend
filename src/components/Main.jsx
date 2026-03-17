@@ -75,7 +75,7 @@ export default function Main() {
         >
             <TopBar navbarLayout={navbarLayout} toggleNavbarLayout={toggleNavbarLayout} />
             {gameData && navbarLayout === "horizontal" && (
-                <div className="hidden md:block">
+                <div className="hidden lg:block">
                     <HorizontalNavbar />
                 </div>
             )}
