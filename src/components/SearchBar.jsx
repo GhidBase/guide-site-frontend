@@ -1,19 +1,15 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useRouteLoaderData } from "react-router";
 import { Search, X } from "lucide-react";
-import { currentAPI } from "../config/api";
 
 export default function SearchBar() {
-    const { gameData, isLDG } = useRouteLoaderData("main");
+    const { gameData, sectionsMap, isLDG } = useRouteLoaderData("main");
     const navigate = useNavigate();
     const [query, setQuery] = useState("");
-    const [results, setResults] = useState([]);
     const [open, setOpen] = useState(false);
     const [highlighted, setHighlighted] = useState(0);
-    const [loading, setLoading] = useState(false);
     const inputRef = useRef(null);
     const containerRef = useRef(null);
-    const debounceRef = useRef(null);
 
     function buildUrl(slug) {
         return isLDG
@@ -21,38 +17,27 @@ export default function SearchBar() {
             : "/games/" + gameData?.slug + "/" + slug;
     }
 
-    useEffect(() => {
-        if (query.trim().length < 2) {
-            setResults([]);
-            setOpen(false);
-            return;
-        }
-
-        clearTimeout(debounceRef.current);
-        debounceRef.current = setTimeout(async () => {
-            setLoading(true);
-            try {
-                const params = new URLSearchParams({ q: query.trim() });
-                if (gameData?.id) params.set("gameId", gameData.id);
-                const res = await fetch(currentAPI + "/search?" + params);
-                const data = await res.json();
-                setResults(data);
-                setOpen(true);
-            } catch {
-                setResults([]);
-            } finally {
-                setLoading(false);
-            }
-        }, 300);
-
-        return () => clearTimeout(debounceRef.current);
-    }, [query]);
+    const q = query.trim().toLowerCase();
+    const results = q.length >= 2 && sectionsMap
+        ? Array.from(sectionsMap.values()).flatMap((section) =>
+            [...(section.pages ?? [])]
+                .filter((page) =>
+                    (page.navbarTitle || page.title)?.toLowerCase().includes(q) ||
+                    section.title?.toLowerCase().includes(q)
+                )
+                .map((page) => ({
+                    id: page.id,
+                    title: page.navbarTitle || page.title,
+                    slug: page.slug,
+                    sectionTitle: section.title,
+                }))
+        )
+        : [];
 
     function handleSelect(result) {
         navigate(buildUrl(result.slug), { viewTransition: true });
         setQuery("");
-        setResults([]);
-        setOpen(false);
+                setOpen(false);
         inputRef.current?.blur();
     }
 
@@ -85,11 +70,7 @@ export default function SearchBar() {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    useEffect(() => {
-        setHighlighted(0);
-    }, [results]);
-
-    const showNoResults = open && query.trim().length >= 2 && !loading && results.length === 0;
+    const showNoResults = open && q.length >= 2 && results.length === 0;
 
     return (
         <div ref={containerRef} className="relative w-full max-w-sm mx-auto" style={{ textShadow: "none" }}>
@@ -100,15 +81,15 @@ export default function SearchBar() {
                     type="text"
                     value={query}
                     placeholder="Search pages..."
-                    onChange={(e) => setQuery(e.target.value)}
-                    onFocus={() => results.length > 0 && setOpen(true)}
+                    onChange={(e) => { setQuery(e.target.value); setOpen(true); setHighlighted(0); }}
+                    onFocus={() => setOpen(true)}
                     onKeyDown={handleKeyDown}
                     className="flex-1 min-w-0 bg-transparent text-(--text-color) text-sm outline-none border-0 placeholder:text-(--primary) placeholder:opacity-100 placeholder:font-semibold"
                     style={{ textShadow: "none" }}
                 />
                 {query && (
                     <button
-                        onClick={() => { setQuery(""); setResults([]); setOpen(false); }}
+                        onClick={() => { setQuery(""); setOpen(false); }}
                         className="cursor-pointer opacity-40 hover:opacity-80"
                     >
                         <X className="w-4 h-4 text-(--text-color)" />

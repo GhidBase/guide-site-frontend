@@ -3,33 +3,29 @@ import { useRouteLoaderData, useNavigate } from "react-router";
 import { useAuth } from "@/hooks/useAuth";
 import { useEditMode } from "../../contexts/EditModeContext.jsx";
 import { ChevronDown, Search, X } from "lucide-react";
-import { currentAPI } from "../../config/api";
 
-function HorizontalSearch({ gameData, isLDG }) {
+function HorizontalSearch({ gameData, isLDG, sectionsMap }) {
     const [query, setQuery] = useState("");
-    const [results, setResults] = useState([]);
     const [open, setOpen] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const debounceRef = useRef(null);
     const containerRef = useRef(null);
     const navigate = useNavigate();
 
-    useEffect(() => {
-        if (query.trim().length < 2) { setResults([]); setOpen(false); return; }
-        clearTimeout(debounceRef.current);
-        debounceRef.current = setTimeout(async () => {
-            setLoading(true);
-            try {
-                const params = new URLSearchParams({ q: query.trim() });
-                if (gameData?.id) params.set("gameId", gameData.id);
-                const res = await fetch(currentAPI + "/search?" + params);
-                const data = await res.json();
-                setResults(data);
-                setOpen(true);
-            } catch { setResults([]); } finally { setLoading(false); }
-        }, 300);
-        return () => clearTimeout(debounceRef.current);
-    }, [query]);
+    const q = query.trim().toLowerCase();
+    const results = q.length >= 2 && sectionsMap
+        ? Array.from(sectionsMap.values()).flatMap((section) =>
+            [...(section.pages ?? [])]
+                .filter((page) =>
+                    (page.navbarTitle || page.title)?.toLowerCase().includes(q) ||
+                    section.title?.toLowerCase().includes(q)
+                )
+                .map((page) => ({
+                    id: page.id,
+                    title: page.navbarTitle || page.title,
+                    slug: page.slug,
+                    sectionTitle: section.title,
+                }))
+        )
+        : [];
 
     useEffect(() => {
         function onClickOutside(e) {
@@ -45,7 +41,7 @@ function HorizontalSearch({ gameData, isLDG }) {
 
     function handleSelect(result) {
         navigate(buildUrl(result.slug), { viewTransition: true });
-        setQuery(""); setResults([]); setOpen(false);
+        setQuery(""); setOpen(false);
     }
 
     return (
@@ -56,13 +52,13 @@ function HorizontalSearch({ gameData, isLDG }) {
                     type="text"
                     value={query}
                     placeholder="Search..."
-                    onChange={(e) => setQuery(e.target.value)}
-                    onFocus={() => results.length > 0 && setOpen(true)}
+                    onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
+                    onFocus={() => setOpen(true)}
                     className="flex-1 min-w-0 bg-transparent text-amber-50 text-xs outline-none placeholder:text-amber-50/50"
                     style={{ textShadow: "none" }}
                 />
                 {query && (
-                    <button onClick={() => { setQuery(""); setResults([]); setOpen(false); }} className="opacity-60 hover:opacity-100 cursor-pointer">
+                    <button onClick={() => { setQuery(""); setOpen(false); }} className="opacity-60 hover:opacity-100 cursor-pointer">
                         <X className="w-3.5 h-3.5 text-amber-50" />
                     </button>
                 )}
@@ -78,7 +74,7 @@ function HorizontalSearch({ gameData, isLDG }) {
                     ))}
                 </div>
             )}
-            {open && query.trim().length >= 2 && !loading && results.length === 0 && (
+            {open && query.trim().length >= 2 && results.length === 0 && (
                 <div className="absolute top-full mt-1 left-0 right-0 z-50 bg-(--primary) border-2 border-(--outline) rounded-lg px-3 py-2 shadow-xl">
                     <span className="text-xs text-amber-50/70" style={{ textShadow: "none" }}>No results found.</span>
                 </div>
@@ -277,7 +273,7 @@ export default function HorizontalNavbar() {
                     </button>
                 )}
 
-                <HorizontalSearch gameData={gameData} isLDG={isLDG} />
+                <HorizontalSearch gameData={gameData} isLDG={isLDG} sectionsMap={sectionsMap} />
 
                 {(isAdmin || isContributor) && (
                     <button
