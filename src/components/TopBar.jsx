@@ -2,7 +2,7 @@ import ldgLogo from "../assets/LDG_Title.webp";
 import { useRouteLoaderData, useNavigate, Link, useMatches } from "react-router";
 import { useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
-import { PanelTop, PanelLeft } from "lucide-react";
+import { PanelTop, PanelLeft, LogOut } from "lucide-react";
 
 export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
     const { pageData, pageSlug, gameData, isLDG } = useRouteLoaderData("main");
@@ -55,7 +55,7 @@ export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
                             onClick={logout}
                             className="text-xs px-3 py-1.5 rounded border border-red-400/50 bg-red-800/40 text-red-200 hover:bg-red-700/60 transition-colors cursor-pointer font-medium"
                         >
-                            Logout
+                            <LogOut className="w-4 h-4" />
                         </button>
                     </>
                 ) : (

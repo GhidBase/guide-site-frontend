@@ -1,4 +1,5 @@
 import NavbarButton from "./NavbarButton";
+import { LogOut } from "lucide-react";
 import { useRouteLoaderData, Link, useNavigate } from "react-router";
 import { Fragment, useState } from "react";
 import NavbarSection from "./NavbarSection";
@@ -368,9 +369,9 @@ export default function Navbar({
                                     )}
                                     <button
                                         onClick={handleLogout}
-                                        className="w-full text-amber-50 bg-(--primary) rounded px-2 py-1 font-semibold cursor-pointer hover:opacity-90 text-sm"
+                                        className="p-1.5 rounded border-2 border-amber-50/30 bg-amber-50/10 hover:bg-amber-50/20 text-amber-50 transition-colors flex items-center justify-center cursor-pointer"
                                     >
-                                        Logout
+                                        <LogOut className="w-4 h-4" />
                                     </button>
                                 </div>
                             ) : (

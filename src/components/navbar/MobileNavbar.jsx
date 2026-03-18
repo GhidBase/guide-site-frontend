@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { LogOut } from "lucide-react";
 import SearchBar from "../SearchBar";
 import discordLogo from "../../assets/icons8-discord-50.png";
 import MobileNavbarCategory from "./MobileNavbarCategory";
@@ -119,7 +120,7 @@ export default function MobileNavbar({ toggleNav, navOpen }) {
                                     onClick={handleLogout}
                                     className="flex-1 text-amber-50 bg-(--primary) rounded px-2 py-1 font-semibold cursor-pointer hover:opacity-90 text-sm h-8"
                                 >
-                                    Logout
+                                    <LogOut className="w-4 h-4" />
                                 </button>
                             </div>
                         </div>
