@@ -52,6 +52,10 @@ export default function PageBuilder() {
         isLDG || !gameData
             ? "/navigation-panel"
             : "/games/" + gameSlug + "/navigation-panel";
+    const commentOverviewSlug =
+        isLDG || !gameData
+            ? "/comment-overview"
+            : "/games/" + gameSlug + "/comment-overview";
 
     useEffect(() => {
         setBlocks(pageData?.blocks ?? []);
@@ -292,6 +296,12 @@ export default function PageBuilder() {
                         to={navigationPanelSlug}
                     >
                         Navigation Panel
+                    </Link>
+                    <Link
+                        className="text-amber-50 bg-(--primary) w-50 rounded px-2 py-0.5 cursor-pointer hover:opacity-90 text-center"
+                        to={commentOverviewSlug}
+                    >
+                        Comment Overview
                     </Link>
                 </div>
             )}

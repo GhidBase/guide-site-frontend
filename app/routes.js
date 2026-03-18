@@ -22,6 +22,7 @@ export default [
             route("game-manager", "routes/game-manager.jsx", { id: "game-game-manager" }),
             route("navigation-panel", "routes/navigation-panel.jsx", { id: "game-navigation-panel" }),
             route("leaderboard", "routes/leaderboard.jsx", { id: "game-leaderboard" }),
+            route("comment-overview", "routes/comment-overview.jsx", { id: "game-comment-overview" }),
         ]),
 
         // Top-level LDG-mode special routes
@@ -39,6 +40,7 @@ export default [
         route("game-manager", "routes/game-manager.jsx", { id: "top-game-manager" }),
         route("navigation-panel", "routes/navigation-panel.jsx", { id: "top-navigation-panel" }),
         route("leaderboard", "routes/leaderboard.jsx", { id: "top-leaderboard" }),
+        route("comment-overview", "routes/comment-overview.jsx", { id: "top-comment-overview" }),
 
         route("404", "routes/not-found.jsx", { id: "not-found-404" }),
         route("*", "routes/not-found.jsx", { id: "not-found-wildcard" }),
