@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { currentAPI } from "../../config/api";
 import { useRouteLoaderData } from "react-router";
 import { useAuth } from "../../hooks/useAuth";
@@ -35,6 +35,13 @@ export default function TierList() {
     const [adminOpen, setAdminOpen] = useState(false);
     const [selectedItem, setSelectedItem] = useState(null);
     const [showItemImagePicker, setShowItemImagePicker] = useState(false);
+
+    // Drag and drop
+    const [draggedItem, setDraggedItem] = useState(null);
+    const [dragOverTierId, setDragOverTierId] = useState(null);
+    const containerRef = useRef(null);
+    const touchDragRef = useRef(null);
+    const dragEntryRef = useRef(null);
 
     // Admin forms
     const [newCategoryName, setNewCategoryName] = useState("");
@@ -328,6 +335,96 @@ export default function TierList() {
         } catch {}
     }
 
+    async function placeItemFromDrag(tierId, item) {
+        const tier = selectedMode?.tiers.find(t => t.id === tierId);
+        if (tier?.entries?.find(e => e.itemId === item.id)) return;
+        try {
+            const res = await fetch(`${currentAPI}/games/${gameId}/tier-categories/${selectedCategoryId}/modes/${selectedModeId}/entries`, {
+                method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include",
+                body: JSON.stringify({ tierId, itemId: item.id }),
+            });
+            if (res.ok) await loadCategoryData(selectedCategoryId);
+        } catch {}
+    }
+
+    async function moveEntry(entryId, toTierId, itemId) {
+        const toTier = selectedMode?.tiers.find(t => t.id === toTierId);
+        if (toTier?.entries?.find(e => e.itemId === itemId)) return;
+        try {
+            const delRes = await fetch(`${currentAPI}/games/${gameId}/tier-categories/${selectedCategoryId}/modes/${selectedModeId}/entries/${entryId}`, {
+                method: "DELETE", credentials: "include",
+            });
+            if (!delRes.ok) return;
+            const res = await fetch(`${currentAPI}/games/${gameId}/tier-categories/${selectedCategoryId}/modes/${selectedModeId}/entries`, {
+                method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include",
+                body: JSON.stringify({ tierId: toTierId, itemId }),
+            });
+            if (res.ok) await loadCategoryData(selectedCategoryId);
+        } catch {}
+    }
+
+    async function handleDrop(tierId) {
+        setDragOverTierId(null);
+        if (draggedItem) {
+            await placeItemFromDrag(tierId, draggedItem);
+            setDraggedItem(null);
+        } else if (dragEntryRef.current) {
+            const { entryId, itemId, fromTierId } = dragEntryRef.current;
+            if (fromTierId !== tierId) await moveEntry(entryId, tierId, itemId);
+            dragEntryRef.current = null;
+        }
+    }
+
+    // ── Touch drag (mobile) ─────────────────────────────────
+    useEffect(() => {
+        const el = containerRef.current;
+        if (!el) return;
+        function onTouchMove(e) {
+            if (!touchDragRef.current) return;
+            const touch = e.touches[0];
+            if (!touchDragRef.current.ghost) {
+                const dx = touch.clientX - touchDragRef.current.startX;
+                const dy = touch.clientY - touchDragRef.current.startY;
+                if (Math.hypot(dx, dy) < 10) return;
+                const imageUrl = touchDragRef.current.item?.imageUrl;
+                if (!imageUrl) return;
+                const ghost = document.createElement("div");
+                ghost.style.cssText = `position:fixed;width:56px;height:56px;border-radius:8px;overflow:hidden;pointer-events:none;z-index:9999;opacity:0.85;transform:translate(-50%,-50%);left:${touch.clientX}px;top:${touch.clientY}px;box-shadow:0 8px 24px rgba(0,0,0,0.3);`;
+                const img = document.createElement("img");
+                img.src = imageUrl; img.style.cssText = "width:100%;height:100%;object-fit:cover;";
+                ghost.appendChild(img); document.body.appendChild(ghost);
+                touchDragRef.current.ghost = ghost;
+            }
+            e.preventDefault();
+            const ghost = touchDragRef.current.ghost;
+            ghost.style.left = `${touch.clientX}px`;
+            ghost.style.top = `${touch.clientY}px`;
+            ghost.style.display = "none";
+            const tierEl = document.elementFromPoint(touch.clientX, touch.clientY)?.closest("[data-tier-id]");
+            ghost.style.display = "";
+            setDragOverTierId(tierEl?.dataset.tierId ?? null);
+        }
+        el.addEventListener("touchmove", onTouchMove, { passive: false });
+        return () => el.removeEventListener("touchmove", onTouchMove);
+    }, []);
+
+    async function handleTouchEnd(e) {
+        if (!touchDragRef.current) return;
+        const { ghost, item, entry } = touchDragRef.current;
+        ghost?.remove();
+        if (!ghost) { touchDragRef.current = null; return; }
+        const touch = e.changedTouches[0];
+        const tierEl = document.elementFromPoint(touch.clientX, touch.clientY)?.closest("[data-tier-id]");
+        const tierId = tierEl?.dataset.tierId;
+        setDragOverTierId(null);
+        if (tierId) {
+            const tid = isNaN(tierId) ? tierId : Number(tierId);
+            if (item && !entry) await placeItemFromDrag(tid, item);
+            else if (entry && entry.fromTierId !== tid) await moveEntry(entry.entryId, tid, entry.itemId);
+        }
+        touchDragRef.current = null;
+    }
+
     async function renameCategory(catId) {
         if (!renamingCategoryName.trim()) return;
         try {
@@ -367,14 +464,23 @@ export default function TierList() {
     }
 
     // ── Entry render helper ─────────────────────────────────
-    function renderEntry(entry) {
+    function renderEntry(entry, fromTierId) {
         const item = itemsById[entry.itemId];
         if (!item) return null;
         return (
-            <div key={entry.id} className="relative group shrink-0 flex flex-col items-center">
+            <div key={entry.id}
+                className="relative shrink-0 flex flex-col items-center"
+                draggable={isAdmin}
+                onDragStart={isAdmin ? (e) => { e.stopPropagation(); dragEntryRef.current = { entryId: entry.id, itemId: entry.itemId, fromTierId }; setDraggedItem(null); } : undefined}
+                onDragEnd={isAdmin ? () => { dragEntryRef.current = null; setDragOverTierId(null); } : undefined}
+                onTouchStart={isAdmin ? (e) => {
+                    const touch = e.touches[0];
+                    touchDragRef.current = { entry: { entryId: entry.id, itemId: entry.itemId, fromTierId }, item, startX: touch.clientX, startY: touch.clientY, ghost: null };
+                } : undefined}
+            >
                 <div className="rounded overflow-hidden border border-(--outline-brown)/30"
                     style={{ width: itemSize, height: itemSize }}>
-                    <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
+                    <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" draggable={false} />
                 </div>
                 <p className="text-xs text-center text-(--text-color) opacity-70 mt-0.5 truncate"
                     style={{ width: itemSize }}>
@@ -383,7 +489,7 @@ export default function TierList() {
                 {isAdmin && (
                     <button
                         onClick={e => { e.stopPropagation(); removeEntry(entry.id); }}
-                        className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 text-white rounded-full hidden group-hover:flex items-center justify-center cursor-pointer z-10"
+                        className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 text-white rounded-full flex items-center justify-center cursor-pointer z-10"
                     >
                         <X className="w-2.5 h-2.5" />
                     </button>
@@ -393,7 +499,7 @@ export default function TierList() {
     }
 
     return (
-        <div className="flex flex-col gap-4 w-full max-w-6xl mx-auto p-4">
+        <div ref={containerRef} onTouchEnd={handleTouchEnd} className="flex flex-col gap-4 w-full max-w-6xl mx-auto p-4">
 
             {/* Category tabs */}
             {(categories.length > 0 || isAdmin) && (
@@ -674,7 +780,10 @@ export default function TierList() {
                                 return (
                                     <div key={tier.id}
                                         style={{ minHeight: rowHeight + "px" }}
-                                        className={`flex ${tierIdx > 0 ? "border-t-2 border-(--outline-brown)/20" : ""}`}>
+                                        className={`flex ${tierIdx > 0 ? "border-t-2 border-(--outline-brown)/20" : ""}`}
+                                        onDragOver={isAdmin ? (e) => { e.preventDefault(); setDragOverTierId(String(tier.id)); } : undefined}
+                                        onDrop={isAdmin ? (e) => { e.preventDefault(); handleDrop(tier.id); } : undefined}
+                                    >
                                         {/* Tier label */}
                                         <div className="w-16 shrink-0 relative group flex items-center justify-center font-bold text-white text-sm select-none px-1 text-center"
                                             style={{ backgroundColor: tier.color }}>
@@ -726,11 +835,13 @@ export default function TierList() {
                                                 const sectionEntries = entries.filter(e => (e.sectionId ?? localSectionMap[e.itemId]) === section.id);
                                                 return (
                                                     <div key={section.id}
+                                                        data-tier-id={tier.id}
                                                         onClick={() => isAdmin && selectedItem && placeItem(tier.id, section.id)}
-                                                        className={`flex-1 p-2 flex flex-wrap gap-2 content-start bg-(--accent)
+                                                        className={`flex-1 p-2 flex flex-wrap gap-2 content-start transition-colors
+                                                            ${dragOverTierId == String(tier.id) ? "bg-(--primary)/15" : "bg-(--accent)"}
                                                             ${i > 0 ? "border-l-2 border-(--outline-brown)/20" : ""}
-                                                            ${isAdmin && selectedItem ? "cursor-pointer hover:bg-(--surface-background)/60 transition-colors" : ""}`}>
-                                                        {sectionEntries.map(renderEntry)}
+                                                            ${isAdmin && selectedItem ? "cursor-pointer hover:bg-(--surface-background)/60" : ""}`}>
+                                                        {sectionEntries.map(e => renderEntry(e, tier.id))}
                                                         {isAdmin && selectedItem && (
                                                             <div className="rounded border-2 border-dashed border-(--outline-brown)/30 flex items-center justify-center opacity-50"
                                                                 style={{ width: itemSize, height: itemSize }}>
@@ -743,10 +854,12 @@ export default function TierList() {
                                         ) : (
                                             // Flat layout
                                             <div
+                                                data-tier-id={tier.id}
                                                 onClick={() => isAdmin && selectedItem && placeItem(tier.id, null)}
-                                                className={`flex-1 p-2 flex flex-wrap gap-2 content-start bg-(--accent)
-                                                    ${isAdmin && selectedItem ? "cursor-pointer hover:bg-(--surface-background)/60 transition-colors" : ""}`}>
-                                                {entries.map(renderEntry)}
+                                                className={`flex-1 p-2 flex flex-wrap gap-2 content-start transition-colors
+                                                    ${dragOverTierId == String(tier.id) ? "bg-(--primary)/15 ring-2 ring-inset ring-(--primary)/40" : "bg-(--accent)"}
+                                                    ${isAdmin && selectedItem ? "cursor-pointer hover:bg-(--surface-background)/60" : ""}`}>
+                                                {entries.map(e => renderEntry(e, tier.id))}
                                                 {isAdmin && selectedItem && (
                                                     <div className="rounded border-2 border-dashed border-(--outline-brown)/30 flex items-center justify-center opacity-50"
                                                         style={{ width: itemSize, height: itemSize }}>
@@ -808,9 +921,16 @@ export default function TierList() {
                                 {poolItems.map(item => (
                                     <button key={item.id}
                                         onClick={() => setSelectedItem(prev => prev?.id === item.id ? null : item)}
+                                        draggable
+                                        onDragStart={() => { setDraggedItem(item); dragEntryRef.current = null; setSelectedItem(null); }}
+                                        onDragEnd={() => { setDraggedItem(null); setDragOverTierId(null); }}
+                                        onTouchStart={(e) => {
+                                            const touch = e.touches[0];
+                                            touchDragRef.current = { item, startX: touch.clientX, startY: touch.clientY, ghost: null };
+                                        }}
                                         title={item.name}
-                                        className={`w-12 h-12 rounded border-2 overflow-hidden cursor-pointer transition-colors ${
-                                            selectedItem?.id === item.id
+                                        className={`w-12 h-12 rounded border-2 overflow-hidden cursor-grab active:cursor-grabbing transition-colors ${
+                                            selectedItem?.id === item.id || draggedItem?.id === item.id
                                                 ? "border-(--primary) ring-2 ring-(--primary)/40"
                                                 : "border-(--outline-brown)/30 hover:border-(--primary)/50"
                                         }`}>
