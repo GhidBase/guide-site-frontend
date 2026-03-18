@@ -53,7 +53,7 @@ export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
                         <span className="text-amber-50/80 text-sm font-medium hidden lg:block">{user?.username}</span>
                         <button
                             onClick={logout}
-                            className="text-xs px-3 py-1.5 rounded border border-red-400/50 bg-red-800/40 text-red-200 hover:bg-red-700/60 transition-colors cursor-pointer font-medium"
+                            className="text-xs px-3 py-1.5 rounded border border-red-500/70 bg-red-700/60 text-red-100 hover:bg-red-700/80 transition-colors cursor-pointer font-medium"
                         >
                             <LogOut className="w-4 h-4" />
                         </button>
