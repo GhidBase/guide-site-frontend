@@ -384,7 +384,7 @@ export default function PageBuilder() {
                     </Link>
                 </div>
             )}
-            <Comments pageId={pageData?.page?.id} />
+            {gameData && <Comments pageId={pageData?.page?.id} />}
         </div>
         </Fragment>
     );
