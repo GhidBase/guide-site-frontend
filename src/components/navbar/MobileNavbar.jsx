@@ -119,7 +119,7 @@ export default function MobileNavbar({ toggleNav, navOpen }) {
                                 )}
                                 <button
                                     onClick={handleLogout}
-                                    className="flex-1 text-amber-50 bg-(--primary) rounded px-2 py-1 font-semibold cursor-pointer hover:opacity-90 text-sm h-8"
+                                    className="flex-1 text-amber-50 bg-(--primary) rounded px-2 py-1 font-semibold cursor-pointer hover:opacity-90 text-sm h-8 flex items-center justify-center"
                                 >
                                     <LogOut className="w-4 h-4" />
                                 </button>
