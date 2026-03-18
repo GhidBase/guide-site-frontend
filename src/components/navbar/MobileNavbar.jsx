@@ -4,6 +4,7 @@ import SearchBar from "../SearchBar";
 import discordLogo from "../../assets/icons8-discord-50.png";
 import MobileNavbarCategory from "./MobileNavbarCategory";
 import { useLoaderData, Link, useNavigate } from "react-router";
+import { Pencil, Eye } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useEditMode } from "../../contexts/EditModeContext.jsx";
 
@@ -113,7 +114,7 @@ export default function MobileNavbar({ toggleNav, navOpen }) {
                                         }}
                                         className={`flex-1 rounded px-2 py-1 font-semibold cursor-pointer hover:opacity-90 text-sm mb-2 h-8 ${adminMode ? "bg-amber-100/30 text-amber-50 border border-amber-50/40" : "bg-(--primary) text-amber-50"}`}
                                     >
-                                        {adminMode ? "View Mode" : isAdmin ? "Edit Mode" : "Suggest Edit"}
+                                        {adminMode ? <Eye className="w-4 h-4 mx-auto" /> : <Pencil className="w-4 h-4 mx-auto" />}
                                     </button>
                                 )}
                                 <button

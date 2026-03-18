@@ -2,12 +2,14 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouteLoaderData, useNavigate } from "react-router";
 import { useAuth } from "@/hooks/useAuth";
 import { useEditMode } from "../../contexts/EditModeContext.jsx";
-import { ChevronDown, Search, X } from "lucide-react";
+import { ChevronDown, Search, X, Pencil, Eye } from "lucide-react";
 
 function HorizontalSearch({ gameData, isLDG, sectionsMap }) {
     const [query, setQuery] = useState("");
     const [open, setOpen] = useState(false);
+    const [expanded, setExpanded] = useState(false);
     const containerRef = useRef(null);
+    const inputRef = useRef(null);
     const navigate = useNavigate();
 
     const q = query.trim().toLowerCase();
@@ -29,11 +31,27 @@ function HorizontalSearch({ gameData, isLDG, sectionsMap }) {
 
     useEffect(() => {
         function onClickOutside(e) {
-            if (containerRef.current && !containerRef.current.contains(e.target)) setOpen(false);
+            if (containerRef.current && !containerRef.current.contains(e.target)) {
+                setOpen(false);
+                setExpanded(false);
+                setQuery("");
+            }
+        }
+        function onKeyDown(e) {
+            if (e.key === "Escape") { setOpen(false); setExpanded(false); setQuery(""); }
         }
         document.addEventListener("mousedown", onClickOutside);
-        return () => document.removeEventListener("mousedown", onClickOutside);
+        document.addEventListener("keydown", onKeyDown);
+        return () => {
+            document.removeEventListener("mousedown", onClickOutside);
+            document.removeEventListener("keydown", onKeyDown);
+        };
     }, []);
+
+    function handleExpand() {
+        setExpanded(true);
+        setTimeout(() => inputRef.current?.focus(), 50);
+    }
 
     function buildUrl(slug) {
         return isLDG ? "/" + slug : "/games/" + gameData?.slug + "/" + slug;
@@ -41,30 +59,39 @@ function HorizontalSearch({ gameData, isLDG, sectionsMap }) {
 
     function handleSelect(result) {
         navigate(buildUrl(result.slug), { viewTransition: true });
-        setQuery(""); setOpen(false);
+        setQuery(""); setOpen(false); setExpanded(false);
     }
 
     return (
-        <div ref={containerRef} className="relative w-56" style={{ textShadow: "none" }}>
-            <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-amber-50/30 border border-amber-50/50">
-                <Search className="w-3.5 h-3.5 text-amber-50/60 shrink-0" />
-                <input
-                    type="text"
-                    value={query}
-                    placeholder="Search..."
-                    onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
-                    onFocus={() => setOpen(true)}
-                    className="flex-1 min-w-0 bg-transparent text-amber-50 text-xs outline-none placeholder:text-amber-50/50"
-                    style={{ textShadow: "none" }}
-                />
-                {query && (
-                    <button onClick={() => { setQuery(""); setOpen(false); }} className="opacity-60 hover:opacity-100 cursor-pointer">
-                        <X className="w-3.5 h-3.5 text-amber-50" />
-                    </button>
-                )}
-            </div>
+        <div ref={containerRef} className="relative flex items-center" style={{ textShadow: "none" }}>
+            {expanded ? (
+                <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-amber-50/15 border border-amber-50/30 w-48 transition-all">
+                    <Search className="w-3.5 h-3.5 text-amber-50/50 shrink-0" />
+                    <input
+                        ref={inputRef}
+                        type="text"
+                        value={query}
+                        placeholder="Search..."
+                        onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
+                        className="flex-1 min-w-0 bg-transparent text-amber-50 text-xs outline-none placeholder:text-amber-50/40"
+                        style={{ textShadow: "none" }}
+                    />
+                    {query && (
+                        <button onClick={() => { setQuery(""); setOpen(false); }} className="opacity-50 hover:opacity-90 cursor-pointer">
+                            <X className="w-3.5 h-3.5 text-amber-50" />
+                        </button>
+                    )}
+                </div>
+            ) : (
+                <button
+                    onClick={handleExpand}
+                    className="p-1.5 text-amber-50 cursor-pointer hover:opacity-70 transition-opacity"
+                >
+                    <Search className="w-4 h-4" />
+                </button>
+            )}
             {open && results.length > 0 && (
-                <div className="absolute top-full mt-1 left-0 right-0 z-50 bg-(--primary) border-2 border-(--outline) rounded-lg shadow-xl max-h-64 overflow-y-auto" style={{ animation: "dropdown-in 150ms ease forwards" }}>
+                <div className="absolute top-full mt-1 right-0 z-50 w-56 bg-(--primary) border-2 border-(--outline) rounded-lg shadow-xl max-h-64 overflow-y-auto" style={{ animation: "dropdown-in 150ms ease forwards" }}>
                     {results.map((r) => (
                         <button key={r.id} onClick={() => handleSelect(r)}
                             className="w-full text-left px-3 py-2 flex flex-col gap-0.5 hover:bg-amber-50/10 border-b border-(--outline)/40 last:border-b-0">
@@ -75,7 +102,7 @@ function HorizontalSearch({ gameData, isLDG, sectionsMap }) {
                 </div>
             )}
             {open && query.trim().length >= 2 && results.length === 0 && (
-                <div className="absolute top-full mt-1 left-0 right-0 z-50 bg-(--primary) border-2 border-(--outline) rounded-lg px-3 py-2 shadow-xl">
+                <div className="absolute top-full mt-1 right-0 z-50 w-56 bg-(--primary) border-2 border-(--outline) rounded-lg px-3 py-2 shadow-xl">
                     <span className="text-xs text-amber-50/70" style={{ textShadow: "none" }}>No results found.</span>
                 </div>
             )}
@@ -293,11 +320,9 @@ export default function HorizontalNavbar() {
                             setAdminMode(m => !m);
                         }}
                         style={{ textShadow: "none" }}
-                        className={`px-3 py-1 text-sm font-medium rounded-md whitespace-nowrap transition-colors cursor-pointer ${
-                            adminMode ? "bg-amber-50/20 text-amber-50" : "text-amber-50 hover:bg-amber-50/10"
-                        }`}
+                        className="p-1.5 text-amber-50 cursor-pointer hover:opacity-70 transition-opacity"
                     >
-                        {adminMode ? "View Mode" : isAdmin ? "Edit Mode" : "Suggest Edit"}
+                        {adminMode ? <Eye className="w-4 h-4" /> : <Pencil className="w-4 h-4" />}
                         {adminMode && dirtyBlocks.size > 0 && (
                             <span className="ml-1.5 text-xs bg-green-600/60 px-1.5 py-0.5 rounded">
                                 {dirtyBlocks.size} unsaved

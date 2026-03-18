@@ -91,10 +91,10 @@ function BgControls({ bgImage, bgSize, heightScale, widthScale, onChange }) {
     );
 }
 
-export default function BoardBuilder() {
+export default function BoardBuilder({ allowedBoardIds, hideAdmin } = {}) {
     const { gameData } = useRouteLoaderData("main");
     const { user } = useAuth();
-    const isAdmin = user?.role === "ADMIN";
+    const isAdmin = (user?.role === "ADMIN") && !hideAdmin;
     const gameId = gameData?.id;
 
     const [categories, setCategories] = useState([]);
@@ -201,7 +201,13 @@ export default function BoardBuilder() {
           ]
         : categories;
 
-    const currentBoard = boards.find((b) => b.id === currentBoardId) ?? null;
+    const visibleBoards = allowedBoardIds?.length > 0
+        ? boards.filter((b) => allowedBoardIds.includes(b.id))
+        : boards;
+
+    const currentBoard = visibleBoards.find((b) => b.id === currentBoardId)
+        ?? visibleBoards[0]
+        ?? null;
     // Merge editingBoard overrides so visual changes are live while editing
     const isCurrentlyEditing = editingBoard?.id === currentBoard?.id;
     const effectiveBoard = isCurrentlyEditing
@@ -500,9 +506,9 @@ export default function BoardBuilder() {
     return (
         <div className="flex flex-col gap-3 w-full max-w-6xl mx-auto p-4">
             {/* Board tabs */}
-            {boards.length > 0 && (
+            {visibleBoards.length > 0 && (
                 <div className="flex items-center gap-1 overflow-x-auto pb-1">
-                    {boards.map((b) => (
+                    {visibleBoards.map((b) => (
                         <button
                             key={b.id}
                             onClick={() => switchBoard(b.id)}
@@ -518,7 +524,7 @@ export default function BoardBuilder() {
                 </div>
             )}
 
-            {boards.length === 0 && !isAdmin && (
+            {visibleBoards.length === 0 && !isAdmin && (
                 <p className="text-sm text-(--text-color) opacity-50 text-center py-10">
                     No boards configured yet.
                 </p>

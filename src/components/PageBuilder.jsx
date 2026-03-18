@@ -3,6 +3,8 @@ import { currentAPI } from "../config/api";
 import TextBlock from "./blocks/TextBlock";
 import { Link, useRouteLoaderData } from "react-router";
 import SingleImageBlock from "./blocks/SingleImageBlock";
+import TierListBlock from "./blocks/TierListBlock";
+import BoardBuilderBlock from "./blocks/BoardBuilderBlock";
 import { useAuth } from "../hooks/useAuth.js";
 import { useEditMode } from "../contexts/EditModeContext.jsx";
 import { Pencil } from "lucide-react";
@@ -177,6 +179,27 @@ export default function PageBuilder() {
         await refreshBlock(block.id);
     }
 
+    async function updateBlockContent(block, newContent) {
+        const response = await fetch(
+            currentAPI + "/games/" + gameId + "/blocks/" + block.id,
+            {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                credentials: "include",
+                body: JSON.stringify({ content: newContent }),
+            },
+        );
+
+        if (response.status === 202) {
+            setShowPendingNotification(true);
+            return;
+        }
+
+        await refreshBlock(block.id);
+    }
+
     async function refreshBlock(id) {
         const response = await fetch(
             currentAPI + "/games/" + gameId + "/blocks/" + id,
@@ -218,9 +241,21 @@ export default function PageBuilder() {
                     </button>
                     <button
                         onClick={async () => { await addBlock({ nextOrder: 0, type: "single-image" }); }}
-                        className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) cursor-pointer"
+                        className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer"
                     >
                         + Image Block
+                    </button>
+                    <button
+                        onClick={async () => { await addBlock({ nextOrder: 0, type: "tier-list" }); }}
+                        className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer"
+                    >
+                        + Tier List Block
+                    </button>
+                    <button
+                        onClick={async () => { await addBlock({ nextOrder: 0, type: "board-builder" }); }}
+                        className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) cursor-pointer"
+                    >
+                        + Board Builder Block
                     </button>
                 </div>
             )}
@@ -239,9 +274,21 @@ export default function PageBuilder() {
                             </button>
                             <button
                                 onClick={async () => { await addBlock({ nextOrder: block.order + 1, type: "single-image" }); }}
-                                className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) cursor-pointer"
+                                className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer"
                             >
                                 + Image Block
+                            </button>
+                            <button
+                                onClick={async () => { await addBlock({ nextOrder: block.order + 1, type: "tier-list" }); }}
+                                className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer"
+                            >
+                                + Tier List Block
+                            </button>
+                            <button
+                                onClick={async () => { await addBlock({ nextOrder: block.order + 1, type: "board-builder" }); }}
+                                className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) cursor-pointer"
+                            >
+                                + Board Builder Block
                             </button>
                         </div>
                     ) : null;
@@ -254,6 +301,38 @@ export default function PageBuilder() {
                                         deleteBlock={() => deleteBlock(block)}
                                         block={block}
                                         updateBlockWithEditorData={updateBlockWithEditorData}
+                                        adminMode={adminMode}
+                                        canDelete={isAdmin}
+                                        onDirty={handleDirtyChange}
+                                    />
+                                    {buttons}
+                                </Fragment>
+                            );
+                            break;
+                        case "board-builder":
+                            blockType = (
+                                <Fragment key={block.id}>
+                                    <BoardBuilderBlock
+                                        ref={(el) => { blockRefs.current[block.id] = el; }}
+                                        deleteBlock={() => deleteBlock(block)}
+                                        block={block}
+                                        updateBlockContent={updateBlockContent}
+                                        adminMode={adminMode}
+                                        canDelete={isAdmin}
+                                        onDirty={handleDirtyChange}
+                                    />
+                                    {buttons}
+                                </Fragment>
+                            );
+                            break;
+                        case "tier-list":
+                            blockType = (
+                                <Fragment key={block.id}>
+                                    <TierListBlock
+                                        ref={(el) => { blockRefs.current[block.id] = el; }}
+                                        deleteBlock={() => deleteBlock(block)}
+                                        block={block}
+                                        updateBlockContent={updateBlockContent}
                                         adminMode={adminMode}
                                         canDelete={isAdmin}
                                         onDirty={handleDirtyChange}
