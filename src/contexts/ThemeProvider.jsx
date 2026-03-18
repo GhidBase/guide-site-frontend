@@ -66,7 +66,7 @@ export function ThemeProvider({ children }) {
 
 export function DarkModeProvider({ children }) {
     const [darkMode, setDarkMode] = useState(
-        () => localStorage.getItem("darkMode") === "true"
+        () => typeof window !== "undefined" && localStorage.getItem("darkMode") === "true"
     );
 
     function toggleDarkMode() {
