@@ -177,7 +177,7 @@ export default function MobileNavbar({ toggleNav, navOpen }) {
                 </div>
                 <div
                     id="mobile-menu-persistent"
-                    className="flex flex-col items-center pt-2.5 pb-2 text-black px-3 border-t-[2px]  "
+                    className="flex flex-col items-center pt-2.5 pb-2 text-(--text-color) px-3 border-t-[2px]  "
                 >
                     {gameData?.discordUrl && (
                         <div className="flex items-center gap-2 ">

@@ -17,7 +17,7 @@ export default function MobileNavbarCategory({
         <div id="mobile-menu-category" className="mb-[8px] w-full ">
             <button
                 id="mobile-menu-cat-header"
-                className=" w-full text-left border-[2px] border-(--outline-brown) px-[12px] py-[10px] bg-(--primary) "
+                className=" w-full text-left border-[2px] border-(--outline-brown) px-[12px] py-[10px] bg-(--primary) text-amber-50"
                 onClick={() => {
                     console.log(linksRef.current.scrollHeight);
                     setOpenedSection(section.id);
@@ -48,7 +48,7 @@ export default function MobileNavbarCategory({
                     return (
                         <button
                             key={page.id}
-                            className="block w-full text-left px-[12px] py-[10px] border-t-[1px] border-(--outline-brown) text-black cursor-pointer"
+                            className="block w-full text-left px-[12px] py-[10px] border-t-[1px] border-(--outline-brown) text-(--text-color) cursor-pointer"
                             onClick={() => {
                                 toggleNav(false);
                                 setTimeout(() => {
