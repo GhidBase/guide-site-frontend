@@ -2,11 +2,13 @@ import ldgLogo from "../assets/LDG_Title.webp";
 import { useRouteLoaderData, useNavigate, Link, useMatches } from "react-router";
 import { useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
-import { PanelTop, PanelLeft, LogOut } from "lucide-react";
+import { PanelTop, PanelLeft, LogOut, Moon, Sun } from "lucide-react";
+import { useDarkMode } from "../contexts/ThemeProvider.jsx";
 
 export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
     const { pageData, pageSlug, gameData, isLDG } = useRouteLoaderData("main");
     const { isAuthenticated, user, logout } = useAuth();
+    const { darkMode, toggleDarkMode } = useDarkMode();
     const navigate = useNavigate();
     const matches = useMatches();
 
@@ -68,6 +70,15 @@ export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
                         </Link>
                     </>
                 )}
+
+                {/* Dark mode toggle */}
+                <button
+                    onClick={toggleDarkMode}
+                    title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+                    className="p-1.5 rounded border border-amber-50/30 bg-amber-50/10 hover:bg-amber-50/20 text-amber-50 transition-colors cursor-pointer flex items-center justify-center"
+                >
+                    {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                </button>
 
                 {/* Layout toggle — desktop only */}
                 {gameData && (

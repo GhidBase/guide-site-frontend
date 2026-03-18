@@ -7,7 +7,7 @@ import NavBarOpenButton from "./NavBarOpenButton.jsx";
 import MobileNavbar from "./navbar/MobileNavbar.jsx";
 import { useEffect, useState } from "react";
 import { usePageTracking } from "../hooks/usePageTracking.js";
-import { useTheme, themeToStyle } from "../contexts/ThemeProvider.jsx";
+import { useTheme, themeToStyle, useDarkMode, computeDarkTheme, THEME_DEFAULTS } from "../contexts/ThemeProvider.jsx";
 import { EditModeProvider } from "../contexts/EditModeContext.jsx";
 import { PanelLeftOpen, PanelLeftClose } from "lucide-react";
 import Footer from "./Footer.jsx";
@@ -27,10 +27,15 @@ export default function Main() {
     }
     const { gameData } = useLoaderData();
     const { theme, setTheme } = useTheme();
+    const { darkMode } = useDarkMode();
 
     useEffect(() => {
         setTheme(gameData?.theme ?? null);
     }, [gameData?.id]);
+
+    const activeTheme = darkMode
+        ? computeDarkTheme(theme ?? THEME_DEFAULTS)
+        : theme;
 
     function toggleNav(state) {
         // I go by typeof because events can
@@ -71,7 +76,7 @@ export default function Main() {
         <div
             id="main-page-sections"
             className="h-full w-full flex flex-col grow box-border bg-(--surface-background)"
-            style={themeToStyle(theme)}
+            style={themeToStyle(activeTheme)}
         >
             <TopBar navbarLayout={navbarLayout} toggleNavbarLayout={toggleNavbarLayout} />
             {gameData && navbarLayout === "horizontal" && (

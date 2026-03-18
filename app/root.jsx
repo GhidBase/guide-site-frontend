@@ -1,6 +1,6 @@
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
 import { AuthProvider } from "../src/contexts/AuthProvider";
-import { ThemeProvider } from "../src/contexts/ThemeProvider";
+import { ThemeProvider, DarkModeProvider } from "../src/contexts/ThemeProvider";
 import "../src/index.css";
 import "../src/tailwind.css";
 
@@ -54,7 +54,9 @@ export default function Root() {
     return (
         <AuthProvider>
             <ThemeProvider>
-                <Outlet />
+                <DarkModeProvider>
+                    <Outlet />
+                </DarkModeProvider>
             </ThemeProvider>
         </AuthProvider>
     );

@@ -4,9 +4,10 @@ import SearchBar from "../SearchBar";
 import discordLogo from "../../assets/icons8-discord-50.png";
 import MobileNavbarCategory from "./MobileNavbarCategory";
 import { useLoaderData, Link, useNavigate } from "react-router";
-import { Pencil, Eye } from "lucide-react";
+import { Pencil, Eye, Moon, Sun } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useEditMode } from "../../contexts/EditModeContext.jsx";
+import { useDarkMode } from "../../contexts/ThemeProvider.jsx";
 
 export default function MobileNavbar({ toggleNav, navOpen }) {
     console.log("navbar rendered");
@@ -18,6 +19,7 @@ export default function MobileNavbar({ toggleNav, navOpen }) {
     const isContributor = user?.role == "CONTRIBUTOR";
     const navigate = useNavigate();
     const { adminMode, setAdminMode, dirtyBlocks } = useEditMode();
+    const { darkMode, toggleDarkMode } = useDarkMode();
     const navbarItems = [];
 
     if (isAuthenticated && isAdmin) {
@@ -118,6 +120,12 @@ export default function MobileNavbar({ toggleNav, navOpen }) {
                                     </button>
                                 )}
                                 <button
+                                    onClick={toggleDarkMode}
+                                    className="flex-1 text-amber-50 bg-(--primary) rounded px-2 py-1 font-semibold cursor-pointer hover:opacity-90 text-sm h-8 flex items-center justify-center"
+                                >
+                                    {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                                </button>
+                                <button
                                     onClick={handleLogout}
                                     className="flex-1 text-amber-50 bg-(--primary) rounded px-2 py-1 font-semibold cursor-pointer hover:opacity-90 text-sm h-8 flex items-center justify-center"
                                 >
@@ -127,6 +135,12 @@ export default function MobileNavbar({ toggleNav, navOpen }) {
                         </div>
                     ) : (
                         <div className="w-full flex gap-2 p-4 bg-(--surface-background)">
+                            <button
+                                onClick={toggleDarkMode}
+                                className="text-amber-50 bg-(--primary) rounded px-2 py-1 cursor-pointer hover:opacity-90 h-8 flex items-center justify-center"
+                            >
+                                {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                            </button>
                             <Link
                                 to="/login"
                                 onClick={() => toggleNav(false)}
