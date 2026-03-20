@@ -335,9 +335,14 @@ export default function TierList() {
         } catch {}
     }
 
-    async function placeItemFromDrag(tierId, item) {
+    async function placeItemFromDrag(tierId, item, sectionId) {
         const tier = selectedMode?.tiers.find(t => t.id === tierId);
-        if (tier?.entries?.find(e => e.itemId === item.id)) return;
+        const alreadyPlaced = tier?.entries?.find(e => e.itemId === item.id);
+        // If sections exist and item is already in this tier, just assign its section
+        if (alreadyPlaced) {
+            if (hasSections && sectionId) updateLocalSection(item.id, sectionId);
+            return;
+        }
         try {
             const res = await fetch(`${currentAPI}/games/${gameId}/tier-categories/${selectedCategoryId}/modes/${selectedModeId}/entries`, {
                 method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include",
@@ -363,13 +368,16 @@ export default function TierList() {
         } catch {}
     }
 
-    async function handleDrop(tierId) {
+    async function handleDrop(tierId, sectionId) {
         setDragOverTierId(null);
         if (draggedItem) {
-            await placeItemFromDrag(tierId, draggedItem);
+            await placeItemFromDrag(tierId, draggedItem, sectionId);
             setDraggedItem(null);
         } else if (dragEntryRef.current) {
             const { entryId, itemId, fromTierId } = dragEntryRef.current;
+            // Update section assignment (handles same-tier section reassignment)
+            if (hasSections && sectionId) updateLocalSection(itemId, sectionId);
+            // Move to different tier if needed
             if (fromTierId !== tierId) await moveEntry(entryId, tierId, itemId);
             dragEntryRef.current = null;
         }
@@ -715,9 +723,10 @@ export default function TierList() {
                         />
                     </div>
 
-                    {/* Tier grid */}
+                    {/* Tier grid + item picker side by side */}
+                    <div className="flex gap-4 items-start">
                     {selectedMode && (
-                        <div className="flex flex-col rounded-lg overflow-hidden border-2 border-(--outline-brown)/30">
+                        <div className="flex-1 flex flex-col rounded-lg overflow-hidden border-2 border-(--outline-brown)/30">
 
                             {/* Section column headers */}
                             {(hasSections || isAdmin) && (
@@ -832,11 +841,18 @@ export default function TierList() {
                                         {hasSections ? (
                                             // Section columns
                                             sortedSections.map((section, i) => {
-                                                const sectionEntries = entries.filter(e => (e.sectionId ?? localSectionMap[e.itemId]) === section.id);
+                                                const sectionEntries = entries.filter(e => {
+                                                    const assigned = e.sectionId ?? localSectionMap[e.itemId];
+                                                    // Orphaned items (no section assignment) fall into the first column
+                                                    if (i === 0 && (assigned == null || assigned === undefined)) return true;
+                                                    return assigned === section.id;
+                                                });
                                                 return (
                                                     <div key={section.id}
                                                         data-tier-id={tier.id}
                                                         onClick={() => isAdmin && selectedItem && placeItem(tier.id, section.id)}
+                                                        onDragOver={isAdmin ? (e) => { e.preventDefault(); setDragOverTierId(String(tier.id)); } : undefined}
+                                                        onDrop={isAdmin ? (e) => { e.preventDefault(); e.stopPropagation(); handleDrop(tier.id, section.id); } : undefined}
                                                         className={`flex-1 p-2 flex flex-wrap gap-2 content-start transition-colors
                                                             ${dragOverTierId == String(tier.id) ? "bg-(--primary)/15" : "bg-(--accent)"}
                                                             ${i > 0 ? "border-l-2 border-(--outline-brown)/20" : ""}
@@ -903,21 +919,15 @@ export default function TierList() {
                         </div>
                     )}
 
-                    {!selectedMode && modes.length === 0 && (
-                        <p className="text-sm text-(--text-color) opacity-40 text-center py-10">
-                            No modes yet.{isAdmin && " Use Manage to add modes."}
-                        </p>
-                    )}
-
-                    {/* Admin: item picker */}
+                    {/* Admin: item picker — right sidebar */}
                     {isAdmin && (
-                        <div className="border border-(--outline-brown)/50 rounded bg-(--accent) p-4 flex flex-col gap-3">
+                        <div className="w-52 shrink-0 border border-(--outline-brown)/50 rounded bg-(--accent) p-3 flex flex-col gap-3 sticky top-4">
                             <p className="text-xs font-semibold text-(--text-color) opacity-60 uppercase tracking-wide">
                                 {selectedItem
-                                    ? `Selected: ${selectedItem.name} — click a${hasSections ? " section column in a" : ""} tier row to place`
-                                    : `Select a ${categoryData.name.toLowerCase().replace(/s$/, "")} to place in a tier`}
+                                    ? `Selected: ${selectedItem.name}`
+                                    : "Select to place"}
                             </p>
-                            <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto">
+                            <div className="flex flex-wrap gap-1.5 overflow-y-auto max-h-[60vh]">
                                 {poolItems.map(item => (
                                     <button key={item.id}
                                         onClick={() => setSelectedItem(prev => prev?.id === item.id ? null : item)}
@@ -939,11 +949,18 @@ export default function TierList() {
                                 ))}
                                 {poolItems.length === 0 && (
                                     <p className="text-xs text-(--text-color) opacity-40 italic">
-                                        No items in the pool yet. Add some in the Manage panel.
+                                        No items yet. Add some in Manage.
                                     </p>
                                 )}
                             </div>
                         </div>
+                    )}
+                    </div>{/* end flex row */}
+
+                    {!selectedMode && modes.length === 0 && (
+                        <p className="text-sm text-(--text-color) opacity-40 text-center py-10">
+                            No modes yet.{isAdmin && " Use Manage to add modes."}
+                        </p>
                     )}
                 </>
             )}
