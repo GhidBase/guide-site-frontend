@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { currentAPI } from "../config/api.js";
-import { useRouteLoaderData } from "react-router";
+import { useRouteLoaderData, Link } from "react-router";
 import {
     PencilIcon,
     Check,
@@ -912,6 +912,17 @@ export default function NavigationPanel() {
     return (
         <>
         <div className="px-4 sm:px-0">
+            {/* ── Quick Links ───────────────────────────────────────────────── */}
+            <div className="mt-8 max-w-4xl mb-6 flex gap-3">
+                <Link to="../board-builder"
+                    className="px-4 py-2 bg-(--primary) text-amber-50 rounded hover:opacity-90 text-sm font-medium">
+                    Board Builder
+                </Link>
+                <Link to="../tier-list"
+                    className="px-4 py-2 bg-(--primary) text-amber-50 rounded hover:opacity-90 text-sm font-medium">
+                    Tier List
+                </Link>
+            </div>
             {/* ── Game Settings ─────────────────────────────────────────────── */}
             <div className="mt-8 max-w-4xl mb-6 border border-(--outline)/40 rounded-lg overflow-hidden">
                 <div className="bg-(--primary) px-4 py-2">
