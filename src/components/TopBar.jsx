@@ -77,6 +77,7 @@ export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
                 {/* Dark mode toggle */}
                 <button
                     onClick={toggleDarkMode}
+                    title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
                     className="p-1.5 rounded border border-amber-50/30 text-amber-50 hover:opacity-80 transition-colors cursor-pointer flex items-center justify-center"
                     style={{ background: darkMode ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.12)" }}
                 >

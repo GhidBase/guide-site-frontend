@@ -86,6 +86,7 @@ function HorizontalSearch({ gameData, isLDG, sectionsMap }) {
             ) : (
                 <button
                     onClick={handleExpand}
+                    title="Search pages"
                     className="p-1.5 text-amber-50 cursor-pointer hover:opacity-70 transition-opacity"
                 >
                     <Search className="w-4 h-4" />
@@ -325,6 +326,7 @@ export default function HorizontalNavbar() {
                             }
                             setAdminMode(m => !m);
                         }}
+                        title={adminMode ? "Exit edit mode" : "Enter edit mode"}
                         style={{ textShadow: "none" }}
                         className="p-1.5 text-amber-50 cursor-pointer hover:opacity-70 transition-opacity"
                     >
