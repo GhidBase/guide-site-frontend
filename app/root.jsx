@@ -54,7 +54,6 @@ gtag('config', window.GA_ID, { send_page_view: false });`,
 function GATracker() {
     const location = useLocation();
     useEffect(() => {
-        if (typeof window.gtag !== "function") return;
         window.gtag("event", "page_view", {
             page_path: location.pathname + location.search,
         });
