@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import html2canvas from "html2canvas";
 import { currentAPI } from "../../config/api";
 import { useRouteLoaderData } from "react-router";
 import { useAuth } from "../../hooks/useAuth";
@@ -270,12 +269,126 @@ export default function BoardBuilder({ allowedBoardIds, hideAdmin } = {}) {
     }
 
     async function saveAsPng() {
-        if (!boardRef.current) return;
-        const canvas = await html2canvas(boardRef.current, {
-            backgroundColor: null,
-            useCORS: true,
-            allowTaint: false,
-        });
+        if (!boardRef.current || !effectiveBoard) return;
+
+        const el = boardRef.current;
+        const dpr = 2;
+        const W = el.offsetWidth * dpr;
+        const H = el.offsetHeight * dpr;
+
+        const canvas = document.createElement("canvas");
+        canvas.width = W;
+        canvas.height = H;
+        const ctx = canvas.getContext("2d");
+
+        async function fetchImage(url) {
+            const res = await fetch(url, { cache: "no-store" });
+            const blob = await res.blob();
+            const objUrl = URL.createObjectURL(blob);
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => { URL.revokeObjectURL(objUrl); resolve(img); };
+                img.onerror = () => { URL.revokeObjectURL(objUrl); reject(); };
+                img.src = objUrl;
+            });
+        }
+
+        // 1. Background
+        if (effectiveBoard.bgImage) {
+            try {
+                const bgImg = await fetchImage(effectiveBoard.bgImage);
+                const bgSize = effectiveBoard.bgSize || "cover";
+                const bgX = effectiveBoard.bgX ?? 0;
+                const bgY = effectiveBoard.bgY ?? 0;
+                const imgAspect = bgImg.naturalWidth / bgImg.naturalHeight;
+                const canvasAspect = W / H;
+                let drawW, drawH;
+                if (bgSize === "cover") {
+                    if (imgAspect > canvasAspect) { drawH = H; drawW = H * imgAspect; }
+                    else { drawW = W; drawH = W / imgAspect; }
+                } else if (bgSize === "contain") {
+                    if (imgAspect > canvasAspect) { drawW = W; drawH = W / imgAspect; }
+                    else { drawH = H; drawW = H * imgAspect; }
+                } else if (bgSize.endsWith("%")) {
+                    drawW = W * parseInt(bgSize) / 100;
+                    drawH = drawW / imgAspect;
+                } else {
+                    if (imgAspect > canvasAspect) { drawH = H; drawW = H * imgAspect; }
+                    else { drawW = W; drawH = W / imgAspect; }
+                }
+                // CSS background-position: X% Y% → drawPos = (container - image) * fraction
+                const drawX = (W - drawW) * (0.5 + bgX / 100);
+                const drawY = (H - drawH) * (0.5 + bgY / 100);
+                ctx.drawImage(bgImg, drawX, drawY, drawW, drawH);
+            } catch {
+                ctx.fillStyle = "#4a7830";
+                ctx.fillRect(0, 0, W, H);
+            }
+        } else {
+            ctx.fillStyle = "#4a7830";
+            ctx.fillRect(0, 0, W, H);
+        }
+
+        // 2. Grid
+        const bgPaddingX = effectiveBoard.bgPaddingX ?? 0;
+        const bgPaddingY = effectiveBoard.bgPaddingY ?? 0;
+        const gridOffsetX = effectiveBoard.gridOffsetX ?? 0;
+        const gridOffsetY = effectiveBoard.gridOffsetY ?? 0;
+        const gridLeft   = W * (bgPaddingX + gridOffsetX) / 100;
+        const gridTop    = H * (bgPaddingY + gridOffsetY) / 100;
+        const gridRight  = W * (1 - (bgPaddingX - gridOffsetX) / 100);
+        const gridBottom = H * (1 - (bgPaddingY - gridOffsetY) / 100);
+        const gridW = gridRight - gridLeft;
+        const gridH = gridBottom - gridTop;
+        const cols = effectiveBoard.cols;
+        const rows = effectiveBoard.rows;
+        const cellW = gridW / cols;
+        const cellH = gridH / rows;
+
+        ctx.strokeStyle = "rgba(255,255,255,0.3)";
+        ctx.lineWidth = dpr;
+        ctx.setLineDash([4 * dpr, 4 * dpr]);
+        for (let c = 1; c < cols; c++) {
+            const x = gridLeft + c * cellW;
+            ctx.beginPath(); ctx.moveTo(x, gridTop); ctx.lineTo(x, gridBottom); ctx.stroke();
+        }
+        for (let r = 1; r < rows; r++) {
+            const y = gridTop + r * cellH;
+            ctx.beginPath(); ctx.moveTo(gridLeft, y); ctx.lineTo(gridRight, y); ctx.stroke();
+        }
+        ctx.setLineDash([]);
+
+        // 3. Unit images
+        const cells = getCells(currentBoard.id, currentBoard.rows, currentBoard.cols);
+        const uniqueUrls = [...new Set(
+            cells.flat().filter(Boolean).map(id => unitsById[id]?.imageUrl).filter(Boolean)
+        )];
+        const imageCache = {};
+        await Promise.all(uniqueUrls.map(async (url) => {
+            try { imageCache[url] = await fetchImage(url); } catch {}
+        }));
+
+        for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+                const unitId = cells[r]?.[c];
+                if (!unitId) continue;
+                const unit = unitsById[unitId];
+                if (!unit?.imageUrl) continue;
+                const img = imageCache[unit.imageUrl];
+                if (!img) continue;
+                const boxW = cellW * 0.8;
+                const boxH = cellH * 0.8;
+                const imgAspect = img.naturalWidth / img.naturalHeight;
+                const boxAspect = boxW / boxH;
+                let iW, iH;
+                if (imgAspect > boxAspect) { iW = boxW; iH = boxW / imgAspect; }
+                else { iH = boxH; iW = boxH * imgAspect; }
+                const cx = gridLeft + c * cellW + cellW / 2;
+                const cy = gridTop + r * cellH + cellH / 2;
+                ctx.drawImage(img, cx - iW / 2, cy - iH / 2, iW, iH);
+            }
+        }
+
         const link = document.createElement("a");
         link.download = `${effectiveBoard.name || "board"}.png`;
         link.href = canvas.toDataURL("image/png");
@@ -553,12 +666,20 @@ export default function BoardBuilder({ allowedBoardIds, hideAdmin } = {}) {
                             {effectiveBoard.rows}×{effectiveBoard.cols}
                         </span>
                         {!isCurrentlyEditing && (
-                            <button
-                                onClick={clearBoard}
-                                className="px-3 py-1.5 text-sm bg-(--accent) border border-(--outline-brown)/50 text-(--text-color) rounded cursor-pointer hover:bg-(--surface-background)"
-                            >
-                                Clear
-                            </button>
+                            <>
+                                <button
+                                    onClick={clearBoard}
+                                    className="px-3 py-1.5 text-sm bg-(--accent) border border-(--outline-brown)/50 text-(--text-color) rounded cursor-pointer hover:bg-(--surface-background)"
+                                >
+                                    Clear
+                                </button>
+                                <button
+                                    onClick={saveAsPng}
+                                    className="px-3 py-1.5 text-sm bg-(--primary) text-amber-50 rounded cursor-pointer hover:opacity-90"
+                                >
+                                    Save PNG
+                                </button>
+                            </>
                         )}
                         {isAdmin && adminOpen && !isCurrentlyEditing && (
                             <button
