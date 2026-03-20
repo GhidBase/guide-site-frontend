@@ -4,8 +4,8 @@ import { useRef } from "react";
 export default function MobileNavbarCategory({
     section,
     toggleNav,
-    openedSection,
-    setOpenedSection,
+    isOpen,
+    onToggle,
 }) {
     const title = section.title;
     const pages = [...section.pages].sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0));
@@ -18,10 +18,7 @@ export default function MobileNavbarCategory({
             <button
                 id="mobile-menu-cat-header"
                 className=" w-full text-left border-[2px] border-(--outline-brown) px-[12px] py-[10px] bg-(--primary) text-amber-50"
-                onClick={() => {
-                    console.log(linksRef.current.scrollHeight);
-                    setOpenedSection(section.id);
-                }}
+                onClick={onToggle}
             >
                 {title} ({pages.length})
             </button>
@@ -31,10 +28,7 @@ export default function MobileNavbarCategory({
                 id="mobile-menu-links"
                 className="border-[2px] border-t-0 border-(--outline-brown) overflow-hidden transition-all duration-300 ease-in-out"
                 style={{
-                    height:
-                        openedSection === section.id
-                            ? linksRef.current?.scrollHeight + "px"
-                            : "0px",
+                    height: isOpen ? linksRef.current?.scrollHeight + "px" : "0px",
                 }}
             >
                 {pages.map((page) => {
