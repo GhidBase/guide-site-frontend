@@ -215,10 +215,6 @@ export default function PageBuilder() {
         setBlocks(newBlocks);
     }
 
-    if (!gameData) {
-        return <GuideCodexHomepage />;
-    }
-
     return (
         <Fragment>
         <div style={{ viewTransitionName: "page-content" }}>
