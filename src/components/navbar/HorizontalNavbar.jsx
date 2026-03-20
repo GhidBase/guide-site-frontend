@@ -55,7 +55,9 @@ function HorizontalSearch({ gameData, isLDG, sectionsMap }) {
     }
 
     function buildUrl(slug) {
-        return isLDG ? "/" + slug : "/games/" + gameData?.slug + "/" + slug;
+        if (isLDG) return "/" + slug;
+        if (slug === gameData?.slug) return "/games/" + gameData?.slug;
+        return "/games/" + gameData?.slug + "/" + slug;
     }
 
     function handleSelect(result) {
@@ -183,7 +185,9 @@ export default function HorizontalNavbar() {
     const overflowSections = visibleCount === Infinity ? [] : sections.slice(visibleCount);
 
     function buildSlug(pageSlug) {
-        return isLDG ? "/" + pageSlug : "/games/" + gameData?.slug + "/" + pageSlug;
+        if (isLDG) return "/" + pageSlug;
+        if (pageSlug === gameData?.slug) return "/games/" + gameData?.slug;
+        return "/games/" + gameData?.slug + "/" + pageSlug;
     }
 
     function navigateTo(slug) {

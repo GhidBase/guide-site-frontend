@@ -16,6 +16,8 @@ export default function NavbarButton({
     var actualSlug;
     if (isLDG) {
         actualSlug = "/" + slug;
+    } else if (slug === gameData?.slug) {
+        actualSlug = "/games/" + gameData.slug;
     } else {
         actualSlug = "/games/" + gameData.slug + "/" + slug;
     }

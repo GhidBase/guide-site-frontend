@@ -26,7 +26,7 @@ export default function Main() {
         setNavbarLayout((prev) => (prev === "vertical" ? "horizontal" : "vertical"));
     }
     const { gameData } = useLoaderData();
-    const { theme, setTheme } = useTheme();
+    const { setTheme } = useTheme();
     const { darkMode } = useDarkMode();
 
     useEffect(() => {
@@ -34,8 +34,8 @@ export default function Main() {
     }, [gameData?.id]);
 
     const activeTheme = darkMode
-        ? computeDarkTheme(theme ?? THEME_DEFAULTS)
-        : theme;
+        ? computeDarkTheme(gameData?.theme ?? THEME_DEFAULTS)
+        : gameData?.theme ?? null;
 
     function toggleNav(state) {
         // I go by typeof because events can
