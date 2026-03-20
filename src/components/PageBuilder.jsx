@@ -5,6 +5,7 @@ import { Link, useRouteLoaderData } from "react-router";
 import SingleImageBlock from "./blocks/SingleImageBlock";
 import TierListBlock from "./blocks/TierListBlock";
 import BoardBuilderBlock from "./blocks/BoardBuilderBlock";
+import GuideCodexHomepage from "./GuideCodexHomepage";
 import { useAuth } from "../hooks/useAuth.js";
 import { useEditMode } from "../contexts/EditModeContext.jsx";
 import { Pencil } from "lucide-react";
@@ -212,6 +213,10 @@ export default function PageBuilder() {
         );
         newBlocks[adjustIndex] = result;
         setBlocks(newBlocks);
+    }
+
+    if (!gameData) {
+        return <GuideCodexHomepage />;
     }
 
     return (
