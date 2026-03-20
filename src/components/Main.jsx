@@ -1,5 +1,5 @@
 import "../css/tables.css";
-import { Outlet, useLoaderData } from "react-router";
+import { Outlet, useLoaderData, useLocation } from "react-router";
 import Navbar from "./navbar/Navbar.jsx";
 import HorizontalNavbar from "./navbar/HorizontalNavbar.jsx";
 import TopBar from "./TopBar.jsx";
@@ -25,7 +25,9 @@ export default function Main() {
     function toggleNavbarLayout() {
         setNavbarLayout((prev) => (prev === "vertical" ? "horizontal" : "vertical"));
     }
-    const { gameData } = useLoaderData();
+    const { gameData, isLDG } = useLoaderData();
+    const { pathname } = useLocation();
+    const isHomepage = pathname === "/" && !isLDG;
     const { theme, setTheme } = useTheme();
     const { darkMode } = useDarkMode();
 
@@ -75,10 +77,10 @@ export default function Main() {
         <EditModeProvider>
         <div
             id="main-page-sections"
-            className="h-full w-full flex flex-col grow box-border bg-(--surface-background)"
-            style={themeToStyle(activeTheme)}
+            className={`h-full w-full flex flex-col grow box-border ${!isHomepage ? "bg-(--surface-background)" : ""}`}
+            style={!isHomepage ? themeToStyle(activeTheme) : undefined}
         >
-            <TopBar navbarLayout={navbarLayout} toggleNavbarLayout={toggleNavbarLayout} />
+            {!isHomepage && <TopBar navbarLayout={navbarLayout} toggleNavbarLayout={toggleNavbarLayout} />}
             {gameData && navbarLayout === "horizontal" && (
                 <div className="hidden lg:block">
                     <HorizontalNavbar />
@@ -86,8 +88,8 @@ export default function Main() {
             )}
             <div
                 id="side-bar-and-content"
-                className={`relative w-full box-border border-t-4 border-(--outline) flex flex-1
-                bg-(--surface-background)
+                className={`relative w-full box-border flex flex-1
+                ${!isHomepage ? "border-t-4 border-(--outline) bg-(--surface-background)" : ""}
                 transition-[padding] duration-300 ease-in-out
                 ${gameData && !sidebarCollapsed && navbarLayout === "vertical" && "xl:pr-30 2xl:pr-60"} `}
             >
@@ -116,7 +118,8 @@ export default function Main() {
                     <div className="hidden lg:block w-0 overflow-visible self-start sticky top-3 z-10">
                         <button
                             onClick={toggleSidebar}
-                            className="flex items-center justify-center ml-3 mt-3 p-1.5 rounded border-2 border-(--outline) bg-(--primary) cursor-pointer hover:opacity-80"
+                            className="flex items-center justify-center ml-3 mt-3 p-1.5 rounded border-2 cursor-pointer hover:opacity-80"
+                            style={{ background: darkMode ? "rgba(255,255,255,0.06)" : "var(--primary)", borderColor: darkMode ? "rgba(255,235,200,0.15)" : "var(--outline)" }}
                             title={
                                 sidebarCollapsed
                                     ? "Expand sidebar"
@@ -131,15 +134,19 @@ export default function Main() {
                         </button>
                     </div>
                 )}
-                <div
-                    id="page-outer-bounds"
-                    className={`gap-4 sm:px-4 pb-4 flex flex-col w-full max-w-230 mx-auto text-(--text-color)`}
-                >
+                {isHomepage ? (
                     <Outlet />
-                </div>
+                ) : (
+                    <div
+                        id="page-outer-bounds"
+                        className={`gap-4 sm:px-4 pb-4 flex flex-col w-full max-w-230 mx-auto text-(--text-color)`}
+                    >
+                        <Outlet />
+                    </div>
+                )}
             </div>
 
-            <Footer />
+            {!isHomepage && <Footer />}
 
             {gameData && (
                 <MobileNavbar
