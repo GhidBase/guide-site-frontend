@@ -1,11 +1,12 @@
 import NavbarButton from "./NavbarButton";
-import { LogOut } from "lucide-react";
+import { LogOut, ChevronsUpDown } from "lucide-react";
 import { useRouteLoaderData, Link, useNavigate } from "react-router";
 import { Fragment, useState } from "react";
 import NavbarSection from "./NavbarSection";
 import NavbarEditButton from "./NavbarEditButton";
 import { useAuth } from "@/hooks/useAuth";
 import SearchBar from "../SearchBar";
+import { useDarkMode } from "../../contexts/ThemeProvider.jsx";
 
 export default function Navbar({
     className,
@@ -15,10 +16,20 @@ export default function Navbar({
 }) {
     const { gameData, sectionsMap, isLDG } = useRouteLoaderData("main");
     const { isAuthenticated, user, logout, isLoading } = useAuth();
+    const { darkMode } = useDarkMode();
     const isAdmin = user?.role == "ADMIN";
     const navigate = useNavigate();
     const [editMode, setEditMode] = useState(false);
+    const [collapsedSections, setCollapsedSections] = useState(new Set());
     const gameSlug = isLDG ? "" : "/games/" + gameData?.slug;
+
+    function toggleSection(id) {
+        setCollapsedSections((prev) => {
+            const next = new Set(prev);
+            next.has(id) ? next.delete(id) : next.add(id);
+            return next;
+        });
+    }
     const navbarItems = [];
 
     function toggleEditMode() {
@@ -342,18 +353,18 @@ export default function Navbar({
 
     return (
         <Fragment>
-            <div id="nav-bar" className={className}>
+            <div id="nav-bar" className={className} style={{ fontFamily: "'Outfit', sans-serif", ...(darkMode ? { background: "#0f0c0a", color: "rgba(255,235,200,0.85)" } : {}) }}>
                 <div className="w-full flex flex-col">
                     {!isLoading && (
-                        <div className="w-full border-b-4 border-(--outline)">
+                        <div className="w-full border-b-4 border-(--outline)" style={darkMode ? { borderColor: "rgba(255,235,200,0.08)" } : {}}>
                             {sectionsMap && (
-                                <div className="px-3 py-2 bg-(--surface-background)">
+                                <div className="px-3 py-2" style={{ background: darkMode ? "rgba(255,255,255,0.03)" : "var(--surface-background)" }}>
                                     <SearchBar />
                                 </div>
                             )}
                             {isAuthenticated ? (
-                                <div className="w-full flex flex-col p-4 bg-(--surface-background)">
-                                    <p className="text-xl text-(--text-color) text-center font-semibold mb-3">
+                                <div className="w-full flex flex-col p-4" style={{ background: darkMode ? "rgba(255,255,255,0.03)" : "var(--surface-background)" }}>
+                                    <p className="text-xl text-center font-semibold mb-3" style={{ color: darkMode ? "rgba(255,235,200,0.7)" : "var(--text-color)" }}>
                                         {user?.username}
                                     </p>
                                     {isAdmin && (
@@ -362,7 +373,8 @@ export default function Navbar({
                                                 navigate("/dashboard");
                                                 toggleNav(false);
                                             }}
-                                            className="w-full text-amber-50 bg-(--primary) rounded px-2 py-1 font-semibold cursor-pointer hover:opacity-90 text-sm mb-2"
+                                            className="w-full text-amber-50 rounded px-2 py-1 font-semibold cursor-pointer hover:opacity-90 text-sm mb-2"
+                                            style={{ background: darkMode ? "rgba(255,235,200,0.12)" : "var(--primary)" }}
                                         >
                                             Dashboard
                                         </button>
@@ -375,18 +387,20 @@ export default function Navbar({
                                     </button>
                                 </div>
                             ) : (
-                                <div className="w-full flex gap-2 p-4 bg-(--surface-background)">
+                                <div className="w-full flex gap-2 p-4" style={{ background: darkMode ? "rgba(255,255,255,0.03)" : "var(--surface-background)" }}>
                                     <Link
                                         to="/login"
                                         onClick={() => toggleNav(false)}
-                                        className="flex-1 text-center text-amber-50 bg-(--primary) rounded px-2 py-1 font-semibold cursor-pointer hover:opacity-90 text-sm"
+                                        className="flex-1 text-center text-amber-50 rounded px-2 py-1 font-semibold cursor-pointer hover:opacity-90 text-sm"
+                                        style={{ background: darkMode ? "rgba(255,235,200,0.12)" : "var(--primary)" }}
                                     >
                                         Log In
                                     </Link>
                                     <Link
                                         to="/signup"
                                         onClick={() => toggleNav(false)}
-                                        className="flex-1 text-center text-amber-50 bg-(--primary) rounded px-2 py-1 font-semibold cursor-pointer hover:opacity-90 text-sm"
+                                        className="flex-1 text-center text-amber-50 rounded px-2 py-1 font-semibold cursor-pointer hover:opacity-90 text-sm"
+                                        style={{ background: darkMode ? "rgba(255,235,200,0.12)" : "var(--primary)" }}
                                     >
                                         Sign Up
                                     </Link>
@@ -395,63 +409,85 @@ export default function Navbar({
                         </div>
                     )}
                 </div>
-                {navbarItems.map((item, index, arr) => {
-                    if (item.type === "page") {
-                        return (
-                            <NavbarButton
-                                slug={item.slug}
-                                navbarEditMode={editMode}
-                                nonEditable={item.nonEditable}
-                                navbarTitle={item.navbarTitle}
-                                key={item.id}
-                                buttonData={item}
-                                className={`
-                                    w-full h-20
-                                    flex items-center justify-center
-                                    lg:h-15 lg:border-b-4 border-(--outline)
-                                    ${index < arr.length - 1 && "border-b-4"}
-                                    text-center
-                                    `}
-                                toggleNav={toggleNav}
-                            />
-                        );
+                {(() => {
+                    // Group flat items into sections
+                    const groups = [];
+                    let cur = { sectionId: null, sectionTitle: null, items: [] };
+                    groups.push(cur);
+                    for (const item of navbarItems) {
+                        if (item.type === "section") {
+                            cur = { sectionId: item.id, sectionTitle: item.navbarTitle, items: [] };
+                            groups.push(cur);
+                        } else {
+                            cur.items.push(item);
+                        }
                     }
-                    if (item.type === "section") {
-                        return (
-                            <NavbarSection
-                                navbarTitle={item.navbarTitle}
-                                navbarEditMode={editMode}
-                                key={item.id}
-                                id={item.id}
-                                nonEditable={item.nonEditable}
-                                className={`
-                                    w-full h-15
-                                    text-2xl font-bold underline
-                                    flex items-center justify-center
-                                    bg-(--surface-background) text-(--text-color) lg:border-b-4 border-(--outline)
-                                    ${index < arr.length - 1 && "border-b-4"}`}
-                            />
-                        );
-                    }
-                    if (item.type === "edit-button") {
-                        return (
-                            <NavbarEditButton
-                                toggleEditMode={toggleEditMode}
-                                navbarEditMode={editMode}
-                                navbarTitle={item.navbarTitle}
-                                key={item.id}
-                                nonEditable={item.nonEditable}
-                                buttonData={item}
-                                className={`
-                                    w-full h-20
-                                    cursor-pointer
-                                    flex items-center justify-center
-                                    lg:h-15 lg:border-b-4 border-(--outline)
-                                    ${index < arr.length - 1 && "border-b-4"}`}
-                            />
-                        );
-                    }
-                })}
+                    const sectionIds = groups.filter((g) => g.sectionId).map((g) => g.sectionId);
+                    const allCollapsed = sectionIds.length > 0 && sectionIds.every((id) => collapsedSections.has(id));
+
+                    return (
+                        <>
+                            {sectionIds.length > 0 && (
+                                <button
+                                    onClick={() => setCollapsedSections(allCollapsed ? new Set() : new Set(sectionIds))}
+                                    className="w-full text-xs py-1.5 px-3 flex items-center justify-end gap-1 cursor-pointer transition-opacity hover:opacity-80 border-b"
+                                    style={{ background: darkMode ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.1)", color: "rgba(255,235,200,0.35)", fontFamily: "'Outfit', sans-serif", letterSpacing: "0.08em", borderColor: darkMode ? "rgba(255,235,200,0.08)" : "var(--outline)" }}
+                                >
+                                    <ChevronsUpDown className="w-3 h-3" />
+                                    {allCollapsed ? "Expand all" : "Collapse all"}
+                                </button>
+                            )}
+                            {groups.map((group) => (
+                                <Fragment key={group.sectionId ?? "__pre__"}>
+                                    {group.sectionId && (
+                                        <NavbarSection
+                                            navbarTitle={group.sectionTitle}
+                                            isCollapsed={collapsedSections.has(group.sectionId)}
+                                            onToggle={() => toggleSection(group.sectionId)}
+                                            darkMode={darkMode}
+                                            className="w-full"
+                                        />
+                                    )}
+                                    <div style={{
+                                        display: "grid",
+                                        gridTemplateRows: group.sectionId && collapsedSections.has(group.sectionId) ? "0fr" : "1fr",
+                                        transition: "grid-template-rows 0.35s cubic-bezier(0.16,1,0.3,1)",
+                                    }}><div style={{ overflow: "hidden" }}>
+                                        {group.items.map((item) => {
+                                            if (item.type === "page") return (
+                                                <NavbarButton
+                                                    key={item.id}
+                                                    slug={item.slug}
+                                                    navbarEditMode={editMode}
+                                                    nonEditable={item.nonEditable}
+                                                    navbarTitle={item.navbarTitle}
+                                                    buttonData={item}
+                                                    className={darkMode
+                                                        ? "w-full h-20 flex items-center justify-center lg:h-15 border-b border-white/8 text-center text-amber-50/75 hover:text-amber-50 hover:bg-white/5 transition-colors"
+                                                        : "w-full h-20 flex items-center justify-center lg:h-15 border-b-4 border-(--outline) text-center text-amber-50"
+                                                    }
+                                                    toggleNav={toggleNav}
+                                                />
+                                            );
+                                            if (item.type === "edit-button") return (
+                                                <NavbarEditButton
+                                                    key={item.id}
+                                                    toggleEditMode={toggleEditMode}
+                                                    navbarEditMode={editMode}
+                                                    navbarTitle={item.navbarTitle}
+                                                    nonEditable={item.nonEditable}
+                                                    buttonData={item}
+                                                    className="w-full h-20 cursor-pointer flex items-center justify-center lg:h-15 border-b-4 border-(--outline)"
+                                                />
+                                            );
+                                            return null;
+                                        })}
+                                    </div></div>
+                                </Fragment>
+                            ))}
+                        </>
+                    );
+                })()}
             </div>
             <button onClick={toggleNav} className={closeClassName + " hidden"}>
                 Close
