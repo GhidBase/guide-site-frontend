@@ -13,7 +13,19 @@ export default function MobileNavbar({ toggleNav, navOpen }) {
     console.log("navbar rendered");
     const { gameData, sectionsMap } = useLoaderData();
     const sections = Array.from(sectionsMap.values());
-    const [openedSection, setOpenedSection] = useState(sections[0]?.id);
+    const [openedSections, setOpenedSections] = useState(new Set(sections[0] ? [sections[0].id] : []));
+    const allOpen = sections.every((s) => openedSections.has(s.id));
+
+    function toggleSection(id) {
+        setOpenedSections((prev) => {
+            const next = new Set(prev);
+            next.has(id) ? next.delete(id) : next.add(id);
+            return next;
+        });
+    }
+    function toggleAll() {
+        setOpenedSections(allOpen ? new Set() : new Set(sections.map((s) => s.id)));
+    }
     const { isAuthenticated, user, logout, isLoading } = useAuth();
     const isAdmin = user?.role == "ADMIN";
     const isContributor = user?.role == "CONTRIBUTOR";
@@ -163,17 +175,21 @@ export default function MobileNavbar({ toggleNav, navOpen }) {
                     id="mobile-menu-categories"
                     className=" flex flex-col overflow-y-auto px-[12px] py-[8px] flex-1 "
                 >
-                    {actualSections.map((section) => {
-                        return (
-                            <MobileNavbarCategory
-                                key={section.id}
-                                toggleNav={toggleNav}
-                                section={section}
-                                openedSection={openedSection}
-                                setOpenedSection={setOpenedSection}
-                            />
-                        );
-                    })}
+                    <button
+                        onClick={toggleAll}
+                        className="w-full text-xs py-1.5 px-3 text-(--text-color) opacity-50 hover:opacity-80 flex items-center justify-end gap-1 cursor-pointer mb-1 transition-opacity"
+                    >
+                        {allOpen ? "Collapse all" : "Expand all"}
+                    </button>
+                    {actualSections.map((section) => (
+                        <MobileNavbarCategory
+                            key={section.id}
+                            toggleNav={toggleNav}
+                            section={section}
+                            isOpen={openedSections.has(section.id)}
+                            onToggle={() => toggleSection(section.id)}
+                        />
+                    ))}
                 </div>
                 <div
                     id="mobile-menu-persistent"
