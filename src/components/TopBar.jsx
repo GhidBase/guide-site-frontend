@@ -65,10 +65,10 @@ export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
                     </>
                 ) : (
                     <>
-                        <Link to="/login" title="Log In" className="p-1.5 rounded border border-amber-50/30 text-amber-50 hover:bg-amber-50/10 transition-colors flex items-center justify-center">
+                        <Link to="/login" title="Log In" className="p-1.5 rounded border border-amber-50/30 text-amber-50 hover:opacity-80 transition-colors flex items-center justify-center" style={{ background: darkMode ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.12)" }}>
                             <LogIn className="w-4 h-4" />
                         </Link>
-                        <Link to="/signup" title="Sign Up" className="p-1.5 rounded bg-amber-50/20 border border-amber-50/30 text-amber-50 hover:bg-amber-50/30 transition-colors flex items-center justify-center">
+                        <Link to="/signup" title="Sign Up" className="p-1.5 rounded border border-amber-50/30 text-amber-50 hover:opacity-80 transition-colors flex items-center justify-center" style={{ background: darkMode ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.12)" }}>
                             <UserPlus className="w-4 h-4" />
                         </Link>
                     </>
@@ -77,7 +77,8 @@ export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
                 {/* Dark mode toggle */}
                 <button
                     onClick={toggleDarkMode}
-                    className="p-1.5 rounded border border-amber-50/30 bg-amber-50/10 hover:bg-amber-50/20 text-amber-50 transition-colors cursor-pointer flex items-center justify-center"
+                    className="p-1.5 rounded border border-amber-50/30 text-amber-50 hover:opacity-80 transition-colors cursor-pointer flex items-center justify-center"
+                    style={{ background: darkMode ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.12)" }}
                 >
                     {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
                 </button>
@@ -87,7 +88,8 @@ export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
                     <button
                         onClick={toggleNavbarLayout}
                         title={navbarLayout === "horizontal" ? "Switch to vertical sidebar" : "Switch to horizontal navbar"}
-                        className="hidden lg:flex p-1.5 rounded border border-amber-50/30 bg-amber-50/10 hover:bg-amber-50/20 text-amber-50 transition-colors cursor-pointer"
+                        className="hidden lg:flex p-1.5 rounded border border-amber-50/30 text-amber-50 hover:opacity-80 transition-colors cursor-pointer"
+                        style={{ background: darkMode ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.12)" }}
                     >
                         {navbarLayout === "horizontal"
                             ? <PanelLeft className="w-4 h-4" />
