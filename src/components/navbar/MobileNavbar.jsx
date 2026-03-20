@@ -4,7 +4,7 @@ import SearchBar from "../SearchBar";
 import discordLogo from "../../assets/icons8-discord-50.png";
 import MobileNavbarCategory from "./MobileNavbarCategory";
 import { useLoaderData, Link, useNavigate } from "react-router";
-import { Pencil, Eye, Moon, Sun } from "lucide-react";
+import { Pencil, Eye, Moon, Sun, LayoutDashboard } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useEditMode } from "../../contexts/EditModeContext.jsx";
 import { useDarkMode } from "../../contexts/ThemeProvider.jsx";
@@ -112,9 +112,10 @@ export default function MobileNavbar({ toggleNav, navOpen }) {
                                             navigate("/dashboard");
                                             toggleNav(false);
                                         }}
-                                        className="flex-1 text-amber-50 bg-(--primary) rounded px-2 py-1 font-semibold cursor-pointer hover:opacity-90 text-sm mb-2 h-8"
+                                        className="flex-1 text-amber-50 rounded px-2 py-1 font-semibold cursor-pointer hover:opacity-90 text-sm mb-2 h-8 flex items-center justify-center gap-1.5"
+                                        style={{ background: darkMode ? "rgba(255,235,200,0.12)" : "var(--primary)" }}
                                     >
-                                        Dashboard
+                                        <LayoutDashboard className="w-4 h-4" />
                                     </button>
                                 )}
                                 {(isAdmin || isContributor) && (
@@ -126,20 +127,22 @@ export default function MobileNavbar({ toggleNav, navOpen }) {
                                             setAdminMode(m => !m);
                                             toggleNav(false);
                                         }}
-                                        className={`flex-1 rounded px-2 py-1 font-semibold cursor-pointer hover:opacity-90 text-sm mb-2 h-8 ${adminMode ? "bg-amber-100/30 text-amber-50 border border-amber-50/40" : "bg-(--primary) text-amber-50"}`}
+                                        className={`flex-1 rounded px-2 py-1 font-semibold cursor-pointer hover:opacity-90 text-sm mb-2 h-8 ${adminMode ? "bg-amber-100/30 text-amber-50 border border-amber-50/40" : "text-amber-50"}`}
+                                        style={!adminMode ? { background: darkMode ? "rgba(255,235,200,0.12)" : "var(--primary)" } : undefined}
                                     >
                                         {adminMode ? <Eye className="w-4 h-4 mx-auto" /> : <Pencil className="w-4 h-4 mx-auto" />}
                                     </button>
                                 )}
                                 <button
                                     onClick={toggleDarkMode}
-                                    className="flex-1 text-amber-50 bg-(--primary) rounded px-2 py-1 font-semibold cursor-pointer hover:opacity-90 text-sm h-8 flex items-center justify-center"
+                                    className="flex-1 text-amber-50 rounded px-2 py-1 font-semibold cursor-pointer hover:opacity-90 text-sm h-8 flex items-center justify-center"
+                                    style={{ background: darkMode ? "rgba(255,235,200,0.12)" : "var(--primary)" }}
                                 >
                                     {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
                                 </button>
                                 <button
                                     onClick={handleLogout}
-                                    className="flex-1 text-amber-50 bg-(--primary) rounded px-2 py-1 font-semibold cursor-pointer hover:opacity-90 text-sm h-8 flex items-center justify-center"
+                                    className="flex-1 rounded px-2 py-1 font-semibold cursor-pointer hover:opacity-90 text-sm h-8 flex items-center justify-center border border-red-500/70 bg-red-700/60 text-red-100"
                                 >
                                     <LogOut className="w-4 h-4" />
                                 </button>
@@ -149,21 +152,24 @@ export default function MobileNavbar({ toggleNav, navOpen }) {
                         <div className="w-full flex gap-2 p-4 bg-(--surface-background)">
                             <button
                                 onClick={toggleDarkMode}
-                                className="text-amber-50 bg-(--primary) rounded px-2 py-1 cursor-pointer hover:opacity-90 h-8 flex items-center justify-center"
+                                className="text-amber-50 rounded px-2 py-1 cursor-pointer hover:opacity-90 h-8 flex items-center justify-center"
+                                style={{ background: darkMode ? "rgba(255,235,200,0.12)" : "var(--primary)" }}
                             >
                                 {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
                             </button>
                             <Link
                                 to="/login"
                                 onClick={() => toggleNav(false)}
-                                className="flex-1 text-center text-amber-50 bg-(--primary) rounded px-2 py-1 font-semibold cursor-pointer hover:opacity-90 text-sm"
+                                className="flex-1 text-center text-amber-50 rounded px-2 py-1 font-semibold cursor-pointer hover:opacity-90 text-sm"
+                                style={{ background: darkMode ? "rgba(255,235,200,0.12)" : "var(--primary)" }}
                             >
                                 Log In
                             </Link>
                             <Link
                                 to="/signup"
                                 onClick={() => toggleNav(false)}
-                                className="flex-1 text-center text-amber-50 bg-(--primary) rounded px-2 py-1 font-semibold cursor-pointer hover:opacity-90 text-sm"
+                                className="flex-1 text-center text-amber-50 rounded px-2 py-1 font-semibold cursor-pointer hover:opacity-90 text-sm"
+                                style={{ background: darkMode ? "rgba(255,235,200,0.12)" : "var(--primary)" }}
                             >
                                 Sign Up
                             </Link>
@@ -177,7 +183,8 @@ export default function MobileNavbar({ toggleNav, navOpen }) {
                 >
                     <button
                         onClick={toggleAll}
-                        className="w-full text-xs py-1.5 px-3 text-(--text-color) opacity-50 hover:opacity-80 flex items-center justify-end gap-1 cursor-pointer mb-1 transition-opacity"
+                        className="w-full text-xs py-1.5 px-3 flex items-center justify-end gap-1 cursor-pointer mb-1 transition-opacity hover:opacity-100"
+                        style={{ color: darkMode ? "rgba(255,235,200,0.85)" : "var(--text-color)", opacity: darkMode ? 1 : 1 }}
                     >
                         {allOpen ? "Collapse all" : "Expand all"}
                     </button>
@@ -193,7 +200,8 @@ export default function MobileNavbar({ toggleNav, navOpen }) {
                 </div>
                 <div
                     id="mobile-menu-persistent"
-                    className="flex flex-col items-center pt-2.5 pb-2 text-(--text-color) px-3 border-t-[2px]  "
+                    className="flex flex-col items-center pt-2.5 pb-2 text-(--text-color) px-3 border-t-2"
+                    style={{ borderColor: "var(--outline-brown)" }}
                 >
                     {gameData?.discordUrl && (
                         <div className="flex items-center gap-2 ">
@@ -208,7 +216,7 @@ export default function MobileNavbar({ toggleNav, navOpen }) {
                         </div>
                     )}
                     <div className="px-8 w-full my-2 ">
-                        <hr className="w-full border-t border-black/50  " />
+                        <hr className="w-full border-t" style={{ borderColor: darkMode ? "rgba(255,235,200,0.1)" : "rgba(139,90,43,0.3)" }} />
                     </div>
                     <div id="nav-footer" className=" text-[0.8em] text-center ">
                         © 2025 LuckyDefenseGuides.com. This site is not
