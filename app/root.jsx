@@ -1,4 +1,5 @@
-import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
+import { Links, Meta, Outlet, Scripts, ScrollRestoration, useLocation } from "react-router";
+import { useEffect } from "react";
 import { AuthProvider } from "../src/contexts/AuthProvider";
 import { ThemeProvider, DarkModeProvider } from "../src/contexts/ThemeProvider";
 import "../src/index.css";
@@ -50,11 +51,23 @@ gtag('config', window.GA_ID, { send_page_view: false });`,
     );
 }
 
+function GATracker() {
+    const location = useLocation();
+    useEffect(() => {
+        if (typeof window.gtag !== "function") return;
+        window.gtag("event", "page_view", {
+            page_path: location.pathname + location.search,
+        });
+    }, [location.pathname, location.search]);
+    return null;
+}
+
 export default function Root() {
     return (
         <AuthProvider>
             <ThemeProvider>
                 <DarkModeProvider>
+                    <GATracker />
                     <Outlet />
                 </DarkModeProvider>
             </ThemeProvider>
