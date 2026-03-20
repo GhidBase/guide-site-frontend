@@ -2,13 +2,13 @@ import ldgLogo from "../assets/LDG_Title.webp";
 import { useRouteLoaderData, useNavigate, Link, useMatches } from "react-router";
 import { useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
-import { PanelTop, PanelLeft, LogOut, Moon, Sun } from "lucide-react";
+import { PanelTop, PanelLeft, Sun, Moon, LogOut, LogIn, UserPlus } from "lucide-react";
 import { useDarkMode } from "../contexts/ThemeProvider.jsx";
 
 export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
     const { pageData, pageSlug, gameData, isLDG } = useRouteLoaderData("main");
-    const { isAuthenticated, user, logout } = useAuth();
     const { darkMode, toggleDarkMode } = useDarkMode();
+    const { isAuthenticated, user, logout } = useAuth();
     const navigate = useNavigate();
     const matches = useMatches();
 
@@ -22,8 +22,10 @@ export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
     const isLDGHomepage = pageTitle === "LD Homepage";
 
     return (
-        <div className="flex items-center gap-3 px-4 h-14 shrink-0 bg-(--primary) border-b-2 border-(--outline)/40"
-            style={{ textShadow: "none" }}>
+        <div
+            className="flex items-center gap-3 px-4 h-14 shrink-0 border-b border-(--outline)/30"
+            style={{ background: darkMode ? "#0f0c0a" : "var(--primary)", textShadow: "none", fontFamily: "'Outfit', sans-serif" }}
+        >
 
             {/* Logo / site name */}
             <Link
@@ -55,18 +57,19 @@ export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
                         <span className="text-amber-50/80 text-sm font-medium hidden lg:block">{user?.username}</span>
                         <button
                             onClick={logout}
-                            className="text-xs px-3 py-1.5 rounded border border-red-500/70 bg-red-700/60 text-red-100 hover:bg-red-700/80 transition-colors cursor-pointer font-medium"
+                            title="Logout"
+                            className="p-1.5 rounded border border-red-400/50 bg-red-800/40 text-red-200 hover:bg-red-700/60 transition-colors cursor-pointer flex items-center justify-center"
                         >
                             <LogOut className="w-4 h-4" />
                         </button>
                     </>
                 ) : (
                     <>
-                        <Link to="/login" className="text-xs px-3 py-1.5 rounded border border-amber-50/30 text-amber-50 hover:bg-amber-50/10 transition-colors">
-                            Log In
+                        <Link to="/login" title="Log In" className="p-1.5 rounded border border-amber-50/30 text-amber-50 hover:bg-amber-50/10 transition-colors flex items-center justify-center">
+                            <LogIn className="w-4 h-4" />
                         </Link>
-                        <Link to="/signup" className="text-xs px-3 py-1.5 rounded bg-amber-50/20 border border-amber-50/30 text-amber-50 hover:bg-amber-50/30 transition-colors">
-                            Sign Up
+                        <Link to="/signup" title="Sign Up" className="p-1.5 rounded bg-amber-50/20 border border-amber-50/30 text-amber-50 hover:bg-amber-50/30 transition-colors flex items-center justify-center">
+                            <UserPlus className="w-4 h-4" />
                         </Link>
                     </>
                 )}
@@ -74,7 +77,6 @@ export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
                 {/* Dark mode toggle */}
                 <button
                     onClick={toggleDarkMode}
-                    title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
                     className="p-1.5 rounded border border-amber-50/30 bg-amber-50/10 hover:bg-amber-50/20 text-amber-50 transition-colors cursor-pointer flex items-center justify-center"
                 >
                     {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
