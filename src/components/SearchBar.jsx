@@ -92,7 +92,7 @@ export default function SearchBar() {
                     onChange={(e) => { setQuery(e.target.value); setOpen(true); setHighlighted(0); }}
                     onFocus={() => setOpen(true)}
                     onKeyDown={handleKeyDown}
-                    className={`flex-1 min-w-0 bg-transparent text-sm outline-none border-0 ${darkMode ? "placeholder:text-amber-100/30" : "placeholder:text-(--primary) placeholder:opacity-100 placeholder:font-semibold"}`}
+                    className={`flex-1 min-w-0 bg-transparent text-sm outline-none border-0 ${darkMode ? "placeholder:text-amber-100/80" : "placeholder:text-(--primary) placeholder:opacity-100 placeholder:font-semibold"}`}
                     style={{
                         color: darkMode ? "rgba(255,235,200,0.85)" : "var(--text-color)",
                         caretColor: darkMode ? "rgba(255,235,200,0.85)" : "var(--text-color)",
