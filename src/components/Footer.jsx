@@ -45,6 +45,7 @@ export default function Footer() {
                                 src="https://cdn.buymeacoffee.com/buttons/bmc-new-btn-logo.svg"
                                 alt="Buy me a coffee"
                                 className="w-4 h-4"
+                                style={darkMode ? { filter: "brightness(0) invert(1)" } : undefined}
                             />
                             Support the Developer
                         </a>
