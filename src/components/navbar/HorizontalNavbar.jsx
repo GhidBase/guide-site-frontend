@@ -2,7 +2,8 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouteLoaderData, useNavigate } from "react-router";
 import { useAuth } from "@/hooks/useAuth";
 import { useEditMode } from "../../contexts/EditModeContext.jsx";
-import { ChevronDown, Search, X, Pencil, Eye } from "lucide-react";
+import { useDarkMode } from "../../contexts/ThemeProvider.jsx";
+import { ChevronDown, Search, X, Pencil, Eye, Trophy, LayoutDashboard, Map } from "lucide-react";
 
 function HorizontalSearch({ gameData, isLDG, sectionsMap }) {
     const [query, setQuery] = useState("");
@@ -116,6 +117,7 @@ export default function HorizontalNavbar() {
     const isAdmin = user?.role === "ADMIN";
     const isContributor = isAuthenticated && !isAdmin;
     const { adminMode, setAdminMode, dirtyBlocks } = useEditMode();
+    const { darkMode } = useDarkMode();
     const navigate = useNavigate();
 
     const [openSection, setOpenSection] = useState(null);
@@ -221,7 +223,8 @@ export default function HorizontalNavbar() {
     }
 
     return (
-        <div ref={navRef} className="flex items-center gap-1 px-4 py-1.5 border-t-4 border-(--outline) bg-(--primary)">
+        <div ref={navRef} className="flex items-center gap-1 px-4 py-1.5 border-t-4 border-(--outline)"
+            style={{ background: darkMode ? "#0f0c0a" : "var(--primary)", fontFamily: "'Outfit', sans-serif" }}>
 
             {/* Hidden measurement clone — renders all sections offscreen to measure widths */}
             <div
@@ -285,26 +288,29 @@ export default function HorizontalNavbar() {
             <div className="flex items-center gap-1 shrink-0">
                 <button
                     onClick={() => navigateTo(buildSlug("leaderboard"))}
-                    className="px-3 py-1 text-sm text-amber-50 rounded-md hover:bg-amber-50/10 transition-colors whitespace-nowrap font-medium"
+                    title="Leaderboard"
+                    className="p-1.5 text-amber-50 cursor-pointer hover:opacity-70 transition-opacity"
                     style={{ textShadow: "none" }}
                 >
-                    Leaderboard
+                    <Trophy className="w-4 h-4" />
                 </button>
                 {isAdmin && (
                     <>
                         <button
                             onClick={() => navigateTo("/dashboard")}
-                            className="px-3 py-1 text-sm text-amber-50 rounded-md hover:bg-amber-50/10 transition-colors whitespace-nowrap font-medium"
+                            title="Dashboard"
+                            className="p-1.5 text-amber-50 cursor-pointer hover:opacity-70 transition-opacity"
                             style={{ textShadow: "none" }}
                         >
-                            Dashboard
+                            <LayoutDashboard className="w-4 h-4" />
                         </button>
                         <button
                             onClick={() => navigateTo(buildSlug("navigation-panel"))}
-                            className="px-3 py-1 text-sm text-amber-50 rounded-md hover:bg-amber-50/10 transition-colors whitespace-nowrap font-medium"
+                            title="Nav Panel"
+                            className="p-1.5 text-amber-50 cursor-pointer hover:opacity-70 transition-opacity"
                             style={{ textShadow: "none" }}
                         >
-                            Nav Panel
+                            <Map className="w-4 h-4" />
                         </button>
                     </>
                 )}
