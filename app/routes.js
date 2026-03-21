@@ -31,6 +31,7 @@ export default [
         route("board-builder", "routes/board-builder.jsx", { id: "top-board-builder" }),
         route("tier-list", "routes/tier-list.jsx", { id: "top-tier-list" }),
 
+        route("privacy-policy", "routes/privacy-policy.jsx"),
         route("login", "routes/login.jsx"),
         route("signup", "routes/signup.jsx"),
         route("dashboard", "routes/dashboard.jsx"),
@@ -38,7 +39,6 @@ export default [
 
         route("page-manager", "routes/page-manager.jsx", { id: "top-page-manager" }),
         route("game-manager", "routes/game-manager.jsx", { id: "top-game-manager" }),
-        route("navigation-panel", "routes/navigation-panel.jsx", { id: "top-navigation-panel" }),
         route("leaderboard", "routes/leaderboard.jsx", { id: "top-leaderboard" }),
         route("comment-overview", "routes/comment-overview.jsx", { id: "top-comment-overview" }),
 
