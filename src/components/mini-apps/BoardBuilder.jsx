@@ -143,7 +143,8 @@ export default function BoardBuilder({ allowedBoardIds, hideAdmin } = {}) {
     // Tab drag-and-drop
     const dragTabRef = useRef(null);
 
-    const [activeLayer, setActiveLayer] = useState(1); // 1 or 2
+    const [activeLayer, setActiveLayer] = useState(1); // 1, 2, or "color"
+    const [paintColor, setPaintColor] = useState("#facc15");
 
     const dragUnitRef = useRef(null);
     const boardRef = useRef(null);
@@ -223,9 +224,9 @@ export default function BoardBuilder({ allowedBoardIds, hideAdmin } = {}) {
         : currentBoard;
 
     function normalizeCell(cell) {
-        if (cell === null || cell === undefined) return { l1: null, l2: null };
-        if (typeof cell === "string") return { l1: cell, l2: null };
-        return cell;
+        if (cell === null || cell === undefined) return { l1: null, l2: null, color: null };
+        if (typeof cell === "string") return { l1: cell, l2: null, color: null };
+        return { l1: null, l2: null, color: null, ...cell };
     }
 
     function getCells(boardId, rows, cols) {
@@ -246,12 +247,16 @@ export default function BoardBuilder({ allowedBoardIds, hideAdmin } = {}) {
         if (!currentBoard) return;
         const cells = getCells(currentBoard.id, currentBoard.rows, currentBoard.cols)
             .map((r) => r.map((c) => ({ ...c })));
-        const key = activeLayer === 1 ? "l1" : "l2";
-        const existing = cells[row][col][key];
-        cells[row][col][key] =
-            selectedUnit && existing === selectedUnit.id ? null
-            : selectedUnit ? selectedUnit.id
-            : null;
+        if (activeLayer === "color") {
+            cells[row][col].color = cells[row][col].color === paintColor ? null : paintColor;
+        } else {
+            const key = activeLayer === 1 ? "l1" : "l2";
+            const existing = cells[row][col][key];
+            cells[row][col][key] =
+                selectedUnit && existing === selectedUnit.id ? null
+                : selectedUnit ? selectedUnit.id
+                : null;
+        }
         setCells(currentBoard.id, cells);
     }
 
@@ -260,8 +265,12 @@ export default function BoardBuilder({ allowedBoardIds, hideAdmin } = {}) {
         if (!currentBoard) return;
         const cells = getCells(currentBoard.id, currentBoard.rows, currentBoard.cols)
             .map((r) => r.map((c) => ({ ...c })));
-        const key = activeLayer === 1 ? "l1" : "l2";
-        cells[row][col][key] = null;
+        if (activeLayer === "color") {
+            cells[row][col].color = null;
+        } else {
+            const key = activeLayer === 1 ? "l1" : "l2";
+            cells[row][col][key] = null;
+        }
         setCells(currentBoard.id, cells);
     }
 
@@ -391,6 +400,15 @@ export default function BoardBuilder({ allowedBoardIds, hideAdmin } = {}) {
                 const cx = gridLeft + c * cellW + cellW / 2;
                 const cy = gridTop + r * cellH + cellH / 2;
 
+                // Cell color highlight
+                if (cell.color) {
+                    ctx.save();
+                    ctx.globalAlpha = 0.45;
+                    ctx.fillStyle = cell.color;
+                    ctx.fillRect(gridLeft + c * cellW, gridTop + r * cellH, cellW, cellH);
+                    ctx.restore();
+                }
+
                 // Layer 1 — centered, 80%
                 if (cell.l1) {
                     const unit = unitsById[cell.l1];
@@ -422,7 +440,7 @@ export default function BoardBuilder({ allowedBoardIds, hideAdmin } = {}) {
         setCells(
             currentBoard.id,
             Array.from({ length: currentBoard.rows }, () =>
-                Array.from({ length: currentBoard.cols }, () => ({ l1: null, l2: null })),
+                Array.from({ length: currentBoard.cols }, () => ({ l1: null, l2: null, color: null })),
             ),
         );
     }
@@ -768,6 +786,20 @@ export default function BoardBuilder({ allowedBoardIds, hideAdmin } = {}) {
                             >
                                 L2
                             </button>
+                            <div className={`flex items-center gap-1 px-2 py-1 border-l border-(--outline-brown)/50 cursor-pointer transition-colors ${activeLayer === "color" ? "bg-(--primary)" : "bg-(--accent) hover:bg-(--surface-background)"}`}
+                                onClick={() => setActiveLayer("color")}
+                                title="Paint cell color"
+                            >
+                                <span className={`text-xs ${activeLayer === "color" ? "text-amber-50" : "text-(--text-color)"}`}>Color</span>
+                                <input
+                                    type="color"
+                                    value={paintColor}
+                                    onChange={(e) => { setPaintColor(e.target.value); setActiveLayer("color"); }}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="w-4 h-4 rounded-sm cursor-pointer border-0 bg-transparent p-0"
+                                    title="Pick paint color"
+                                />
+                            </div>
                         </div>
                         <button
                             onClick={clearBoard}
@@ -1311,6 +1343,7 @@ export default function BoardBuilder({ allowedBoardIds, hideAdmin } = {}) {
                                                                 style={{
                                                                     borderRight: col < effectiveBoard.cols - 1 ? "1px dashed rgba(255,255,255,0.3)" : undefined,
                                                                     borderBottom: row < effectiveBoard.rows - 1 ? "1px dashed rgba(255,255,255,0.3)" : undefined,
+                                                                    backgroundColor: cell.color ? cell.color + "73" : undefined,
                                                                 }}
                                                                 className="relative flex items-center justify-center cursor-pointer hover:bg-white/10 transition-colors overflow-hidden min-w-0 min-h-0"
                                                             >
@@ -1400,6 +1433,7 @@ export default function BoardBuilder({ allowedBoardIds, hideAdmin } = {}) {
                                                                 style={{
                                                                     borderRight: col < effectiveBoard.cols - 1 ? "1px dashed rgba(255,255,255,0.3)" : undefined,
                                                                     borderBottom: row < effectiveBoard.rows - 1 ? "1px dashed rgba(255,255,255,0.3)" : undefined,
+                                                                    backgroundColor: cell.color ? cell.color + "73" : undefined,
                                                                 }}
                                                                 className="relative flex items-center justify-center cursor-pointer hover:bg-white/10 transition-colors overflow-hidden min-w-0 min-h-0"
                                                             >
