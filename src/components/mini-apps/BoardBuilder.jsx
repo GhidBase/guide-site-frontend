@@ -143,6 +143,8 @@ export default function BoardBuilder({ allowedBoardIds, hideAdmin } = {}) {
     // Tab drag-and-drop
     const dragTabRef = useRef(null);
 
+    const [activeLayer, setActiveLayer] = useState(1); // 1 or 2
+
     const dragUnitRef = useRef(null);
     const boardRef = useRef(null);
     const addUnitBtnRef = useRef(null);
@@ -220,11 +222,19 @@ export default function BoardBuilder({ allowedBoardIds, hideAdmin } = {}) {
         ? { ...currentBoard, ...editingBoard }
         : currentBoard;
 
+    function normalizeCell(cell) {
+        if (cell === null || cell === undefined) return { l1: null, l2: null };
+        if (typeof cell === "string") return { l1: cell, l2: null };
+        return cell;
+    }
+
     function getCells(boardId, rows, cols) {
         const saved = allCells[boardId];
         if (saved && saved.length === rows && saved[0]?.length === cols)
-            return saved;
-        return Array.from({ length: rows }, () => Array(cols).fill(null));
+            return saved.map((row) => row.map(normalizeCell));
+        return Array.from({ length: rows }, () =>
+            Array.from({ length: cols }, () => ({ l1: null, l2: null })),
+        );
     }
 
     function setCells(boardId, cells) {
@@ -234,30 +244,24 @@ export default function BoardBuilder({ allowedBoardIds, hideAdmin } = {}) {
     // Cell actions
     function handleCellClick(row, col) {
         if (!currentBoard) return;
-        const cells = getCells(
-            currentBoard.id,
-            currentBoard.rows,
-            currentBoard.cols,
-        ).map((r) => [...r]);
-        const existing = cells[row][col];
-        cells[row][col] =
-            selectedUnit && existing === selectedUnit.id
-                ? null
-                : selectedUnit
-                  ? selectedUnit.id
-                  : null;
+        const cells = getCells(currentBoard.id, currentBoard.rows, currentBoard.cols)
+            .map((r) => r.map((c) => ({ ...c })));
+        const key = activeLayer === 1 ? "l1" : "l2";
+        const existing = cells[row][col][key];
+        cells[row][col][key] =
+            selectedUnit && existing === selectedUnit.id ? null
+            : selectedUnit ? selectedUnit.id
+            : null;
         setCells(currentBoard.id, cells);
     }
 
     function handleCellRightClick(e, row, col) {
         e.preventDefault();
         if (!currentBoard) return;
-        const cells = getCells(
-            currentBoard.id,
-            currentBoard.rows,
-            currentBoard.cols,
-        ).map((r) => [...r]);
-        cells[row][col] = null;
+        const cells = getCells(currentBoard.id, currentBoard.rows, currentBoard.cols)
+            .map((r) => r.map((c) => ({ ...c })));
+        const key = activeLayer === 1 ? "l1" : "l2";
+        cells[row][col][key] = null;
         setCells(currentBoard.id, cells);
     }
 
@@ -266,12 +270,10 @@ export default function BoardBuilder({ allowedBoardIds, hideAdmin } = {}) {
         if (!dragUnitRef.current || !currentBoard) return;
         const unit = dragUnitRef.current;
         dragUnitRef.current = null;
-        const cells = getCells(
-            currentBoard.id,
-            currentBoard.rows,
-            currentBoard.cols,
-        ).map((r) => [...r]);
-        cells[row][col] = unit.id;
+        const cells = getCells(currentBoard.id, currentBoard.rows, currentBoard.cols)
+            .map((r) => r.map((c) => ({ ...c })));
+        const key = activeLayer === 1 ? "l1" : "l2";
+        cells[row][col][key] = unit.id;
         setCells(currentBoard.id, cells);
     }
 
@@ -367,32 +369,45 @@ export default function BoardBuilder({ allowedBoardIds, hideAdmin } = {}) {
 
         // 3. Unit images
         const cells = getCells(currentBoard.id, currentBoard.rows, currentBoard.cols);
-        const uniqueUrls = [...new Set(
-            cells.flat().filter(Boolean).map(id => unitsById[id]?.imageUrl).filter(Boolean)
-        )];
+        const allUnitIds = cells.flat().flatMap((cell) => [cell.l1, cell.l2]).filter(Boolean);
+        const uniqueUrls = [...new Set(allUnitIds.map((id) => unitsById[id]?.imageUrl).filter(Boolean))];
         const imageCache = {};
         await Promise.all(uniqueUrls.map(async (url) => {
             try { imageCache[url] = await fetchImage(url); } catch {}
         }));
 
+        function drawUnit(img, cx, cy, boxW, boxH) {
+            const imgAspect = img.naturalWidth / img.naturalHeight;
+            const boxAspect = boxW / boxH;
+            let iW, iH;
+            if (imgAspect > boxAspect) { iW = boxW; iH = boxW / imgAspect; }
+            else { iH = boxH; iW = boxH * imgAspect; }
+            ctx.drawImage(img, cx - iW / 2, cy - iH / 2, iW, iH);
+        }
+
         for (let r = 0; r < rows; r++) {
             for (let c = 0; c < cols; c++) {
-                const unitId = cells[r]?.[c];
-                if (!unitId) continue;
-                const unit = unitsById[unitId];
-                if (!unit?.imageUrl) continue;
-                const img = imageCache[unit.imageUrl];
-                if (!img) continue;
-                const boxW = cellW * 0.8;
-                const boxH = cellH * 0.8;
-                const imgAspect = img.naturalWidth / img.naturalHeight;
-                const boxAspect = boxW / boxH;
-                let iW, iH;
-                if (imgAspect > boxAspect) { iW = boxW; iH = boxW / imgAspect; }
-                else { iH = boxH; iW = boxH * imgAspect; }
+                const cell = cells[r]?.[c];
                 const cx = gridLeft + c * cellW + cellW / 2;
                 const cy = gridTop + r * cellH + cellH / 2;
-                ctx.drawImage(img, cx - iW / 2, cy - iH / 2, iW, iH);
+
+                // Layer 1 — centered, 80%
+                if (cell.l1) {
+                    const unit = unitsById[cell.l1];
+                    const img = unit?.imageUrl ? imageCache[unit.imageUrl] : null;
+                    if (img) drawUnit(img, cx, cy, cellW * 0.8, cellH * 0.8);
+                }
+
+                // Layer 2 — bottom-right corner, 42%
+                if (cell.l2) {
+                    const unit = unitsById[cell.l2];
+                    const img = unit?.imageUrl ? imageCache[unit.imageUrl] : null;
+                    if (img) {
+                        const bx = gridLeft + (c + 1) * cellW - cellW * 0.21;
+                        const by = gridTop + (r + 1) * cellH - cellH * 0.21;
+                        drawUnit(img, bx, by, cellW * 0.42, cellH * 0.42);
+                    }
+                }
             }
         }
 
@@ -407,7 +422,7 @@ export default function BoardBuilder({ allowedBoardIds, hideAdmin } = {}) {
         setCells(
             currentBoard.id,
             Array.from({ length: currentBoard.rows }, () =>
-                Array(currentBoard.cols).fill(null),
+                Array.from({ length: currentBoard.cols }, () => ({ l1: null, l2: null })),
             ),
         );
     }
@@ -740,6 +755,20 @@ export default function BoardBuilder({ allowedBoardIds, hideAdmin } = {}) {
                         <span className="text-xs text-(--text-color) opacity-40 shrink-0">
                             {effectiveBoard.rows}×{effectiveBoard.cols}
                         </span>
+                        <div className="flex items-center rounded border border-(--outline-brown)/50 overflow-hidden shrink-0 text-sm">
+                            <button
+                                onClick={() => setActiveLayer(1)}
+                                className={`px-2.5 py-1.5 cursor-pointer transition-colors ${activeLayer === 1 ? "bg-(--primary) text-amber-50" : "bg-(--accent) text-(--text-color) hover:bg-(--surface-background)"}`}
+                            >
+                                L1
+                            </button>
+                            <button
+                                onClick={() => setActiveLayer(2)}
+                                className={`px-2.5 py-1.5 cursor-pointer transition-colors border-l border-(--outline-brown)/50 ${activeLayer === 2 ? "bg-(--primary) text-amber-50" : "bg-(--accent) text-(--text-color) hover:bg-(--surface-background)"}`}
+                            >
+                                L2
+                            </button>
+                        </div>
                         <button
                             onClick={clearBoard}
                             className="px-3 py-1.5 text-sm bg-(--accent) border border-(--outline-brown)/50 text-(--text-color) rounded cursor-pointer hover:bg-(--surface-background) shrink-0"
@@ -1269,70 +1298,36 @@ export default function BoardBuilder({ allowedBoardIds, hideAdmin } = {}) {
                                                         const col =
                                                             i %
                                                             currentBoard.cols;
-                                                        const unitId =
-                                                            cells[row]?.[col] ??
-                                                            null;
-                                                        const unit = unitId
-                                                            ? unitsById[unitId]
-                                                            : null;
+                                                        const cell = cells[row]?.[col] ?? { l1: null, l2: null };
+                                                        const unit1 = cell.l1 ? unitsById[cell.l1] : null;
+                                                        const unit2 = cell.l2 ? unitsById[cell.l2] : null;
                                                         return (
                                                             <div
                                                                 key={`${row}-${col}`}
-                                                                onClick={() =>
-                                                                    handleCellClick(
-                                                                        row,
-                                                                        col,
-                                                                    )
-                                                                }
-                                                                onContextMenu={(
-                                                                    e,
-                                                                ) =>
-                                                                    handleCellRightClick(
-                                                                        e,
-                                                                        row,
-                                                                        col,
-                                                                    )
-                                                                }
-                                                                onDragOver={(
-                                                                    e,
-                                                                ) =>
-                                                                    e.preventDefault()
-                                                                }
-                                                                onDrop={(e) =>
-                                                                    handleDrop(
-                                                                        e,
-                                                                        row,
-                                                                        col,
-                                                                    )
-                                                                }
+                                                                onClick={() => handleCellClick(row, col)}
+                                                                onContextMenu={(e) => handleCellRightClick(e, row, col)}
+                                                                onDragOver={(e) => e.preventDefault()}
+                                                                onDrop={(e) => handleDrop(e, row, col)}
                                                                 style={{
-                                                                    borderRight:
-                                                                        col <
-                                                                        effectiveBoard.cols -
-                                                                            1
-                                                                            ? "1px dashed rgba(255,255,255,0.3)"
-                                                                            : undefined,
-                                                                    borderBottom:
-                                                                        row <
-                                                                        effectiveBoard.rows -
-                                                                            1
-                                                                            ? "1px dashed rgba(255,255,255,0.3)"
-                                                                            : undefined,
+                                                                    borderRight: col < effectiveBoard.cols - 1 ? "1px dashed rgba(255,255,255,0.3)" : undefined,
+                                                                    borderBottom: row < effectiveBoard.rows - 1 ? "1px dashed rgba(255,255,255,0.3)" : undefined,
                                                                 }}
-                                                                className="flex items-center justify-center cursor-pointer hover:bg-white/10 transition-colors overflow-hidden min-w-0 min-h-0"
+                                                                className="relative flex items-center justify-center cursor-pointer hover:bg-white/10 transition-colors overflow-hidden min-w-0 min-h-0"
                                                             >
-                                                                {unit && (
+                                                                {unit1 && (
                                                                     <img
-                                                                        src={
-                                                                            unit.imageUrl
-                                                                        }
-                                                                        alt={
-                                                                            unit.name
-                                                                        }
-                                                                        draggable={
-                                                                            false
-                                                                        }
+                                                                        src={unit1.imageUrl}
+                                                                        alt={unit1.name}
+                                                                        draggable={false}
                                                                         className="w-4/5 h-4/5 object-contain pointer-events-none drop-shadow-md"
+                                                                    />
+                                                                )}
+                                                                {unit2 && (
+                                                                    <img
+                                                                        src={unit2.imageUrl}
+                                                                        alt={unit2.name}
+                                                                        draggable={false}
+                                                                        className="absolute bottom-0 right-0 w-[42%] h-[42%] object-contain pointer-events-none drop-shadow-md"
                                                                     />
                                                                 )}
                                                             </div>
@@ -1392,70 +1387,36 @@ export default function BoardBuilder({ allowedBoardIds, hideAdmin } = {}) {
                                                         const col =
                                                             i %
                                                             currentBoard.cols;
-                                                        const unitId =
-                                                            cells[row]?.[col] ??
-                                                            null;
-                                                        const unit = unitId
-                                                            ? unitsById[unitId]
-                                                            : null;
+                                                        const cell = cells[row]?.[col] ?? { l1: null, l2: null };
+                                                        const unit1 = cell.l1 ? unitsById[cell.l1] : null;
+                                                        const unit2 = cell.l2 ? unitsById[cell.l2] : null;
                                                         return (
                                                             <div
                                                                 key={`${row}-${col}`}
-                                                                onClick={() =>
-                                                                    handleCellClick(
-                                                                        row,
-                                                                        col,
-                                                                    )
-                                                                }
-                                                                onContextMenu={(
-                                                                    e,
-                                                                ) =>
-                                                                    handleCellRightClick(
-                                                                        e,
-                                                                        row,
-                                                                        col,
-                                                                    )
-                                                                }
-                                                                onDragOver={(
-                                                                    e,
-                                                                ) =>
-                                                                    e.preventDefault()
-                                                                }
-                                                                onDrop={(e) =>
-                                                                    handleDrop(
-                                                                        e,
-                                                                        row,
-                                                                        col,
-                                                                    )
-                                                                }
+                                                                onClick={() => handleCellClick(row, col)}
+                                                                onContextMenu={(e) => handleCellRightClick(e, row, col)}
+                                                                onDragOver={(e) => e.preventDefault()}
+                                                                onDrop={(e) => handleDrop(e, row, col)}
                                                                 style={{
-                                                                    borderRight:
-                                                                        col <
-                                                                        effectiveBoard.cols -
-                                                                            1
-                                                                            ? "1px dashed rgba(255,255,255,0.3)"
-                                                                            : undefined,
-                                                                    borderBottom:
-                                                                        row <
-                                                                        effectiveBoard.rows -
-                                                                            1
-                                                                            ? "1px dashed rgba(255,255,255,0.3)"
-                                                                            : undefined,
+                                                                    borderRight: col < effectiveBoard.cols - 1 ? "1px dashed rgba(255,255,255,0.3)" : undefined,
+                                                                    borderBottom: row < effectiveBoard.rows - 1 ? "1px dashed rgba(255,255,255,0.3)" : undefined,
                                                                 }}
-                                                                className="flex items-center justify-center cursor-pointer hover:bg-white/10 transition-colors overflow-hidden min-w-0 min-h-0"
+                                                                className="relative flex items-center justify-center cursor-pointer hover:bg-white/10 transition-colors overflow-hidden min-w-0 min-h-0"
                                                             >
-                                                                {unit && (
+                                                                {unit1 && (
                                                                     <img
-                                                                        src={
-                                                                            unit.imageUrl
-                                                                        }
-                                                                        alt={
-                                                                            unit.name
-                                                                        }
-                                                                        draggable={
-                                                                            false
-                                                                        }
+                                                                        src={unit1.imageUrl}
+                                                                        alt={unit1.name}
+                                                                        draggable={false}
                                                                         className="w-4/5 h-4/5 object-contain pointer-events-none drop-shadow-md"
+                                                                    />
+                                                                )}
+                                                                {unit2 && (
+                                                                    <img
+                                                                        src={unit2.imageUrl}
+                                                                        alt={unit2.name}
+                                                                        draggable={false}
+                                                                        className="absolute bottom-0 right-0 w-[42%] h-[42%] object-contain pointer-events-none drop-shadow-md"
                                                                     />
                                                                 )}
                                                             </div>
