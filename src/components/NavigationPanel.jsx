@@ -913,7 +913,7 @@ export default function NavigationPanel() {
         <>
         <div className="px-4 sm:px-0">
             {/* ── Quick Links ───────────────────────────────────────────────── */}
-            <div className="mt-8 max-w-4xl mb-6 flex gap-3">
+            <div className="mt-8 max-w-4xl mb-6 flex flex-wrap gap-3">
                 <Link to="../board-builder"
                     className="px-4 py-2 bg-(--primary) text-amber-50 rounded hover:opacity-90 text-sm font-medium">
                     Board Builder
@@ -921,6 +921,14 @@ export default function NavigationPanel() {
                 <Link to="../tier-list"
                     className="px-4 py-2 bg-(--primary) text-amber-50 rounded hover:opacity-90 text-sm font-medium">
                     Tier List
+                </Link>
+                <Link to="../comment-overview"
+                    className="px-4 py-2 bg-(--primary) text-amber-50 rounded hover:opacity-90 text-sm font-medium">
+                    Comment Overview
+                </Link>
+                <Link to="/dashboard"
+                    className="px-4 py-2 bg-(--primary) text-amber-50 rounded hover:opacity-90 text-sm font-medium">
+                    Dashboard
                 </Link>
             </div>
             {/* ── Game Settings ─────────────────────────────────────────────── */}

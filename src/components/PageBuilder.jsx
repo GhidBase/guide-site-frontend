@@ -1,7 +1,7 @@
 import { useState, Fragment, useEffect, useRef } from "react";
 import { currentAPI } from "../config/api";
 import TextBlock from "./blocks/TextBlock";
-import { Link, useRouteLoaderData } from "react-router";
+import { useRouteLoaderData } from "react-router";
 import SingleImageBlock from "./blocks/SingleImageBlock";
 import TierListBlock from "./blocks/TierListBlock";
 import BoardBuilderBlock from "./blocks/BoardBuilderBlock";
@@ -51,14 +51,6 @@ export default function PageBuilder() {
         isLDG || !gameData
             ? "/page-manager"
             : "/games/" + gameSlug + "/page-manager";
-    const navigationPanelSlug =
-        isLDG || !gameData
-            ? "/navigation-panel"
-            : "/games/" + gameSlug + "/navigation-panel";
-    const commentOverviewSlug =
-        isLDG || !gameData
-            ? "/comment-overview"
-            : "/games/" + gameSlug + "/comment-overview";
 
     useEffect(() => {
         setBlocks(pageData?.blocks ?? []);
@@ -367,22 +359,6 @@ export default function PageBuilder() {
                             {c.username}{i < pageData.page.contributors.length - 1 ? ", " : ""}
                         </span>
                     ))}
-                </div>
-            )}
-            {isAdmin && (
-                <div className="flex flex-col items-center mt-2 gap-2">
-                    <Link
-                        className="text-amber-50 bg-(--primary) w-50 rounded px-2 py-0.5 cursor-pointer hover:opacity-90 text-center"
-                        to={navigationPanelSlug}
-                    >
-                        Navigation Panel
-                    </Link>
-                    <Link
-                        className="text-amber-50 bg-(--primary) w-50 rounded px-2 py-0.5 cursor-pointer hover:opacity-90 text-center"
-                        to={commentOverviewSlug}
-                    >
-                        Comment Overview
-                    </Link>
                 </div>
             )}
             {gameData && <Comments pageId={pageData?.page?.id} />}

@@ -3,7 +3,7 @@ import { useRouteLoaderData, useNavigate } from "react-router";
 import { useAuth } from "@/hooks/useAuth";
 import { useEditMode } from "../../contexts/EditModeContext.jsx";
 import { useDarkMode } from "../../contexts/ThemeProvider.jsx";
-import { ChevronDown, Search, X, Pencil, Eye, Trophy, LayoutDashboard, Map } from "lucide-react";
+import { ChevronDown, Search, X, Pencil, Eye, Trophy, Settings } from "lucide-react";
 
 function HorizontalSearch({ gameData, isLDG, sectionsMap }) {
     const [query, setQuery] = useState("");
@@ -300,24 +300,14 @@ export default function HorizontalNavbar() {
                     <Trophy className="w-4 h-4" />
                 </button>
                 {isAdmin && (
-                    <>
-                        <button
-                            onClick={() => navigateTo("/dashboard")}
-                            title="Dashboard"
-                            className="p-1.5 text-amber-50 cursor-pointer hover:opacity-70 transition-opacity"
-                            style={{ textShadow: "none" }}
-                        >
-                            <LayoutDashboard className="w-4 h-4" />
-                        </button>
-                        <button
-                            onClick={() => navigateTo(buildSlug("navigation-panel"))}
-                            title="Nav Panel"
-                            className="p-1.5 text-amber-50 cursor-pointer hover:opacity-70 transition-opacity"
-                            style={{ textShadow: "none" }}
-                        >
-                            <Map className="w-4 h-4" />
-                        </button>
-                    </>
+                    <button
+                        onClick={() => navigateTo(buildSlug("navigation-panel"))}
+                        title="Admin Panel"
+                        className="p-1.5 text-amber-50 cursor-pointer hover:opacity-70 transition-opacity"
+                        style={{ textShadow: "none" }}
+                    >
+                        <Settings className="w-4 h-4" />
+                    </button>
                 )}
 
                 <HorizontalSearch gameData={gameData} isLDG={isLDG} sectionsMap={sectionsMap} />
