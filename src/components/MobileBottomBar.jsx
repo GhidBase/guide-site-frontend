@@ -18,8 +18,8 @@ export default function MobileBottomBar({ toggleNav }) {
     const btnStyle = { background: darkMode ? "rgba(255,235,200,0.10)" : "var(--primary)" };
 
     function navPanelUrl() {
-        if (isLDG) return "/navigation-panel";
-        return "/games/" + gameData?.slug + "/navigation-panel";
+        if (isLDG || !gameData) return "/navigation-panel";
+        return "/games/" + gameData.slug + "/navigation-panel";
     }
 
     return (

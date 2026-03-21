@@ -2,14 +2,14 @@ import ldgLogo from "../assets/LDG_Title.webp";
 import { useRouteLoaderData, useNavigate, Link, useMatches } from "react-router";
 import { useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
-import { PanelTop, PanelLeft, Sun, Moon, LogOut, LogIn, UserPlus } from "lucide-react";
+import { PanelTop, PanelLeft, Sun, Moon, LogOut, LogIn, UserPlus, Pencil, Eye } from "lucide-react";
 import { useDarkMode } from "../contexts/ThemeProvider.jsx";
 import { useEditMode } from "../contexts/EditModeContext.jsx";
 
 export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
     const { pageData, pageSlug, gameData, isLDG } = useRouteLoaderData("main");
     const { darkMode, toggleDarkMode } = useDarkMode();
-    const { adminMode, dirtyBlocks, saveAll } = useEditMode();
+    const { adminMode, setAdminMode, dirtyBlocks, saveAll } = useEditMode();
     const { isAuthenticated, user, logout } = useAuth();
     const navigate = useNavigate();
     const matches = useMatches();
@@ -58,6 +58,27 @@ export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
                     className="flex items-center gap-1.5 px-3 py-1 text-sm font-semibold text-white bg-green-700/70 hover:bg-green-600/80 rounded cursor-pointer transition-colors shrink-0"
                 >
                     Save ({dirtyBlocks.size})
+                </button>
+            )}
+
+            {/* Edit mode toggle — desktop, admin/contributor only */}
+            {(user?.role === "ADMIN" || user?.role === "CONTRIBUTOR") && (
+                <button
+                    onClick={() => {
+                        if (adminMode && dirtyBlocks.size > 0) {
+                            if (!window.confirm("You have unsaved changes. Exit edit mode anyway?")) return;
+                        }
+                        setAdminMode(m => !m);
+                    }}
+                    title={adminMode ? "Exit edit mode" : "Enter edit mode"}
+                    className="hidden lg:flex p-1.5 rounded border cursor-pointer items-center justify-center transition-colors"
+                    style={{
+                        background: adminMode ? "rgba(255,235,200,0.15)" : darkMode ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.12)",
+                        borderColor: adminMode ? "rgba(255,235,200,0.4)" : "rgba(255,255,255,0.3)",
+                        color: "#fef3c7",
+                    }}
+                >
+                    {adminMode ? <Eye className="w-4 h-4" /> : <Pencil className="w-4 h-4" />}
                 </button>
             )}
 
