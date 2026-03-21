@@ -8,9 +8,42 @@ import MobileNavbar from "./navbar/MobileNavbar.jsx";
 import { useEffect, useState } from "react";
 import { usePageTracking } from "../hooks/usePageTracking.js";
 import { useTheme, themeToStyle, useDarkMode, computeDarkTheme, THEME_DEFAULTS } from "../contexts/ThemeProvider.jsx";
-import { EditModeProvider } from "../contexts/EditModeContext.jsx";
-import { PanelLeftOpen, PanelLeftClose } from "lucide-react";
+import { EditModeProvider, useEditMode } from "../contexts/EditModeContext.jsx";
+import { PanelLeftOpen, PanelLeftClose, Pencil, Eye } from "lucide-react";
 import Footer from "./Footer.jsx";
+import { useAuth } from "../hooks/useAuth.js";
+
+function HomepageEditButton() {
+    const { adminMode, setAdminMode, dirtyBlocks } = useEditMode();
+    const { user } = useAuth();
+    const isAdmin = user?.role === "ADMIN";
+    const isContributor = user?.role === "CONTRIBUTOR";
+    if (!isAdmin && !isContributor) return null;
+    return (
+        <button
+            onClick={() => {
+                if (adminMode && dirtyBlocks.size > 0) {
+                    if (!window.confirm("You have unsaved changes. Exit edit mode anyway?")) return;
+                }
+                setAdminMode(m => !m);
+            }}
+            title={adminMode ? "Exit edit mode" : "Enter edit mode"}
+            style={{
+                position: "fixed", bottom: "2rem", left: "1rem", zIndex: 50,
+                background: adminMode ? "rgba(255,235,200,0.15)" : "rgba(10,8,6,0.7)",
+                border: adminMode ? "1px solid rgba(255,235,200,0.35)" : "1px solid rgba(255,255,255,0.12)",
+                borderRadius: "8px", color: "rgba(232,220,200,0.85)",
+                padding: "0.5rem 0.75rem", cursor: "pointer",
+                display: "flex", alignItems: "center", gap: "0.4rem",
+                fontSize: "0.75rem", backdropFilter: "blur(8px)",
+                fontFamily: "'Outfit', sans-serif",
+            }}
+        >
+            {adminMode ? <Eye size={14} /> : <Pencil size={14} />}
+            {adminMode ? "Exit edit mode" : "Edit page"}
+        </button>
+    );
+}
 
 export default function Main() {
     usePageTracking();
@@ -147,6 +180,7 @@ export default function Main() {
             </div>
 
             {!isHomepage && <Footer />}
+            {isHomepage && <HomepageEditButton />}
 
             {gameData && (
                 <MobileNavbar
