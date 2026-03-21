@@ -29,44 +29,24 @@ export default async function gameAndPageLoader({ params, request }) {
     }
 
     async function fetchGameHomepage() {
-        const response = await fetch(
-            currentAPI +
-                "/games/" +
-                gameData.id +
-                "/pages/by-slug/" +
-                gameData.slug,
-        );
-        const result = await response.json();
-        return result;
+        return safeFetch(currentAPI + "/games/" + gameData.id + "/pages/by-slug/" + gameData.slug);
     }
 
     async function fetchMainHomepage() {
-        const response = await fetch(currentAPI + "/pages/by-slug/homepage");
-        const result = await response.json();
-        return result;
+        return safeFetch(currentAPI + "/pages/by-slug/homepage");
     }
 
     async function fetchGameBySlug(gameSlug) {
-        if (gameSlug == undefined) {
-            return;
-        }
-
-        const response = await fetch(currentAPI + "/games/by-slug/" + gameSlug);
-        if (response == null || response == undefined) {
-            return;
-        }
-        const result = await response.json();
-        return result;
+        if (gameSlug == undefined) return;
+        return safeFetch(currentAPI + "/games/by-slug/" + gameSlug);
     }
 
     async function fetchNavbar() {
         if (!gameData) {
             return;
         }
-        const res = await fetch(
-            currentAPI + "/sections/navbar?gameId=" + gameData.id,
-        );
-        const data = await res.json();
+        const data = await safeFetch(currentAPI + "/sections/navbar?gameId=" + gameData.id);
+        if (!data) return;
 
         const navbarMap = new Map();
         data.forEach((section) => {
@@ -96,6 +76,7 @@ export default async function gameAndPageLoader({ params, request }) {
     } else {
         if (gameSlug != null && gameSlug != undefined) {
             gameData = await fetchGameBySlug(gameSlug);
+            if (!gameData) throw redirect("/404");
         }
 
         if (!!pageSlug) {
@@ -114,10 +95,11 @@ export default async function gameAndPageLoader({ params, request }) {
             isHomePage = true;
         }
 
-        //if (!gameData && !!pageData) {
-        //pageData = await fetchPageBySlug();
-        //isHomePage = true;
-        //}
+        // If we have a pageSlug and found a page but no game context,
+        // it's a game page being accessed at the wrong URL → 404
+        if (!gameData && pageData && !isHomePage) {
+            throw redirect("/404");
+        }
     }
 
     if (pageSlug && isHomePage) {
