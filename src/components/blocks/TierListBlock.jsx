@@ -305,7 +305,11 @@ function TierListDisplay({ gameId, display }) {
 
                             {hasSections ? (
                                 sortedSections.map((section, i) => {
-                                    const sectionEntries = entries.filter(e => String(e.sectionId ?? localSectionMap[e.itemId]) === String(section.id));
+                                    const sectionEntries = entries.filter(e => {
+                                        const assigned = e.sectionId ?? localSectionMap[e.itemId];
+                                        if (i === 0 && (assigned == null || assigned === undefined)) return true;
+                                        return String(assigned) === String(section.id);
+                                    });
                                     return (
                                         <div key={section.id}
                                             className={`flex-1 px-3 py-2 flex flex-wrap gap-2 content-start bg-(--surface-background) ${i > 0 ? "border-l border-(--outline)" : ""}`}>
