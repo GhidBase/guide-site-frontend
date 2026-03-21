@@ -22,13 +22,17 @@ const secret = import.meta.env.VITE_SECRET;
 
 export default function NavigationPanel() {
     const [, forceRender] = useState(0);
-    const { gameData, sectionsMap: loaderSectionsMap, isLDG } = useRouteLoaderData("main");
+    const { gameData, pageData, sectionsMap: loaderSectionsMap, isLDG } = useRouteLoaderData("main");
     // For game pages, require sectionsMap to be loaded. For non-game pages, proceed with empty map.
     if (gameData && !loaderSectionsMap) {
         return <div>Loading navigation data...</div>;
     }
     const sectionsMap = loaderSectionsMap ?? new Map();
     const gameId = gameData?.id;
+    const pageId = pageData?.page?.id;
+    const imagesBaseUrl = gameId
+        ? `${currentAPI}/games/${gameId}/images`
+        : `${currentAPI}/pages/by-id/${pageId}/images`;
 
     // URL helpers for page operations — different for game vs non-game pages
     const pagesBaseUrl = gameId
@@ -86,8 +90,8 @@ export default function NavigationPanel() {
     const [bulkProgress, setBulkProgress] = useState(null); // null | { done, total }
 
     useEffect(() => {
-        if (!gameId) return;
-        fetch(currentAPI + "/games/" + gameId + "/images")
+        if (!pageId && !gameId) return;
+        fetch(imagesBaseUrl)
             .then((r) => r.json())
             .then(setImages)
             .catch(() => {});
@@ -103,7 +107,7 @@ export default function NavigationPanel() {
             formData.append("category", imageUploadCategory.trim());
         }
         try {
-            const res = await fetch(currentAPI + "/games/" + gameId + "/images", {
+            const res = await fetch(imagesBaseUrl, {
                 method: "POST",
                 credentials: "include",
                 body: formData,
@@ -130,7 +134,7 @@ export default function NavigationPanel() {
             formData.append("title", file.name.replace(/\.[^.]+$/, ""));
             if (category.trim()) formData.append("category", category.trim());
             try {
-                const res = await fetch(currentAPI + "/games/" + gameId + "/images", {
+                const res = await fetch(imagesBaseUrl, {
                     method: "POST",
                     credentials: "include",
                     body: formData,
@@ -154,7 +158,7 @@ export default function NavigationPanel() {
         if (!confirm(`Delete all ${group.length} image${group.length !== 1 ? "s" : ""} in "${cat || "Uncategorized"}"?`)) return;
         for (const img of group) {
             try {
-                await fetch(currentAPI + "/games/" + gameId + "/images/" + img.id, {
+                await fetch(imagesBaseUrl + "/" + img.id, {
                     method: "DELETE",
                     credentials: "include",
                 });
@@ -167,7 +171,7 @@ export default function NavigationPanel() {
 
     async function deleteImage(imageId) {
         try {
-            await fetch(currentAPI + "/games/" + gameId + "/images/" + imageId, {
+            await fetch(imagesBaseUrl + "/" + imageId, {
                 method: "DELETE",
                 credentials: "include",
             });
