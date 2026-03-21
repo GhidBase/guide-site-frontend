@@ -225,7 +225,7 @@ export default function MobileNavbar({ toggleNav, navOpen }) {
                         <a
                             id="privacy-policy"
                             className=""
-                            href="/pages/privacy-policy.html"
+                            href="/privacy-policy"
                         >
                             Privacy Policy
                         </a>
