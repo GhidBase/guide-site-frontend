@@ -13,6 +13,21 @@ import { PanelLeftOpen, PanelLeftClose, Pencil, Eye } from "lucide-react";
 import Footer from "./Footer.jsx";
 import { useAuth } from "../hooks/useAuth.js";
 
+function HomepageStickyHeader({ isHomepage, sectionsMap, navbarLayout, toggleNavbarLayout }) {
+    const { adminMode } = useEditMode();
+    if (isHomepage && !adminMode) return null;
+    return (
+        <div id="sticky-header" className="sticky top-0 z-40 border-b-4 border-(--outline)">
+            <TopBar navbarLayout={navbarLayout} toggleNavbarLayout={toggleNavbarLayout} />
+            {sectionsMap && navbarLayout === "horizontal" && (
+                <div className="hidden lg:block">
+                    <HorizontalNavbar />
+                </div>
+            )}
+        </div>
+    );
+}
+
 function HomepageEditButton() {
     const { adminMode, setAdminMode, dirtyBlocks } = useEditMode();
     const { user } = useAuth();
@@ -127,14 +142,7 @@ export default function Main() {
             className={`h-full w-full flex flex-col grow box-border ${!isHomepage ? "bg-(--surface-background)" : ""}`}
             style={!isHomepage ? themeToStyle(activeTheme) : undefined}
         >
-            {!isHomepage && <div id="sticky-header" className="sticky top-0 z-40 border-b-4 border-(--outline)">
-                <TopBar navbarLayout={navbarLayout} toggleNavbarLayout={toggleNavbarLayout} />
-                {sectionsMap && navbarLayout === "horizontal" && (
-                    <div className="hidden lg:block">
-                        <HorizontalNavbar />
-                    </div>
-                )}
-            </div>}
+            <HomepageStickyHeader isHomepage={isHomepage} sectionsMap={sectionsMap} navbarLayout={navbarLayout} toggleNavbarLayout={toggleNavbarLayout} />
             <div
                 id="side-bar-and-content"
                 className={`relative w-full box-border flex flex-1
