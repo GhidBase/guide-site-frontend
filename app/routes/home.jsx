@@ -1,1 +1,1 @@
-export { default } from "../../src/components/PageBuilder";
+export { default } from "../../src/components/GuideCodexHomepage";
