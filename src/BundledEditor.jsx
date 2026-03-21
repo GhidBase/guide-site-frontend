@@ -95,7 +95,7 @@ export default function BundledEditor({ imagePickerTriggerRef, ...props }) {
                 onboarding: false,
                 statusbar: false,
                 toolbar_sticky: true,
-                toolbar_sticky_offset: 28,
+                toolbar_sticky_offset: 0,
 
                 content_css: "/editor-content.css",
                 content_style: "body { padding: 0px 26px }",

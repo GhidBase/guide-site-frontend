@@ -33,6 +33,20 @@ export default function Main() {
         setTheme(gameData?.theme ?? null);
     }, [gameData?.id]);
 
+    useEffect(() => {
+        const el = document.getElementById("sticky-header");
+        if (!el) return;
+        const update = () =>
+            document.documentElement.style.setProperty(
+                "--sticky-header-height",
+                el.offsetHeight + "px",
+            );
+        update();
+        const ro = new ResizeObserver(update);
+        ro.observe(el);
+        return () => ro.disconnect();
+    }, []);
+
     const activeTheme = darkMode
         ? computeDarkTheme(gameData?.theme ?? THEME_DEFAULTS)
         : gameData?.theme ?? null;
@@ -78,7 +92,7 @@ export default function Main() {
             className="h-full w-full flex flex-col grow box-border bg-(--surface-background)"
             style={themeToStyle(activeTheme)}
         >
-            <div className="sticky top-0 z-40 border-b-4 border-(--outline)">
+            <div id="sticky-header" className="sticky top-0 z-40 border-b-4 border-(--outline)">
                 <TopBar navbarLayout={navbarLayout} toggleNavbarLayout={toggleNavbarLayout} />
                 {gameData && navbarLayout === "horizontal" && (
                     <div className="hidden lg:block">
