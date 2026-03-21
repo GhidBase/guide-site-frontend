@@ -1,6 +1,7 @@
 import { forwardRef, useImperativeHandle, useState, useRef, useEffect } from "react";
-import { Link } from "react-router";
+import { Link, useRouteLoaderData } from "react-router";
 import { ArrowUpRight, Pencil, Trash2, Plus, Check, X } from "lucide-react";
+import { currentAPI } from "../../config/api";
 
 // Content shape: { sectionLabel: string, cards: Card[] }
 // Card shape: { id, title, description, imageUrl, linkUrl, linkText, accentColor }
@@ -11,10 +12,10 @@ function genId() {
 
 const DEFAULT_ACCENT = "#9b6a4e";
 
-const CARD_FIELDS = [
+
+const NON_IMAGE_FIELDS = [
     ["Title", "title", "text"],
     ["Description", "description", "textarea"],
-    ["Image URL", "imageUrl", "text"],
     ["Link URL", "linkUrl", "text"],
     ["Link text", "linkText", "text"],
 ];
@@ -23,12 +24,20 @@ const ImageTextBlock = forwardRef(function ImageTextBlock(
     { block, adminMode, canDelete, deleteBlock, updateBlockContent, onDirty },
     ref
 ) {
+    const { gameData, pageData } = useRouteLoaderData("main");
+    const gameId = gameData?.id;
+    const pageId = pageData?.page?.id;
+    const imagesBaseUrl = gameId
+        ? `${currentAPI}/games/${gameId}/images`
+        : `${currentAPI}/pages/by-id/${pageId}/images`;
+
     const [data, setData] = useState(() => {
         try { return block.content ? JSON.parse(block.content) : { sectionLabel: "", cards: [] }; }
         catch { return { sectionLabel: "", cards: [] }; }
     });
     const [editing, setEditing] = useState(null);
     const [draft, setDraft] = useState(null);
+    const [poolImages, setPoolImages] = useState([]);
     const cardRefs = useRef([]);
 
     useImperativeHandle(ref, () => ({
@@ -57,6 +66,10 @@ const ImageTextBlock = forwardRef(function ImageTextBlock(
     function startEdit(card) {
         setEditing(card.id);
         setDraft({ ...card });
+        fetch(imagesBaseUrl)
+            .then(r => r.ok ? r.json() : [])
+            .then(setPoolImages)
+            .catch(() => {});
     }
 
     function commitEdit() {
@@ -213,7 +226,7 @@ const ImageTextBlock = forwardRef(function ImageTextBlock(
                                         overflowY: "auto",
                                     }}>
                                         <p style={{ fontWeight: 600, fontSize: "0.85rem", margin: 0, color: "#e8d5b7" }}>Edit card</p>
-                                        {CARD_FIELDS.map(([label, key, type]) => (
+                                        {NON_IMAGE_FIELDS.map(([label, key, type]) => (
                                             <div key={key} style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
                                                 <label style={{ fontSize: "0.62rem", textTransform: "uppercase", letterSpacing: "0.1em", opacity: 0.4, color: "#e8d5b7" }}>{label}</label>
                                                 {type === "textarea" ? (
@@ -233,6 +246,29 @@ const ImageTextBlock = forwardRef(function ImageTextBlock(
                                                 )}
                                             </div>
                                         ))}
+                                        {/* Image picker */}
+                                        <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
+                                            <label style={{ fontSize: "0.62rem", textTransform: "uppercase", letterSpacing: "0.1em", opacity: 0.4, color: "#e8d5b7" }}>Image</label>
+                                            {draft.imageUrl && (
+                                                <img src={draft.imageUrl} style={{ height: "70px", objectFit: "cover", borderRadius: "4px", marginBottom: "0.25rem" }} />
+                                            )}
+                                            {poolImages.length > 0 ? (
+                                                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(72px, 1fr))", gap: "0.35rem", maxHeight: "150px", overflowY: "auto" }}>
+                                                    {poolImages.map(img => {
+                                                        const url = img.url ?? img;
+                                                        const selected = draft.imageUrl === url;
+                                                        return (
+                                                            <img key={url} src={url}
+                                                                onClick={() => setDraft(p => ({ ...p, imageUrl: url }))}
+                                                                style={{ width: "100%", aspectRatio: "16/9", objectFit: "cover", borderRadius: "3px", cursor: "pointer", border: selected ? "2px solid #e8d5b7" : "2px solid transparent", opacity: selected ? 1 : 0.55 }}
+                                                            />
+                                                        );
+                                                    })}
+                                                </div>
+                                            ) : (
+                                                <p style={{ color: "rgba(232,213,183,0.3)", fontSize: "0.72rem", margin: 0 }}>No images in pool. Upload via the navigation panel.</p>
+                                            )}
+                                        </div>
                                         <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
                                             <label style={{ fontSize: "0.62rem", textTransform: "uppercase", letterSpacing: "0.1em", opacity: 0.4, color: "#e8d5b7" }}>Accent color</label>
                                             <input
