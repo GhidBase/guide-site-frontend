@@ -20,7 +20,7 @@ export default function PageBuilder() {
     const [blocks, setBlocks] = useState(pageData?.blocks ?? []);
     const isAdmin = user?.role == "ADMIN";
     const isContributor = isAuthenticated && !isAdmin;
-    const { adminMode, setAdminMode, dirtyBlocks, setDirtyBlocks } = useEditMode();
+    const { adminMode, setAdminMode, dirtyBlocks, setDirtyBlocks, setSaveAll } = useEditMode();
     const [showPendingNotification, setShowPendingNotification] = useState(false);
     const blockRefs = useRef({});
 
@@ -37,6 +37,11 @@ export default function PageBuilder() {
             await blockRefs.current[id]?.save();
         }
     }
+
+    useEffect(() => {
+        setSaveAll(() => saveAllChanges);
+        return () => setSaveAll(null);
+    }, [dirtyBlocks]);
 
     function handleToggleAdminMode() {
         if (adminMode && dirtyBlocks.size > 0) {
@@ -210,16 +215,6 @@ export default function PageBuilder() {
     return (
         <Fragment>
         <div style={{ viewTransitionName: "page-content" }}>
-            {adminMode && dirtyBlocks.size > 0 && (
-                <div className="self-stretch flex justify-center sticky top-0 bg-(--primary) sm:rounded-b max-w-full z-2">
-                    <button
-                        className="text-amber-50 font-semibold px-4 py-0.5 flex justify-center items-center bg-green-800/40 hover:bg-green-700/50"
-                        onClick={saveAllChanges}
-                    >
-                        Save Changes ({dirtyBlocks.size})
-                    </button>
-                </div>
-            )}
             <PendingReviewNotification
                 visible={showPendingNotification}
                 onDismiss={() => setShowPendingNotification(false)}

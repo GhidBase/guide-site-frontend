@@ -4,10 +4,12 @@ import { useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { PanelTop, PanelLeft, Sun, Moon, LogOut, LogIn, UserPlus } from "lucide-react";
 import { useDarkMode } from "../contexts/ThemeProvider.jsx";
+import { useEditMode } from "../contexts/EditModeContext.jsx";
 
 export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
     const { pageData, pageSlug, gameData, isLDG } = useRouteLoaderData("main");
     const { darkMode, toggleDarkMode } = useDarkMode();
+    const { adminMode, dirtyBlocks, saveAll } = useEditMode();
     const { isAuthenticated, user, logout } = useAuth();
     const navigate = useNavigate();
     const matches = useMatches();
@@ -49,6 +51,15 @@ export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
             )}
 
             <div className="flex-1" />
+
+            {adminMode && dirtyBlocks.size > 0 && saveAll && (
+                <button
+                    onClick={saveAll}
+                    className="flex items-center gap-1.5 px-3 py-1 text-sm font-semibold text-white bg-green-700/70 hover:bg-green-600/80 rounded cursor-pointer transition-colors shrink-0"
+                >
+                    Save ({dirtyBlocks.size})
+                </button>
+            )}
 
             {/* Auth */}
             <div className="flex items-center gap-2">
