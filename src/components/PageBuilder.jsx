@@ -4,7 +4,10 @@ import TextBlock from "./blocks/TextBlock";
 import { Link, useRouteLoaderData } from "react-router";
 import SingleImageBlock from "./blocks/SingleImageBlock";
 import TierListBlock from "./blocks/TierListBlock";
+import HeroTextBlock from "./blocks/HeroTextBlock";
 import BoardBuilderBlock from "./blocks/BoardBuilderBlock";
+import GamesListBlock from "./blocks/GamesListBlock";
+import NotFound from "./NotFound";
 import GuideCodexHomepage from "./GuideCodexHomepage";
 import { useAuth } from "../hooks/useAuth.js";
 import { useEditMode } from "../contexts/EditModeContext.jsx";
@@ -70,107 +73,71 @@ export default function PageBuilder() {
         return blocks.find((block) => block.order == order) != undefined;
     }
 
+    const blocksUrl = gameId
+        ? `${currentAPI}/games/${gameId}/pages/by-id/${pageId}/blocks`
+        : `${currentAPI}/pages/by-id/${pageId}/blocks`;
+
+    function blockUrl(blockId) {
+        return gameId
+            ? `${currentAPI}/games/${gameId}/blocks/${blockId}`
+            : `${currentAPI}/pages/by-id/${pageId}/blocks/${blockId}`;
+    }
+
+    function deleteBlockUrl(blockId) {
+        return gameId
+            ? `${currentAPI}/games/${gameId}/blocks/${blockId}`
+            : `${currentAPI}/pages/by-id/${blockId}`;
+    }
+
     async function addBlock({ nextOrder = highestOrder + 1, type } = {}) {
-        // nextOrder is used to insert blocks at the beginning,
-        // end, or middle where the user intends
-
-        console.log("adding block");
-        console.log(
-            currentAPI +
-                "/games/" +
-                gameId +
-                "/pages/by-id/" +
-                pageId +
-                "/blocks",
-        );
         const orderTaken = isOrderTaken(nextOrder);
-
         if (orderTaken) {
             await shiftBlocks(nextOrder);
         }
 
-        const response = await fetch(
-            currentAPI +
-                "/games/" +
-                gameId +
-                "/pages/by-id/" +
-                pageId +
-                "/blocks",
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ order: nextOrder, type }),
-                credentials: "include",
-            },
-        );
+        const response = await fetch(blocksUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ order: nextOrder, type }),
+            credentials: "include",
+        });
         const newBlock = await response.json();
-        const newBlocks = [...blocks, newBlock];
-        setBlocks(newBlocks);
+        setBlocks([...blocks, newBlock]);
     }
 
     async function shiftBlocks(order) {
-        const response = await fetch(
-            currentAPI +
-                "/games/" +
-                gameId +
-                "/pages/by-id/" +
-                pageId +
-                "/blocks",
-            {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                credentials: "include",
-                body: JSON.stringify({ type: "offset", order }),
-            },
-        );
-        if (!response.ok) {
-            throw new Error("Request failed");
-        }
+        const response = await fetch(blocksUrl, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ type: "offset", order }),
+        });
+        if (!response.ok) throw new Error("Request failed");
         blocks.map((block) => {
-            if (block.order >= order) {
-                block.order++;
-            }
+            if (block.order >= order) block.order++;
             return block;
         });
-        return;
     }
 
     async function deleteBlock(block) {
-        console.log(gameId);
-        const response = await fetch(
-            currentAPI + "/games/" + gameId + "/blocks/" + block.id,
-            {
-                method: "DELETE",
-                credentials: "include",
-            },
-        );
-
-        const deletedBlock = await response.json();
-        const newBlocks = blocks.filter((block) => {
-            return block.id != deletedBlock.id;
+        const response = await fetch(deleteBlockUrl(block.id), {
+            method: "DELETE",
+            credentials: "include",
         });
-        setBlocks(newBlocks);
+        const deletedBlock = await response.json();
+        setBlocks(blocks.filter((b) => b.id != deletedBlock.id));
     }
 
     async function updateBlockWithEditorData(block, editorRef) {
         const content = editorRef.current.getContent();
         const content2 = block.content2;
 
-        const response = await fetch(
-            currentAPI + "/games/" + gameId + "/blocks/" + block.id,
-            {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                credentials: "include",
-                body: JSON.stringify({ content, content2 }),
-            },
-        );
+        const response = await fetch(blockUrl(block.id), {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ content, content2 }),
+        });
 
         if (response.status === 202) {
             setShowPendingNotification(true);
@@ -181,17 +148,12 @@ export default function PageBuilder() {
     }
 
     async function updateBlockContent(block, newContent) {
-        const response = await fetch(
-            currentAPI + "/games/" + gameId + "/blocks/" + block.id,
-            {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                credentials: "include",
-                body: JSON.stringify({ content: newContent }),
-            },
-        );
+        const response = await fetch(blockUrl(block.id), {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ content: newContent }),
+        });
 
         if (response.status === 202) {
             setShowPendingNotification(true);
@@ -202,9 +164,7 @@ export default function PageBuilder() {
     }
 
     async function refreshBlock(id) {
-        const response = await fetch(
-            currentAPI + "/games/" + gameId + "/blocks/" + id,
-        );
+        const response = await fetch(blockUrl(id));
 
         const result = await response.json();
         const newBlocks = [...blocks];
@@ -215,7 +175,11 @@ export default function PageBuilder() {
         setBlocks(newBlocks);
     }
 
-    if (!gameData) {
+    if (pageData?.notFound) {
+        return <NotFound />;
+    }
+
+    if (!gameData && !adminMode) {
         return <GuideCodexHomepage />;
     }
 
@@ -258,9 +222,21 @@ export default function PageBuilder() {
                     </button>
                     <button
                         onClick={async () => { await addBlock({ nextOrder: 0, type: "board-builder" }); }}
-                        className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) cursor-pointer"
+                        className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer"
                     >
                         + Board Builder Block
+                    </button>
+                    <button
+                        onClick={async () => { await addBlock({ nextOrder: 0, type: "games-list" }); }}
+                        className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer"
+                    >
+                        + Games List Block
+                    </button>
+                    <button
+                        onClick={async () => { await addBlock({ nextOrder: 0, type: "hero-text" }); }}
+                        className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) cursor-pointer"
+                    >
+                        + Hero Text Block
                     </button>
                 </div>
             )}
@@ -291,9 +267,21 @@ export default function PageBuilder() {
                             </button>
                             <button
                                 onClick={async () => { await addBlock({ nextOrder: block.order + 1, type: "board-builder" }); }}
-                                className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) cursor-pointer"
+                                className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer"
                             >
                                 + Board Builder Block
+                            </button>
+                            <button
+                                onClick={async () => { await addBlock({ nextOrder: block.order + 1, type: "games-list" }); }}
+                                className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer"
+                            >
+                                + Games List Block
+                            </button>
+                            <button
+                                onClick={async () => { await addBlock({ nextOrder: block.order + 1, type: "hero-text" }); }}
+                                className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) cursor-pointer"
+                            >
+                                + Hero Text Block
                             </button>
                         </div>
                     ) : null;
@@ -334,6 +322,38 @@ export default function PageBuilder() {
                             blockType = (
                                 <Fragment key={block.id}>
                                     <TierListBlock
+                                        ref={(el) => { blockRefs.current[block.id] = el; }}
+                                        deleteBlock={() => deleteBlock(block)}
+                                        block={block}
+                                        updateBlockContent={updateBlockContent}
+                                        adminMode={adminMode}
+                                        canDelete={isAdmin}
+                                        onDirty={handleDirtyChange}
+                                    />
+                                    {buttons}
+                                </Fragment>
+                            );
+                            break;
+                        case "games-list":
+                            blockType = (
+                                <Fragment key={block.id}>
+                                    <GamesListBlock
+                                        ref={(el) => { blockRefs.current[block.id] = el; }}
+                                        deleteBlock={() => deleteBlock(block)}
+                                        block={block}
+                                        updateBlockContent={updateBlockContent}
+                                        adminMode={adminMode}
+                                        canDelete={isAdmin}
+                                        onDirty={handleDirtyChange}
+                                    />
+                                    {buttons}
+                                </Fragment>
+                            );
+                            break;
+                        case "hero-text":
+                            blockType = (
+                                <Fragment key={block.id}>
+                                    <HeroTextBlock
                                         ref={(el) => { blockRefs.current[block.id] = el; }}
                                         deleteBlock={() => deleteBlock(block)}
                                         block={block}
