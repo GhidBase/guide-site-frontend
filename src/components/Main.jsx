@@ -25,7 +25,7 @@ export default function Main() {
     function toggleNavbarLayout() {
         setNavbarLayout((prev) => (prev === "vertical" ? "horizontal" : "vertical"));
     }
-    const { gameData } = useLoaderData();
+    const { gameData, sectionsMap } = useLoaderData();
     const { setTheme } = useTheme();
     const { darkMode } = useDarkMode();
 
@@ -94,7 +94,7 @@ export default function Main() {
         >
             <div id="sticky-header" className="sticky top-0 z-40 border-b-4 border-(--outline)">
                 <TopBar navbarLayout={navbarLayout} toggleNavbarLayout={toggleNavbarLayout} />
-                {gameData && navbarLayout === "horizontal" && (
+                {sectionsMap && navbarLayout === "horizontal" && (
                     <div className="hidden lg:block">
                         <HorizontalNavbar />
                     </div>
@@ -107,7 +107,7 @@ export default function Main() {
                 transition-[padding] duration-300 ease-in-out
                 ${gameData && !sidebarCollapsed && navbarLayout === "vertical" && "xl:pr-30 2xl:pr-60"} `}
             >
-                {gameData && navbarLayout === "vertical" && (
+                {sectionsMap && navbarLayout === "vertical" && (
                     <Navbar
                         className={`
                             w-60 max-w-60 min-w-60 lg:min-w-0 z-3 lg:h-full
@@ -128,7 +128,7 @@ export default function Main() {
                             bg-(--primary) border-4 border-t-0 border-(--outline)`}
                     ></Navbar>
                 )}
-                {gameData && navbarLayout === "vertical" && (
+                {sectionsMap && navbarLayout === "vertical" && (
                     <div className="hidden lg:block w-0 overflow-visible self-start sticky top-3 z-10">
                         <button
                             onClick={toggleSidebar}
@@ -158,7 +158,7 @@ export default function Main() {
 
             <Footer />
 
-            {gameData && (
+            {sectionsMap && (
                 <MobileNavbar
                     toggleNav={toggleNav}
                     className={`${!navOpen ? "hidden" : "lg:fixed"}`}

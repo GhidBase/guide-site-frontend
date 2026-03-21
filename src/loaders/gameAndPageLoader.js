@@ -60,13 +60,13 @@ export default async function gameAndPageLoader({ params, request }) {
     }
 
     async function fetchNavbar() {
-        if (!gameData) {
-            return;
-        }
-        const res = await fetch(
-            currentAPI + "/sections/navbar?gameId=" + gameData.id,
-        );
+        const url = gameData
+            ? currentAPI + "/sections/navbar?gameId=" + gameData.id
+            : currentAPI + "/sections/navbar";
+        const res = await fetch(url);
+        if (!res.ok) return;
         const data = await res.json();
+        if (!Array.isArray(data) || data.length === 0) return;
 
         const navbarMap = new Map();
         data.forEach((section) => {

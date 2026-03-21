@@ -22,16 +22,28 @@ const secret = import.meta.env.VITE_SECRET;
 
 export default function NavigationPanel() {
     const [, forceRender] = useState(0);
-    const { gameData, sectionsMap, isLDG } = useRouteLoaderData("main");
-    if (!gameData || !sectionsMap) {
+    const { gameData, sectionsMap: loaderSectionsMap, isLDG } = useRouteLoaderData("main");
+    // For game pages, require sectionsMap to be loaded. For non-game pages, proceed with empty map.
+    if (gameData && !loaderSectionsMap) {
         return <div>Loading navigation data...</div>;
     }
+    const sectionsMap = loaderSectionsMap ?? new Map();
     const gameId = gameData?.id;
+
+    // URL helpers for page operations — different for game vs non-game pages
+    const pagesBaseUrl = gameId
+        ? `${currentAPI}/games/${gameId}/pages`
+        : `${currentAPI}/pages`;
+    function pageUrl(id) {
+        return gameId
+            ? `${currentAPI}/games/${gameId}/pages/by-id/${id}`
+            : `${currentAPI}/pages/by-id/${id}`;
+    }
+
     const [unsectionedPages, setUnsectionedPages] = useState([]);
 
     useEffect(() => {
-        if (!gameId) return;
-        fetch(currentAPI + "/games/" + gameId + "/pages")
+        fetch(pagesBaseUrl)
             .then((res) => res.json())
             .then((pages) =>
                 setUnsectionedPages(pages.filter((p) => !p.sectionId)),
@@ -627,7 +639,7 @@ export default function NavigationPanel() {
         if (!pageId) return;
 
         try {
-            const res = await fetch(currentAPI + "/games/" + gameId + "/pages/by-id/" + pageId, {
+            const res = await fetch(pageUrl(pageId), {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -694,7 +706,7 @@ export default function NavigationPanel() {
         const body = { title: newPageTitle };
         if (newPageSection) body.sectionId = Number(newPageSection);
         try {
-            const res = await fetch(currentAPI + "/games/" + gameId + "/pages", {
+            const res = await fetch(pagesBaseUrl, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",
@@ -717,14 +729,11 @@ export default function NavigationPanel() {
 
     async function deletePage(page) {
         try {
-            await fetch(
-                currentAPI + "/games/" + gameId + "/pages/by-id/" + page.id,
-                {
-                    method: "DELETE",
-                    headers: { "Content-Type": "application/json" },
-                    credentials: "include",
-                },
-            );
+            await fetch(pageUrl(page.id), {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+            });
             if (page.sectionId) {
                 const section = sectionsMap.get(page.sectionId);
                 if (section)
@@ -744,9 +753,7 @@ export default function NavigationPanel() {
 
     async function renamePage(id) {
         try {
-            await fetch(
-                currentAPI + "/games/" + gameId + "/pages/by-id/" + id,
-                {
+            await fetch(pageUrl(id), {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
                     credentials: "include",
@@ -861,9 +868,7 @@ export default function NavigationPanel() {
                 if (titleChanged) body.title = detailTitle;
                 if (slugChanged) body.slug = detailSlug;
                 if (descriptionChanged) body.description = detailDescription;
-                await fetch(
-                    currentAPI + "/games/" + gameId + "/pages/by-id/" + id,
-                    {
+                await fetch(pageUrl(id), {
                         method: "PUT",
                         headers: { "Content-Type": "application/json" },
                         credentials: "include",

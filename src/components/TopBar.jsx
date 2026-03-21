@@ -2,12 +2,12 @@ import ldgLogo from "../assets/LDG_Title.webp";
 import { useRouteLoaderData, useNavigate, Link, useMatches } from "react-router";
 import { useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
-import { PanelTop, PanelLeft, Sun, Moon, LogOut, LogIn, UserPlus, Pencil, Eye } from "lucide-react";
+import { PanelTop, PanelLeft, Sun, Moon, LogOut, LogIn, UserPlus, Pencil, Eye, Settings } from "lucide-react";
 import { useDarkMode } from "../contexts/ThemeProvider.jsx";
 import { useEditMode } from "../contexts/EditModeContext.jsx";
 
 export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
-    const { pageData, pageSlug, gameData, isLDG } = useRouteLoaderData("main");
+    const { pageData, pageSlug, gameData, sectionsMap, isLDG } = useRouteLoaderData("main");
     const { darkMode, toggleDarkMode } = useDarkMode();
     const { adminMode, setAdminMode, dirtyBlocks, saveAll } = useEditMode();
     const { isAuthenticated, user, logout } = useAuth();
@@ -59,6 +59,18 @@ export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
                 >
                     Save ({dirtyBlocks.size})
                 </button>
+            )}
+
+            {/* Nav panel link — desktop, admin only */}
+            {user?.role === "ADMIN" && (
+                <a
+                    href={isLDG || !gameData ? "/navigation-panel" : "/games/" + gameData.slug + "/navigation-panel"}
+                    title="Navigation Panel"
+                    className="hidden lg:flex p-1.5 rounded border border-amber-50/30 text-amber-50 hover:opacity-80 transition-colors items-center justify-center"
+                    style={{ background: darkMode ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.12)" }}
+                >
+                    <Settings className="w-4 h-4" />
+                </a>
             )}
 
             {/* Edit mode toggle — desktop, admin/contributor only */}
@@ -117,7 +129,7 @@ export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
                 </button>
 
                 {/* Layout toggle — desktop only */}
-                {gameData && (
+                {sectionsMap && (
                     <button
                         onClick={toggleNavbarLayout}
                         title={navbarLayout === "horizontal" ? "Switch to vertical sidebar" : "Switch to horizontal navbar"}
