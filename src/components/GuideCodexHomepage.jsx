@@ -1,64 +1,29 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { Link } from "react-router";
 import { useRouteLoaderData } from "react-router";
-import { currentAPI } from "../config/api";
 import { useAuth } from "../hooks/useAuth";
+import { useEditMode } from "../contexts/EditModeContext";
 import { LogOut, ArrowUpRight, LogIn } from "lucide-react";
-
-// ── Helpers ──────────────────────────────────────────────────────
-
-function findGameBlocks(blocks, gameTitle) {
-    const sorted = [...blocks].sort((a, b) => a.order - b.order);
-    const textIdx = sorted.findIndex(
-        (b) =>
-            b.content?.type === "richText" &&
-            b.content?.content?.includes(`<h3>${gameTitle}</h3>`),
-    );
-    if (textIdx === -1) return { textBlock: null, imageBlock: null };
-    const textBlock = sorted[textIdx];
-    const nearby = sorted.slice(textIdx, textIdx + 3);
-    const imageBlock = nearby.find((b) => b.type === "single-image") ?? null;
-    return { textBlock, imageBlock };
-}
-
-function decodeEntities(str) {
-    return str
-        .replace(/&rsquo;|&#8217;/g, "'")
-        .replace(/&lsquo;|&#8216;/g, "'")
-        .replace(/&rdquo;|&#8221;/g, '"')
-        .replace(/&ldquo;|&#8220;/g, '"')
-        .replace(/&amp;/g, "&")
-        .replace(/&nbsp;/g, " ")
-        .replace(/&lt;/g, "<")
-        .replace(/&gt;/g, ">")
-        .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
-        .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCharCode(parseInt(n, 16)));
-}
-
-function stripHtml(html) {
-    return decodeEntities(html?.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim() ?? "");
-}
-
-function extractDescription(html) {
-    const withoutH3 = html?.replace(/<h3>[^<]*<\/h3>/g, "") ?? "";
-    return stripHtml(withoutH3);
-}
-
-// ── Component ────────────────────────────────────────────────────
+import PageBuilder from "./PageBuilder";
 
 export default function GuideCodexHomepage() {
     const { pageData } = useRouteLoaderData("main");
     const { isAuthenticated, user, logout } = useAuth();
-    const [games, setGames] = useState([]);
-    const blocks = pageData?.blocks ?? [];
+    const { adminMode } = useEditMode();
     const cardRefs = useRef([]);
 
-    useEffect(() => {
-        fetch(`${currentAPI}/games`)
-            .then((r) => (r.ok ? r.json() : []))
-            .then((data) => setGames(data.filter((g) => g.isActive !== false).sort((a, b) => (a.slug === "lucky-defense" ? -1 : b.slug === "lucky-defense" ? 1 : 0))))
-            .catch(() => {});
-    }, []);
+    const blocks = pageData?.blocks ?? [];
+
+    const titleBlock = blocks.find((b) => b.type === "title");
+    const topLine = titleBlock?.content?.topLine ?? "Guide";
+    const bottomLine = titleBlock?.content?.bottomLine ?? "Codex";
+
+    const allCards = blocks
+        .filter((b) => b.type === "image-text")
+        .sort((a, b) => a.order - b.order)
+        .flatMap((b) => b.content?.cards ?? []);
+
+    const sectionLabel = blocks.find((b) => b.type === "image-text")?.content?.sectionLabel || "Games we cover";
 
     useEffect(() => {
         const observer = new IntersectionObserver(
@@ -74,7 +39,11 @@ export default function GuideCodexHomepage() {
         );
         cardRefs.current.forEach((el) => el && observer.observe(el));
         return () => observer.disconnect();
-    }, [games]);
+    }, [allCards]);
+
+    if (adminMode) {
+        return <PageBuilder />;
+    }
 
     return (
         <>
@@ -219,7 +188,6 @@ export default function GuideCodexHomepage() {
                 }
             `}</style>
 
-
             {/* Grain overlay */}
             <div
                 aria-hidden
@@ -333,7 +301,7 @@ export default function GuideCodexHomepage() {
                             userSelect: "none",
                         }}>
                             <span className="gcx-word-guide" style={{ color: "#f5ede0", textShadow: "0 4px 60px rgba(245,237,224,0.08)" }}>
-                                Guide
+                                {topLine}
                             </span>
                             <span className="gcx-word-codex" style={{
                                 color: "#9b6a4e",
@@ -341,19 +309,19 @@ export default function GuideCodexHomepage() {
                                 textAlign: "right",
                                 textShadow: "0 4px 60px rgba(155,106,78,0.3)",
                             }}>
-                                Codex
+                                {bottomLine}
                             </span>
                         </div>
 
                         <div className="gcx-hero-sub" style={{
                             display: "flex", alignItems: "center", gap: "1.25rem", marginTop: "2.5rem",
                         }}>
-                            </div>
+                        </div>
                     </div>
                 </section>
 
-                {/* ── Games ── */}
-                {games.length > 0 && (
+                {/* ── Cards ── */}
+                {allCards.length > 0 && (
                     <section style={{
                         maxWidth: "1280px",
                         width: "100%",
@@ -361,27 +329,23 @@ export default function GuideCodexHomepage() {
                         padding: "0 2.5rem 10rem",
                         boxSizing: "border-box",
                     }}>
-                        {/* Section label */}
                         <div className="gcx-section-label" style={{
                             display: "flex", alignItems: "center", gap: "1rem", marginBottom: "2.5rem",
                         }}>
                             <span style={{ fontSize: "0.6rem", letterSpacing: "0.25em", textTransform: "uppercase", opacity: 0.3, whiteSpace: "nowrap" }}>
-                                Games we cover
+                                {sectionLabel}
                             </span>
                             <div style={{ flex: 1, height: "1px", background: "linear-gradient(to right, rgba(232,213,183,0.12), transparent)" }} />
                         </div>
 
                         <div style={{ display: "flex", flexDirection: "column", gap: "1.75rem" }}>
-                            {games.map((game, i) => {
-                                const { textBlock, imageBlock } = findGameBlocks(blocks, game.title);
-                                const description = extractDescription(textBlock?.content?.content ?? "");
-                                const imageUrl = imageBlock?.files?.[0]?.url;
-                                const primary = game.theme?.primary ?? "#9b6a4e";
+                            {allCards.map((card, i) => {
+                                const primary = card.accentColor || "#9b6a4e";
                                 const isEven = i % 2 === 0;
 
                                 return (
                                     <div
-                                        key={game.id}
+                                        key={card.id ?? i}
                                         ref={(el) => (cardRefs.current[i] = el)}
                                         className="gcx-card"
                                         style={{ transitionDelay: `${i * 0.06}s` }}
@@ -405,18 +369,17 @@ export default function GuideCodexHomepage() {
                                             }}
                                         >
                                             {/* Image panel */}
-                                            {imageUrl && (
+                                            {card.imageUrl && (
                                                 <div
                                                     className="gcx-img-panel"
                                                     style={{ width: "45%", flexShrink: 0, overflow: "hidden", position: "relative" }}
                                                 >
                                                     <img
-                                                        src={imageUrl}
-                                                        alt={game.title}
+                                                        src={card.imageUrl}
+                                                        alt={card.title}
                                                         className="gcx-img"
                                                         style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", display: "block" }}
                                                     />
-                                                    {/* Edge fade toward text */}
                                                     <div style={{
                                                         position: "absolute", inset: 0,
                                                         background: isEven
@@ -442,7 +405,6 @@ export default function GuideCodexHomepage() {
                                                 position: "relative",
                                                 overflow: "hidden",
                                             }}>
-                                                {/* Subtle corner glow */}
                                                 <div style={{
                                                     position: "absolute",
                                                     [isEven ? "left" : "right"]: "-40px",
@@ -474,10 +436,10 @@ export default function GuideCodexHomepage() {
                                                         position: "relative",
                                                     }}
                                                 >
-                                                    {game.title}
+                                                    {card.title}
                                                 </h2>
 
-                                                {description && (
+                                                {card.description && (
                                                     <p style={{
                                                         fontSize: "0.875rem",
                                                         lineHeight: 1.75,
@@ -486,27 +448,29 @@ export default function GuideCodexHomepage() {
                                                         margin: 0,
                                                         position: "relative",
                                                     }}>
-                                                        {description}
+                                                        {card.description}
                                                     </p>
                                                 )}
 
-                                                <Link
-                                                    to={`/games/${game.slug}`}
-                                                    className="gcx-link"
-                                                    style={{
-                                                        color: primary,
-                                                        fontSize: "0.8rem",
-                                                        fontWeight: 700,
-                                                        letterSpacing: "0.05em",
-                                                        textDecoration: "none",
-                                                        marginTop: "0.5rem",
-                                                        width: "fit-content",
-                                                        position: "relative",
-                                                    }}
-                                                >
-                                                    Explore guides
-                                                    <ArrowUpRight size={14} />
-                                                </Link>
+                                                {card.linkUrl && (
+                                                    <Link
+                                                        to={card.linkUrl}
+                                                        className="gcx-link"
+                                                        style={{
+                                                            color: primary,
+                                                            fontSize: "0.8rem",
+                                                            fontWeight: 700,
+                                                            letterSpacing: "0.05em",
+                                                            textDecoration: "none",
+                                                            marginTop: "0.5rem",
+                                                            width: "fit-content",
+                                                            position: "relative",
+                                                        }}
+                                                    >
+                                                        {card.linkText || "Explore guides"}
+                                                        <ArrowUpRight size={14} />
+                                                    </Link>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
