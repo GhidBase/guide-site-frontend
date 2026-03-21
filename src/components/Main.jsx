@@ -1,5 +1,5 @@
 import "../css/tables.css";
-import { Outlet, useLoaderData } from "react-router";
+import { Outlet, useLoaderData, useLocation } from "react-router";
 import Navbar from "./navbar/Navbar.jsx";
 import HorizontalNavbar from "./navbar/HorizontalNavbar.jsx";
 import TopBar from "./TopBar.jsx";
@@ -8,9 +8,42 @@ import MobileNavbar from "./navbar/MobileNavbar.jsx";
 import { useEffect, useState } from "react";
 import { usePageTracking } from "../hooks/usePageTracking.js";
 import { useTheme, themeToStyle, useDarkMode, computeDarkTheme, THEME_DEFAULTS } from "../contexts/ThemeProvider.jsx";
-import { EditModeProvider } from "../contexts/EditModeContext.jsx";
-import { PanelLeftOpen, PanelLeftClose } from "lucide-react";
+import { EditModeProvider, useEditMode } from "../contexts/EditModeContext.jsx";
+import { PanelLeftOpen, PanelLeftClose, Pencil, Eye } from "lucide-react";
 import Footer from "./Footer.jsx";
+import { useAuth } from "../hooks/useAuth.js";
+
+function HomepageEditButton() {
+    const { adminMode, setAdminMode, dirtyBlocks } = useEditMode();
+    const { user } = useAuth();
+    const isAdmin = user?.role === "ADMIN";
+    const isContributor = user?.role === "CONTRIBUTOR";
+    if (!isAdmin && !isContributor) return null;
+    return (
+        <button
+            onClick={() => {
+                if (adminMode && dirtyBlocks.size > 0) {
+                    if (!window.confirm("You have unsaved changes. Exit edit mode anyway?")) return;
+                }
+                setAdminMode(m => !m);
+            }}
+            title={adminMode ? "Exit edit mode" : "Enter edit mode"}
+            style={{
+                position: "fixed", bottom: "2rem", left: "1rem", zIndex: 50,
+                background: adminMode ? "rgba(255,235,200,0.15)" : "rgba(10,8,6,0.7)",
+                border: adminMode ? "1px solid rgba(255,235,200,0.35)" : "1px solid rgba(255,255,255,0.12)",
+                borderRadius: "8px", color: "rgba(232,220,200,0.85)",
+                padding: "0.5rem 0.75rem", cursor: "pointer",
+                display: "flex", alignItems: "center", gap: "0.4rem",
+                fontSize: "0.75rem", backdropFilter: "blur(8px)",
+                fontFamily: "'Outfit', sans-serif",
+            }}
+        >
+            {adminMode ? <Eye size={14} /> : <Pencil size={14} />}
+            {adminMode ? "Exit edit mode" : "Edit page"}
+        </button>
+    );
+}
 
 export default function Main() {
     usePageTracking();
@@ -26,6 +59,8 @@ export default function Main() {
         setNavbarLayout((prev) => (prev === "vertical" ? "horizontal" : "vertical"));
     }
     const { gameData, sectionsMap } = useLoaderData();
+    const { pathname } = useLocation();
+    const isHomepage = pathname === "/";
     const { setTheme } = useTheme();
     const { darkMode } = useDarkMode();
 
@@ -89,17 +124,17 @@ export default function Main() {
         <EditModeProvider>
         <div
             id="main-page-sections"
-            className="h-full w-full flex flex-col grow box-border bg-(--surface-background)"
-            style={themeToStyle(activeTheme)}
+            className={`h-full w-full flex flex-col grow box-border ${!isHomepage ? "bg-(--surface-background)" : ""}`}
+            style={!isHomepage ? themeToStyle(activeTheme) : undefined}
         >
-            <div id="sticky-header" className="sticky top-0 z-40 border-b-4 border-(--outline)">
+            {!isHomepage && <div id="sticky-header" className="sticky top-0 z-40 border-b-4 border-(--outline)">
                 <TopBar navbarLayout={navbarLayout} toggleNavbarLayout={toggleNavbarLayout} />
                 {sectionsMap && navbarLayout === "horizontal" && (
                     <div className="hidden lg:block">
                         <HorizontalNavbar />
                     </div>
                 )}
-            </div>
+            </div>}
             <div
                 id="side-bar-and-content"
                 className={`relative w-full box-border flex flex-1
@@ -148,15 +183,20 @@ export default function Main() {
                         </button>
                     </div>
                 )}
-                <div
-                    id="page-outer-bounds"
-                    className={`gap-4 sm:px-4 pb-4 flex flex-col w-full max-w-230 mx-auto text-(--text-color)`}
-                >
+                {isHomepage ? (
                     <Outlet />
-                </div>
+                ) : (
+                    <div
+                        id="page-outer-bounds"
+                        className="gap-4 sm:px-4 pb-4 flex flex-col w-full max-w-230 mx-auto text-(--text-color)"
+                    >
+                        <Outlet />
+                    </div>
+                )}
             </div>
 
-            <Footer />
+            {!isHomepage && <Footer />}
+            {isHomepage && <HomepageEditButton />}
 
             {sectionsMap && (
                 <MobileNavbar
@@ -166,7 +206,7 @@ export default function Main() {
                 />
             )}
 
-            <MobileBottomBar toggleNav={toggleNav} />
+            {!isHomepage && <MobileBottomBar toggleNav={toggleNav} />}
         </div>
         </EditModeProvider>
     );
