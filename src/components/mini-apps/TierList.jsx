@@ -5,6 +5,14 @@ import { useAuth } from "../../hooks/useAuth";
 import { X, ChevronUp, ChevronDown, Pencil } from "lucide-react";
 import ImagePickerModal from "../ImagePickerModal.jsx";
 
+const DEFAULT_TIERS = [
+    { name: "S", color: "#ff7f7f" },
+    { name: "A", color: "#ffbf7f" },
+    { name: "B", color: "#ffff7f" },
+    { name: "C", color: "#bfff7f" },
+    { name: "D", color: "#7fff7f" },
+];
+
 export default function TierList() {
     const { gameData } = useRouteLoaderData("main");
     const { user } = useAuth();
@@ -58,6 +66,7 @@ export default function TierList() {
     const [newModeNameInline, setNewModeNameInline] = useState("");
     const [renamingTierId, setRenamingTierId] = useState(null);
     const [renamingTierName, setRenamingTierName] = useState("");
+    const [renamingTierColor, setRenamingTierColor] = useState("#ef4444");
     const [addingTier, setAddingTier] = useState(false);
     const [renamingCategoryId, setRenamingCategoryId] = useState(null);
     const [renamingCategoryName, setRenamingCategoryName] = useState("");
@@ -175,6 +184,16 @@ export default function TierList() {
     }
 
     // ── Modes ───────────────────────────────────────────────
+    async function seedDefaultTiers(categoryId, modeId) {
+        for (let i = 0; i < DEFAULT_TIERS.length; i++) {
+            const { name, color } = DEFAULT_TIERS[i];
+            await fetch(`${currentAPI}/games/${gameId}/tier-categories/${categoryId}/modes/${modeId}/tiers`, {
+                method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include",
+                body: JSON.stringify({ name, color, order: i }),
+            });
+        }
+    }
+
     async function createMode() {
         if (!newModeName.trim()) return;
         try {
@@ -185,6 +204,7 @@ export default function TierList() {
             if (res.ok) {
                 const data = await res.json();
                 setNewModeName("");
+                await seedDefaultTiers(selectedCategoryId, data.id);
                 await loadCategoryData(selectedCategoryId);
                 setSelectedModeId(data.id);
             }
@@ -225,6 +245,7 @@ export default function TierList() {
             if (res.ok) {
                 const data = await res.json();
                 setNewModeNameInline(""); setAddingMode(false);
+                await seedDefaultTiers(selectedCategoryId, data.id);
                 await loadCategoryData(selectedCategoryId);
                 setSelectedModeId(data.id);
             }
@@ -248,7 +269,7 @@ export default function TierList() {
         try {
             const res = await fetch(`${currentAPI}/games/${gameId}/tier-categories/${selectedCategoryId}/modes/${selectedModeId}/tiers/${tierId}`, {
                 method: "PUT", headers: { "Content-Type": "application/json" }, credentials: "include",
-                body: JSON.stringify({ name: renamingTierName.trim() }),
+                body: JSON.stringify({ name: renamingTierName.trim(), color: renamingTierColor }),
             });
             if (res.ok) { setRenamingTierId(null); await loadCategoryData(selectedCategoryId); }
         } catch {}
@@ -808,6 +829,13 @@ export default function TierList() {
                                                         }}
                                                         className="w-full px-1 py-0.5 text-xs rounded bg-white/20 text-white placeholder-white/50 outline-none text-center border border-white/40"
                                                     />
+                                                    <input
+                                                        type="color"
+                                                        value={renamingTierColor}
+                                                        onChange={e => setRenamingTierColor(e.target.value)}
+                                                        className="w-6 h-6 rounded cursor-pointer border-0 bg-transparent"
+                                                        title="Tier color"
+                                                    />
                                                     <div className="flex gap-1">
                                                         <button onClick={() => renameTier(tier.id)}
                                                             className="text-xs text-white bg-white/20 px-1.5 rounded hover:bg-white/30 cursor-pointer">✓</button>
@@ -821,8 +849,8 @@ export default function TierList() {
                                                     {isAdmin && (
                                                         <div className="absolute inset-0 flex items-center justify-center gap-1.5 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto bg-black/40 transition-opacity cursor-default">
                                                             <button
-                                                                onClick={e => { e.stopPropagation(); setRenamingTierId(tier.id); setRenamingTierName(tier.name); }}
-                                                                title="Rename"
+                                                                onClick={e => { e.stopPropagation(); setRenamingTierId(tier.id); setRenamingTierName(tier.name); setRenamingTierColor(tier.color ?? "#ef4444"); }}
+                                                                title="Edit"
                                                                 className="text-white hover:text-white/70 cursor-pointer">
                                                                 <Pencil className="w-3.5 h-3.5" />
                                                             </button>
