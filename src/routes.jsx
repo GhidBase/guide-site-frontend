@@ -2,6 +2,7 @@ import Checklist from "./components/Checklist";
 import Main from "./components/Main";
 import PageManager from "./components/PageManager";
 import PageBuilder from "./components/PageBuilder";
+import GuideCodexHomepage from "./components/GuideCodexHomepage.jsx";
 import oldRoutes from "./js/oldRoutes.jsx";
 import NotFound from "./components/NotFound.jsx";
 import GuardianCosts from "./components/mini-apps/GuardianCosts.jsx";
@@ -32,7 +33,7 @@ const mainRoute = {
     // because they're missing the :pageSlug needed
     // to find the title of the page
     children: [
-        { index: true, element: <PageBuilder /> },
+        { index: true, element: <GuideCodexHomepage /> },
         { path: ":pageSlug", element: <PageBuilder /> },
         {
             path: "games/:gameSlug",
@@ -90,7 +91,7 @@ const luckyDefenseRoute = {
         currentParams.pageSlug !== nextParams.pageSlug,
 
     children: [
-        { index: true, element: <PageBuilder /> },
+        { index: true, element: <GuideCodexHomepage /> },
         { path: ":pageSlug", element: <PageBuilder /> },
         {
             path: "guardian-upgrade-costs",
