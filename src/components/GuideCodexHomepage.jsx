@@ -5,44 +5,11 @@ import { currentAPI } from "../config/api";
 import { useAuth } from "../hooks/useAuth";
 import { LogOut, ArrowUpRight, LogIn } from "lucide-react";
 
-// ── Helpers ──────────────────────────────────────────────────────
-
-function findGameBlocks(blocks, gameTitle) {
-    const sorted = [...blocks].sort((a, b) => a.order - b.order);
-    const textIdx = sorted.findIndex(
-        (b) =>
-            b.content?.type === "richText" &&
-            b.content?.content?.includes(`<h3>${gameTitle}</h3>`),
-    );
-    if (textIdx === -1) return { textBlock: null, imageBlock: null };
-    const textBlock = sorted[textIdx];
-    const nearby = sorted.slice(textIdx, textIdx + 3);
-    const imageBlock = nearby.find((b) => b.type === "single-image") ?? null;
-    return { textBlock, imageBlock };
-}
-
-function decodeEntities(str) {
-    return str
-        .replace(/&rsquo;|&#8217;/g, "'")
-        .replace(/&lsquo;|&#8216;/g, "'")
-        .replace(/&rdquo;|&#8221;/g, '"')
-        .replace(/&ldquo;|&#8220;/g, '"')
-        .replace(/&amp;/g, "&")
-        .replace(/&nbsp;/g, " ")
-        .replace(/&lt;/g, "<")
-        .replace(/&gt;/g, ">")
-        .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
-        .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCharCode(parseInt(n, 16)));
-}
-
-function stripHtml(html) {
-    return decodeEntities(html?.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim() ?? "");
-}
-
-function extractDescription(html) {
-    const withoutH3 = html?.replace(/<h3>[^<]*<\/h3>/g, "") ?? "";
-    return stripHtml(withoutH3);
-}
+// ── Fallback descriptions ─────────────────────────────────────────
+const FALLBACK_DESCRIPTIONS = {
+    "Lucky Defense": "The game that started it all. A defining modern tower defense game built around engaging systems, satisfying upgrades, strategy, and a rewarding amount of build variety. We've been covering Lucky Defense since early launch, tracking mechanics, upgrades, and balance changes as the game evolves. Our goal is to help players understand the systems quickly and build better runs, faster.",
+    "Coop TD": "A cooperative tower defense game that rewards strategy and teamwork. While smaller than Lucky Defense, Coop TD has a passionate community and a surprising amount of depth beneath its simple surface. We're building guides that focus on core mechanics, strong team compositions, and strategies that work best when playing together.",
+};
 
 // ── Component ────────────────────────────────────────────────────
 
@@ -53,12 +20,19 @@ export default function GuideCodexHomepage() {
     const blocks = pageData?.blocks ?? [];
     const cardRefs = useRef([]);
 
+    const heroBlock = blocks.find(b => b.type === "hero-text");
+    const heroData = (() => {
+        try { return heroBlock?.content ? JSON.parse(heroBlock.content) : {}; }
+        catch { return {}; }
+    })();
+
     useEffect(() => {
         fetch(`${currentAPI}/games`)
             .then((r) => (r.ok ? r.json() : []))
             .then((data) => setGames(data.filter((g) => g.isActive !== false).sort((a, b) => (a.slug === "lucky-defense" ? -1 : b.slug === "lucky-defense" ? 1 : 0))))
             .catch(() => {});
     }, []);
+
 
     useEffect(() => {
         const observer = new IntersectionObserver(
@@ -191,6 +165,30 @@ export default function GuideCodexHomepage() {
                     animation: gcx-bar-shimmer 1.2s linear infinite !important;
                 }
 
+                /* ── Mobile ── */
+                @media (max-width: 640px) {
+                    .gcx-card-inner {
+                        flex-direction: column !important;
+                        min-height: unset !important;
+                    }
+                    .gcx-img-panel {
+                        width: 100% !important;
+                        height: 200px !important;
+                    }
+                    .gcx-card-text {
+                        padding: 1.5rem !important;
+                    }
+                    .gcx-header {
+                        padding: 1rem !important;
+                    }
+                    .gcx-hero-section {
+                        padding: 8vh 1rem 6vh !important;
+                    }
+                    .gcx-games-section {
+                        padding: 0 1rem 6rem !important;
+                    }
+                }
+
                 /* ── Explore link ── */
                 .gcx-link {
                     position: relative;
@@ -303,7 +301,7 @@ export default function GuideCodexHomepage() {
                 </header>
 
                 {/* ── Hero ── */}
-                <section style={{
+                <section className="gcx-hero-section" style={{
                     padding: "12vh 2.5rem 10vh",
                     maxWidth: "1280px",
                     width: "100%",
@@ -354,7 +352,7 @@ export default function GuideCodexHomepage() {
 
                 {/* ── Games ── */}
                 {games.length > 0 && (
-                    <section style={{
+                    <section className="gcx-games-section" style={{
                         maxWidth: "1280px",
                         width: "100%",
                         margin: "0 auto",
@@ -373,9 +371,9 @@ export default function GuideCodexHomepage() {
 
                         <div style={{ display: "flex", flexDirection: "column", gap: "1.75rem" }}>
                             {games.map((game, i) => {
-                                const { textBlock, imageBlock } = findGameBlocks(blocks, game.title);
-                                const description = extractDescription(textBlock?.content?.content ?? "");
-                                const imageUrl = imageBlock?.files?.[0]?.url;
+                                const over = heroData[game.slug] ?? {};
+                                const description = over.description ?? FALLBACK_DESCRIPTIONS[game.title] ?? "";
+                                const imageUrl = over.imageUrl ?? "";
                                 const primary = game.theme?.primary ?? "#9b6a4e";
                                 const isEven = i % 2 === 0;
 
@@ -384,7 +382,7 @@ export default function GuideCodexHomepage() {
                                         key={game.id}
                                         ref={(el) => (cardRefs.current[i] = el)}
                                         className="gcx-card"
-                                        style={{ transitionDelay: `${i * 0.06}s` }}
+                                        style={{ transitionDelay: `${i * 0.06}s`, position: "relative" }}
                                     >
                                         <div
                                             className="gcx-card-inner"
@@ -428,7 +426,7 @@ export default function GuideCodexHomepage() {
                                             )}
 
                                             {/* Text panel */}
-                                            <div style={{
+                                            <div className="gcx-card-text" style={{
                                                 flex: 1,
                                                 background: `linear-gradient(135deg, ${primary}18 0%, #0e0b08 50%, #0a0806 100%)`,
                                                 borderLeft: isEven ? `3px solid ${primary}` : "none",
@@ -532,7 +530,7 @@ export default function GuideCodexHomepage() {
                     <span>© 2025 GuideCodex</span>
                     <span style={{ opacity: 0.4 }}>·</span>
                     <a
-                        href="/pages/privacy-policy.html"
+                        href="/privacy-policy"
                         style={{ color: "inherit", textDecoration: "none", transition: "opacity 0.2s" }}
                         onMouseEnter={(e) => (e.currentTarget.style.opacity = 0.6)}
                         onMouseLeave={(e) => (e.currentTarget.style.opacity = 1)}
