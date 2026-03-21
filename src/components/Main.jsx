@@ -3,7 +3,7 @@ import { Outlet, useLoaderData } from "react-router";
 import Navbar from "./navbar/Navbar.jsx";
 import HorizontalNavbar from "./navbar/HorizontalNavbar.jsx";
 import TopBar from "./TopBar.jsx";
-import NavBarOpenButton from "./NavBarOpenButton.jsx";
+import MobileBottomBar from "./MobileBottomBar.jsx";
 import MobileNavbar from "./navbar/MobileNavbar.jsx";
 import { useEffect, useState } from "react";
 import { usePageTracking } from "../hooks/usePageTracking.js";
@@ -153,13 +153,7 @@ export default function Main() {
             )}
 
             {gameData && (
-                <NavBarOpenButton
-                    className={
-                        "lg:hidden sticky bottom-0 flex w-full justify-center border-t-4 border-(--outline) bg-(--red-brown)"
-                    }
-                    buttonClassName={"h-13 w-13"}
-                    toggleNav={toggleNav}
-                ></NavBarOpenButton>
+                <MobileBottomBar toggleNav={toggleNav} />
             )}
         </div>
         </EditModeProvider>

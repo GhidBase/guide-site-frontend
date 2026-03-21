@@ -3,10 +3,9 @@ import { LogOut } from "lucide-react";
 import SearchBar from "../SearchBar";
 import discordLogo from "../../assets/icons8-discord-50.png";
 import MobileNavbarCategory from "./MobileNavbarCategory";
-import { useLoaderData, Link, useNavigate } from "react-router";
-import { Pencil, Eye, Moon, Sun, LayoutDashboard } from "lucide-react";
+import { useLoaderData, Link } from "react-router";
+import { Moon, Sun } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { useEditMode } from "../../contexts/EditModeContext.jsx";
 import { useDarkMode } from "../../contexts/ThemeProvider.jsx";
 
 export default function MobileNavbar({ toggleNav, navOpen }) {
@@ -26,37 +25,13 @@ export default function MobileNavbar({ toggleNav, navOpen }) {
     function toggleAll() {
         setOpenedSections(allOpen ? new Set() : new Set(sections.map((s) => s.id)));
     }
-    const { isAuthenticated, user, logout, isLoading } = useAuth();
-    const isAdmin = user?.role == "ADMIN";
-    const isContributor = user?.role == "CONTRIBUTOR";
-    const navigate = useNavigate();
-    const { adminMode, setAdminMode, dirtyBlocks } = useEditMode();
+    const { isAuthenticated, user, logout } = useAuth();
     const { darkMode, toggleDarkMode } = useDarkMode();
-    const navbarItems = [];
-
-    if (isAuthenticated && isAdmin) {
-        navbarItems.push(
-            {
-                id: "nav-panel",
-                title: "Navigation Panel",
-                slug: "navigation-panel",
-            },
-            {
-                id: "page-mgr",
-                title: "Page Manager",
-                slug: "page-manager",
-            },
-        );
-    }
 
     const actualSections = sections.map((section) => ({
         ...section,
         pages: [...section.pages],
     }));
-
-    if (actualSections[0]) {
-        actualSections[0].pages = [...navbarItems, ...actualSections[0].pages];
-    }
 
     const lastSection = actualSections[actualSections.length - 1];
     if (lastSection) {
@@ -74,7 +49,7 @@ export default function MobileNavbar({ toggleNav, navOpen }) {
 
     return (
         <div
-            className={`mobile-menu-overlay bg-black/40 w-full h-full fixed inset z-2  ${navOpen ? "opacity-100" : "opacity-0 pointer-events-none"} transition-all lg:hidden text-[0.8em] duration-250 `}
+            className={`mobile-menu-overlay bg-black/40 w-full h-full fixed inset-0 z-50  ${navOpen ? "opacity-100" : "opacity-0 pointer-events-none"} transition-all lg:hidden text-[0.8em] duration-250 `}
             onClick={(e) => {
                 if (e.target === e.currentTarget) {
                     toggleNav();
@@ -84,7 +59,7 @@ export default function MobileNavbar({ toggleNav, navOpen }) {
             <div
                 id="mobile-menu-panel"
                 className={`rounded-lg
-                    fixed inset-4 top-16 bottom-16 z-2
+                    fixed inset-4 top-16 bottom-16 z-[51]
                     items-stretch flex flex-col justify-start
                     bg-(--surface-background) border-(--outline-brown) border-[2px] shadow-lg shadow-black/50
                     transition-all duration-200
@@ -106,33 +81,6 @@ export default function MobileNavbar({ toggleNav, navOpen }) {
                                 {user?.username}
                             </p>
                             <div className="flex gap-2">
-                                {isAdmin && (
-                                    <button
-                                        onClick={() => {
-                                            navigate("/dashboard");
-                                            toggleNav(false);
-                                        }}
-                                        className="flex-1 text-amber-50 rounded px-2 py-1 font-semibold cursor-pointer hover:opacity-90 text-sm mb-2 h-8 flex items-center justify-center gap-1.5"
-                                        style={{ background: darkMode ? "rgba(255,235,200,0.12)" : "var(--primary)" }}
-                                    >
-                                        <LayoutDashboard className="w-4 h-4" />
-                                    </button>
-                                )}
-                                {(isAdmin || isContributor) && (
-                                    <button
-                                        onClick={() => {
-                                            if (adminMode && dirtyBlocks.size > 0) {
-                                                if (!window.confirm("You have unsaved changes. Exit edit mode anyway?")) return;
-                                            }
-                                            setAdminMode(m => !m);
-                                            toggleNav(false);
-                                        }}
-                                        className={`flex-1 rounded px-2 py-1 font-semibold cursor-pointer hover:opacity-90 text-sm mb-2 h-8 ${adminMode ? "bg-amber-100/30 text-amber-50 border border-amber-50/40" : "text-amber-50"}`}
-                                        style={!adminMode ? { background: darkMode ? "rgba(255,235,200,0.12)" : "var(--primary)" } : undefined}
-                                    >
-                                        {adminMode ? <Eye className="w-4 h-4 mx-auto" /> : <Pencil className="w-4 h-4 mx-auto" />}
-                                    </button>
-                                )}
                                 <button
                                     onClick={toggleDarkMode}
                                     className="flex-1 text-amber-50 rounded px-2 py-1 font-semibold cursor-pointer hover:opacity-90 text-sm h-8 flex items-center justify-center"
