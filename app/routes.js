@@ -20,9 +20,9 @@ export default [
                 id: "game-guardian-costs",
             }),
             route("flea-guide", "routes/flea-guide.jsx"),
-            /*route("board-builder", "routes/board-builder.jsx", {
+            route("board-builder-admin", "routes/board-builder.jsx", {
                 id: "game-board-builder",
-            }),*/
+            }),
             route("tier-list", "routes/tier-list.jsx", {
                 id: "game-tier-list",
             }),
@@ -50,7 +50,7 @@ export default [
         route("guardian-upgrade-costs", "routes/guardian-costs.jsx", {
             id: "top-guardian-costs",
         }),
-        //route("board-builder", "routes/board-builder.jsx", { id: "top-board-builder" }),
+        route("board-builder-admin", "routes/board-builder.jsx", { id: "top-board-builder" }),
         route("tier-list", "routes/tier-list.jsx", { id: "top-tier-list" }),
 
         route("login", "routes/login.jsx"),

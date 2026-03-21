@@ -202,13 +202,8 @@ export default TierListBlock;
 function TierListDisplay({ gameId, display }) {
     const [categoryData, setCategoryData] = useState(null);
     const [loading, setLoading] = useState(true);
-    const storageKey = `tier-block-row-height-${display.id}`;
-    const [rowHeight, setRowHeight] = useState(() => {
-        const saved = typeof window !== "undefined" && localStorage.getItem(storageKey);
-        return saved ? Number(saved) : 80;
-    });
-    function updateRowHeight(h) { setRowHeight(h); localStorage.setItem(storageKey, h); }
-    const itemSize = Math.max(32, rowHeight - 16);
+    const rowHeight = 80;
+    const itemSize = 64;
 
     // Read local section assignments written by the TierList admin page
     const localSectionsStore = (() => {
@@ -269,14 +264,6 @@ function TierListDisplay({ gameId, display }) {
                 <h4 className="font-semibold text-amber-50 flex-1">
                     {display.categoryName} — {display.modeName}
                 </h4>
-                <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-xs text-amber-50/50">Row size</span>
-                    <input type="range" min={48} max={160} step={4}
-                        value={rowHeight}
-                        onChange={e => updateRowHeight(Number(e.target.value))}
-                        className="w-20 cursor-pointer"
-                    />
-                </div>
             </div>
 
             {/* Section column headers */}

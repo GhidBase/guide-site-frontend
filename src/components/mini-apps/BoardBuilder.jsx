@@ -3,7 +3,7 @@ import { currentAPI } from "../../config/api";
 import { useRouteLoaderData } from "react-router";
 import { useAuth } from "../../hooks/useAuth";
 import ImagePickerModal from "../ImagePickerModal.jsx";
-import { Search, X, Plus, ChevronUp, ChevronDown } from "lucide-react";
+import { Search, X, Plus, ChevronUp, ChevronDown, Pencil, Copy, Trash2 } from "lucide-react";
 
 function BgControls({ bgImage, bgSize, heightScale, widthScale, onChange }) {
     if (!bgImage && (widthScale ?? 1) === 1 && (heightScale ?? 1) === 1)
@@ -135,6 +135,13 @@ export default function BoardBuilder({ allowedBoardIds, hideAdmin } = {}) {
     const [editingBoard, setEditingBoard] = useState(null);
     const [showBoardBgPicker, setShowBoardBgPicker] = useState(false);
     const [editBoardBgPicker, setEditBoardBgPicker] = useState(false);
+
+    // Inline tab rename
+    const [renamingBoardId, setRenamingBoardId] = useState(null);
+    const [renamingBoardName, setRenamingBoardName] = useState("");
+
+    // Tab drag-and-drop
+    const dragTabRef = useRef(null);
 
     const dragUnitRef = useRef(null);
     const boardRef = useRef(null);
@@ -489,6 +496,39 @@ export default function BoardBuilder({ allowedBoardIds, hideAdmin } = {}) {
         await loadBoards();
     }
 
+    async function renameBoard(id, name) {
+        if (!name.trim()) return;
+        await fetch(currentAPI + "/games/" + gameId + "/boards/" + id, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ name: name.trim() }),
+        });
+        setRenamingBoardId(null);
+        await loadBoards();
+    }
+
+    async function swapBoards(aId, bId) {
+        const aIdx = boards.findIndex((b) => b.id === aId);
+        const bIdx = boards.findIndex((b) => b.id === bId);
+        if (aIdx === -1 || bIdx === -1 || aIdx === bIdx) return;
+        await Promise.all([
+            fetch(currentAPI + "/games/" + gameId + "/boards/" + aId, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ order: bIdx }),
+            }),
+            fetch(currentAPI + "/games/" + gameId + "/boards/" + bId, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ order: aIdx }),
+            }),
+        ]);
+        await loadBoards();
+    }
+
     async function copyBoard(b) {
         const res = await fetch(currentAPI + "/games/" + gameId + "/boards", {
             method: "POST",
@@ -618,70 +658,101 @@ export default function BoardBuilder({ allowedBoardIds, hideAdmin } = {}) {
 
     return (
         <div className="flex flex-col gap-3 w-full max-w-6xl mx-auto p-4">
-            {/* Board tabs */}
-            {visibleBoards.length > 0 && (
-                <div className="flex items-center gap-1 overflow-x-auto pb-1">
-                    {visibleBoards.map((b) => (
-                        <button
+            {/* Toolbar: board tabs left, actions right */}
+            <div className="flex items-center gap-1 flex-wrap">
+                {visibleBoards.map((b) => {
+                    const isActive = b.id === currentBoardId;
+                    const isRenaming = renamingBoardId === b.id;
+                    return (
+                        <div
                             key={b.id}
-                            onClick={() => switchBoard(b.id)}
-                            className={`px-3 py-1 text-sm rounded-t cursor-pointer transition-colors whitespace-nowrap shrink-0 ${
-                                b.id === currentBoardId
+                            draggable={isAdmin}
+                            onDragStart={() => { dragTabRef.current = b.id; }}
+                            onDragOver={(e) => e.preventDefault()}
+                            onDrop={() => {
+                                if (dragTabRef.current && dragTabRef.current !== b.id) {
+                                    swapBoards(dragTabRef.current, b.id);
+                                    dragTabRef.current = null;
+                                }
+                            }}
+                            onClick={() => !isRenaming && switchBoard(b.id)}
+                            className={`flex items-center gap-1 px-2 py-1.5 text-sm rounded cursor-pointer transition-colors whitespace-nowrap shrink-0 group ${
+                                isActive
                                     ? "bg-(--primary) text-amber-50"
                                     : "bg-(--accent) text-(--text-color) border border-(--outline-brown)/40 hover:bg-(--surface-background)"
                             }`}
                         >
-                            {b.name}
-                        </button>
-                    ))}
-                </div>
-            )}
+                            {isRenaming ? (
+                                <input
+                                    autoFocus
+                                    value={renamingBoardName}
+                                    onChange={(e) => setRenamingBoardName(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter") renameBoard(b.id, renamingBoardName);
+                                        if (e.key === "Escape") setRenamingBoardId(null);
+                                    }}
+                                    onBlur={() => renameBoard(b.id, renamingBoardName)}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="w-24 bg-transparent outline-none border-b border-current text-sm"
+                                />
+                            ) : (
+                                <span>{b.name}</span>
+                            )}
+                            {isAdmin && !isRenaming && (
+                                <span className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <span
+                                        onClick={(e) => { e.stopPropagation(); setRenamingBoardId(b.id); setRenamingBoardName(b.name); }}
+                                        className="p-0.5 hover:opacity-70 cursor-pointer"
+                                        title="Rename"
+                                    >
+                                        <Pencil className="w-3 h-3" />
+                                    </span>
+                                    <span
+                                        onClick={(e) => { e.stopPropagation(); copyBoard(b); }}
+                                        className="p-0.5 hover:opacity-70 cursor-pointer"
+                                        title="Copy"
+                                    >
+                                        <Copy className="w-3 h-3" />
+                                    </span>
+                                    <span
+                                        onClick={(e) => { e.stopPropagation(); deleteBoard(b.id); }}
+                                        className="p-0.5 hover:opacity-70 cursor-pointer text-red-400"
+                                        title="Delete"
+                                    >
+                                        <Trash2 className="w-3 h-3" />
+                                    </span>
+                                </span>
+                            )}
+                        </div>
+                    );
+                })}
 
-            {visibleBoards.length === 0 && !isAdmin && (
-                <p className="text-sm text-(--text-color) opacity-50 text-center py-10">
-                    No boards configured yet.
-                </p>
-            )}
+                {visibleBoards.length === 0 && !isAdmin && (
+                    <p className="text-sm text-(--text-color) opacity-50 py-2">
+                        No boards configured yet.
+                    </p>
+                )}
 
-            {/* Admin toggle — always visible to admins */}
-            {isAdmin && (
-                <div className="flex justify-end">
-                    <button
-                        onClick={() => setAdminOpen((o) => !o)}
-                        className="px-3 py-1.5 text-sm bg-(--primary) text-amber-50 rounded cursor-pointer hover:opacity-90"
-                    >
-                        {adminOpen ? "Close Admin" : "Manage"}
-                    </button>
-                </div>
-            )}
+                <div className="flex-1" />
 
-            {currentBoard && (
-                <>
-                    {/* Board toolbar */}
-                    <div className="flex flex-wrap gap-2 items-center">
-                        <span className="text-sm font-medium text-(--text-color) opacity-70">
-                            {effectiveBoard.name}
-                        </span>
-                        <span className="text-xs text-(--text-color) opacity-40">
+                {currentBoard && !isCurrentlyEditing && (
+                    <>
+                        <span className="text-xs text-(--text-color) opacity-40 shrink-0">
                             {effectiveBoard.rows}×{effectiveBoard.cols}
                         </span>
-                        {!isCurrentlyEditing && (
-                            <>
-                                <button
-                                    onClick={clearBoard}
-                                    className="px-3 py-1.5 text-sm bg-(--accent) border border-(--outline-brown)/50 text-(--text-color) rounded cursor-pointer hover:bg-(--surface-background)"
-                                >
-                                    Clear
-                                </button>
-                                <button
-                                    onClick={saveAsPng}
-                                    className="px-3 py-1.5 text-sm bg-(--primary) text-amber-50 rounded cursor-pointer hover:opacity-90"
-                                >
-                                    Save PNG
-                                </button>
-                            </>
-                        )}
-                        {isAdmin && adminOpen && !isCurrentlyEditing && (
+                        <button
+                            onClick={clearBoard}
+                            className="px-3 py-1.5 text-sm bg-(--accent) border border-(--outline-brown)/50 text-(--text-color) rounded cursor-pointer hover:bg-(--surface-background) shrink-0"
+                        >
+                            Clear
+                        </button>
+                        <button
+                            onClick={saveAsPng}
+                            className="px-3 py-1.5 text-sm bg-(--primary) text-amber-50 rounded cursor-pointer hover:opacity-90 shrink-0"
+                        >
+                            Save PNG
+                        </button>
+                        {isAdmin && adminOpen && (
                             <button
                                 onClick={() =>
                                     setEditingBoard({
@@ -693,42 +764,53 @@ export default function BoardBuilder({ allowedBoardIds, hideAdmin } = {}) {
                                         bgSize: currentBoard.bgSize || "cover",
                                         bgX: currentBoard.bgX ?? 0,
                                         bgY: currentBoard.bgY ?? 0,
-                                        heightScale:
-                                            currentBoard.heightScale ?? 1,
-                                        widthScale:
-                                            currentBoard.widthScale ?? 1,
-                                        bgPaddingX:
-                                            currentBoard.bgPaddingX ?? 0,
-                                        bgPaddingY:
-                                            currentBoard.bgPaddingY ?? 0,
-                                        gridOffsetX:
-                                            currentBoard.gridOffsetX ?? 0,
-                                        gridOffsetY:
-                                            currentBoard.gridOffsetY ?? 0,
+                                        heightScale: currentBoard.heightScale ?? 1,
+                                        widthScale: currentBoard.widthScale ?? 1,
+                                        bgPaddingX: currentBoard.bgPaddingX ?? 0,
+                                        bgPaddingY: currentBoard.bgPaddingY ?? 0,
+                                        gridOffsetX: currentBoard.gridOffsetX ?? 0,
+                                        gridOffsetY: currentBoard.gridOffsetY ?? 0,
                                     })
                                 }
-                                className="px-3 py-1.5 text-sm bg-(--accent) border border-(--outline-brown)/50 text-(--text-color) rounded cursor-pointer hover:bg-(--surface-background)"
+                                className="px-3 py-1.5 text-sm bg-(--accent) border border-(--outline-brown)/50 text-(--text-color) rounded cursor-pointer hover:bg-(--surface-background) shrink-0"
                             >
                                 Edit Board
                             </button>
                         )}
-                        {isCurrentlyEditing && (
-                            <>
-                                <button
-                                    onClick={updateBoard}
-                                    className="px-3 py-1.5 text-sm bg-green-700/80 text-white rounded cursor-pointer hover:bg-green-700"
-                                >
-                                    Save
-                                </button>
-                                <button
-                                    onClick={() => setEditingBoard(null)}
-                                    className="px-3 py-1.5 text-sm bg-(--accent) border border-(--outline-brown)/50 text-(--text-color) rounded cursor-pointer hover:bg-(--surface-background)"
-                                >
-                                    Cancel
-                                </button>
-                            </>
-                        )}
-                    </div>
+                    </>
+                )}
+                {currentBoard && isCurrentlyEditing && (
+                    <>
+                        <button
+                            onClick={updateBoard}
+                            className="px-3 py-1.5 text-sm bg-green-700/80 text-white rounded cursor-pointer hover:bg-green-700 shrink-0"
+                        >
+                            Save
+                        </button>
+                        <button
+                            onClick={() => setEditingBoard(null)}
+                            className="px-3 py-1.5 text-sm bg-(--accent) border border-(--outline-brown)/50 text-(--text-color) rounded cursor-pointer hover:bg-(--surface-background) shrink-0"
+                        >
+                            Cancel
+                        </button>
+                    </>
+                )}
+                {isAdmin && (
+                    <button
+                        onClick={() => setAdminOpen((o) => !o)}
+                        className={`px-3 py-1.5 text-sm rounded cursor-pointer hover:opacity-90 shrink-0 ${
+                            adminOpen
+                                ? "bg-(--accent) border border-(--outline-brown)/50 text-(--text-color)"
+                                : "bg-(--primary) text-amber-50"
+                        }`}
+                    >
+                        {adminOpen ? "Close Manage" : "Manage"}
+                    </button>
+                )}
+            </div>
+
+            {currentBoard && (
+                <>
 
                     {/* Card: board left, unit picker right */}
                     <div className="flex flex-col lg:flex-row rounded-lg border border-(--outline-brown)/40 overflow-hidden bg-(--surface-background) lg:h-[calc(50dvh)]">

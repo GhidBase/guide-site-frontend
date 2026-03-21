@@ -15,6 +15,7 @@ const BoardBuilderBlock = forwardRef(function BoardBuilderBlock(
         block?.content?.allowedBoardIds ?? [],
     );
     const [isDirty, setIsDirty] = useState(false);
+    const [configOpen, setConfigOpen] = useState(false);
 
     useEffect(() => {
         if (!gameId || !adminMode) return;
@@ -61,31 +62,35 @@ const BoardBuilderBlock = forwardRef(function BoardBuilderBlock(
             }`}
         >
             {adminMode && (
-                <div className="absolute top-2 right-3 flex items-center gap-2 z-10 pointer-events-none">
-                    {isDirty && <span className="text-xs text-(--primary) opacity-70 pointer-events-none">unsaved</span>}
+                <div className="flex items-center gap-2 px-3 py-1.5 border-b border-(--outline)/40 bg-black/10 text-xs">
+                    <button
+                        onClick={() => setConfigOpen(o => !o)}
+                        className="text-(--text-color) opacity-60 hover:opacity-100 cursor-pointer"
+                    >
+                        {configOpen ? "▲ Hide block config" : "▼ Block config"}
+                    </button>
+                    <span className="flex-1" />
+                    {isDirty && <span className="text-(--primary) opacity-70">unsaved</span>}
                     {canDelete && (
-                        <button onClick={checkDeletion}
-                            className="text-xs text-red-700/60 hover:text-red-700 pointer-events-auto cursor-pointer">
-                            Delete
+                        <button onClick={checkDeletion} className="text-red-700/60 hover:text-red-700 cursor-pointer">
+                            Delete block
                         </button>
                     )}
                 </div>
             )}
 
-            {adminMode ? (
-                <div className="p-6 bg-black/5">
-                    <h3 className="text-lg font-semibold mb-4">Board Builder Block</h3>
-                    <p className="text-sm text-(--text-color) opacity-60 mb-4">
-                        Select which boards to show in this block. Leave all unchecked to show all boards.
+            {adminMode && configOpen && (
+                <div className="p-4 bg-black/5 border-b border-(--outline)/40">
+                    <p className="text-sm text-(--text-color) opacity-60 mb-3">
+                        Select which boards to show. Leave all unchecked to show all boards.
                     </p>
-
                     {boards.length === 0 ? (
                         <p className="text-sm opacity-50">No boards configured yet.</p>
                     ) : (
-                        <div className="space-y-2">
+                        <div className="space-y-1.5">
                             {boards.map((board) => (
                                 <label key={board.id}
-                                    className="flex items-center gap-3 p-3 bg-(--surface-background) border border-(--outline) rounded cursor-pointer hover:bg-(--accent) transition-colors">
+                                    className="flex items-center gap-3 p-2.5 bg-(--surface-background) border border-(--outline) rounded cursor-pointer hover:bg-(--accent) transition-colors">
                                     <input
                                         type="checkbox"
                                         checked={allowedBoardIds.includes(board.id)}
@@ -98,19 +103,18 @@ const BoardBuilderBlock = forwardRef(function BoardBuilderBlock(
                             ))}
                         </div>
                     )}
-
                     {isDirty && (
-                        <div className="mt-4 pt-4 border-t border-(--outline) flex gap-2">
+                        <div className="mt-3 flex gap-2">
                             <button onClick={handleSave}
-                                className="px-4 py-2 bg-green-700/50 hover:bg-green-700/60 text-amber-50 rounded font-medium">
+                                className="px-3 py-1.5 text-sm bg-green-700/50 hover:bg-green-700/60 text-amber-50 rounded font-medium cursor-pointer">
                                 Save
                             </button>
                         </div>
                     )}
                 </div>
-            ) : (
-                <BoardBuilder allowedBoardIds={allowedBoardIds} hideAdmin />
             )}
+
+            <BoardBuilder allowedBoardIds={allowedBoardIds} hideAdmin={!adminMode} />
         </div>
     );
 });
