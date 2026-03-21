@@ -14,7 +14,7 @@ export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
 
     // Keep notFound redirect that was previously in Title
     useEffect(() => {
-        if (pageData?.notFound) navigate("/404", { replace: true });
+        if (pageData?.notFound && !gameData) navigate("/404", { replace: true });
     }, [pageSlug]);
 
     const hardCodedTitle = matches?.find((m) => m.handle?.title)?.handle.title;
