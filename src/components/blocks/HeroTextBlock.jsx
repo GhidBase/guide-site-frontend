@@ -4,7 +4,16 @@ import { Check, X, Pencil, Trash2 } from "lucide-react";
 const EMPTY = { title: "", subtitle: "", backgroundUrl: "", accentColor: "#9b6a4e" };
 
 function parse(content) {
-    try { return content ? { ...EMPTY, ...JSON.parse(content) } : { ...EMPTY }; }
+    if (!content) return { ...EMPTY };
+    if (typeof content === "object") {
+        // Legacy: backend incorrectly wrapped the JSON string in a richText envelope
+        if (content.type === "richText" && typeof content.content === "string") {
+            try { return { ...EMPTY, ...JSON.parse(content.content) }; }
+            catch { return { ...EMPTY }; }
+        }
+        return { ...EMPTY, ...content };
+    }
+    try { return { ...EMPTY, ...JSON.parse(content) }; }
     catch { return { ...EMPTY }; }
 }
 
@@ -18,7 +27,7 @@ const HeroTextBlock = forwardRef(function HeroTextBlock(
 
     useImperativeHandle(ref, () => ({
         save: async () => {
-            await updateBlockContent(block, JSON.stringify(data));
+            await updateBlockContent(block, data);
             onDirty?.(block.id, false);
         },
     }), [data]);

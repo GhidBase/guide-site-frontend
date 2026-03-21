@@ -137,6 +137,10 @@ export default function PageBuilder() {
             setShowPendingNotification(true);
             return;
         }
+        if (!response.ok) {
+            console.error("Failed to save block", response.status, await response.text().catch(() => ""));
+            return;
+        }
         await refreshBlock(block.id);
     }
 

@@ -24,7 +24,16 @@ const ImageTextBlock = forwardRef(function ImageTextBlock(
     ref
 ) {
     const [data, setData] = useState(() => {
-        try { return block.content ? JSON.parse(block.content) : { sectionLabel: "", cards: [] }; }
+        if (!block.content) return { sectionLabel: "", cards: [] };
+        if (typeof block.content === "object") {
+            // Legacy: backend incorrectly wrapped the JSON string in a richText envelope
+            if (block.content.type === "richText" && typeof block.content.content === "string") {
+                try { return JSON.parse(block.content.content); }
+                catch { return { sectionLabel: "", cards: [] }; }
+            }
+            return block.content;
+        }
+        try { return JSON.parse(block.content); }
         catch { return { sectionLabel: "", cards: [] }; }
     });
     const [editing, setEditing] = useState(null);
@@ -33,7 +42,7 @@ const ImageTextBlock = forwardRef(function ImageTextBlock(
 
     useImperativeHandle(ref, () => ({
         save: async () => {
-            await updateBlockContent(block, JSON.stringify(data));
+            await updateBlockContent(block, data);
             onDirty?.(block.id, false);
         },
     }), [data]);
