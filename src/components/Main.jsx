@@ -78,16 +78,18 @@ export default function Main() {
             className="h-full w-full flex flex-col grow box-border bg-(--surface-background)"
             style={themeToStyle(activeTheme)}
         >
-            <TopBar navbarLayout={navbarLayout} toggleNavbarLayout={toggleNavbarLayout} />
-            {gameData && navbarLayout === "horizontal" && (
-                <div className="hidden lg:block">
-                    <HorizontalNavbar />
-                </div>
-            )}
+            <div className="sticky top-0 z-40 border-b-4 border-(--outline)">
+                <TopBar navbarLayout={navbarLayout} toggleNavbarLayout={toggleNavbarLayout} />
+                {gameData && navbarLayout === "horizontal" && (
+                    <div className="hidden lg:block">
+                        <HorizontalNavbar />
+                    </div>
+                )}
+            </div>
             <div
                 id="side-bar-and-content"
                 className={`relative w-full box-border flex flex-1
-                border-t-4 border-(--outline) bg-(--surface-background)
+                bg-(--surface-background)
                 transition-[padding] duration-300 ease-in-out
                 ${gameData && !sidebarCollapsed && navbarLayout === "vertical" && "xl:pr-30 2xl:pr-60"} `}
             >
