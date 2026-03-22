@@ -148,9 +148,26 @@ const ImageTextBlock = forwardRef(function ImageTextBlock(
                 }
                 .itb-inline-input::placeholder { opacity: 0.3; }
                 @media (max-width: 640px) {
-                    .itb-card-inner { flex-direction: column !important; min-height: unset !important; }
-                    .itb-img-panel { width: 100% !important; height: 200px !important; }
-                    .itb-card-text { padding: 1.5rem !important; }
+                    .itb-card-inner {
+                        flex-direction: column !important;
+                        min-height: unset !important;
+                    }
+                    .itb-img-panel {
+                        width: 100% !important;
+                        height: 220px !important;
+                    }
+                    .itb-img-overlay {
+                        background: linear-gradient(to bottom, transparent 45%, rgba(10,8,6,0.55)) !important;
+                    }
+                    .itb-card-text {
+                        padding: 1.25rem 1.25rem 1.5rem !important;
+                        border-left: none !important;
+                        border-right: none !important;
+                        border-top: 3px solid var(--itb-accent) !important;
+                    }
+                    .itb-card-text p {
+                        max-width: 100% !important;
+                    }
                 }
             `}</style>
 
@@ -199,7 +216,7 @@ const ImageTextBlock = forwardRef(function ImageTextBlock(
                                 ref={el => (cardRefs.current[i] = el)}
                                 className="itb-card"
                                 data-admin={adminMode ? "true" : undefined}
-                                style={{ transitionDelay: `${i * 0.05}s` }}
+                                style={{ transitionDelay: `${i * 0.05}s`, "--itb-accent": accent }}
                             >
                                 {/* Card */}
                                 <div
@@ -215,7 +232,15 @@ const ImageTextBlock = forwardRef(function ImageTextBlock(
                                         background: "#0a0806",
                                         cursor: isCardClickable ? "pointer" : "default",
                                     }}
-                                    onClick={() => { if (isCardClickable) navigate(card.cardLinkUrl); }}
+                                    onClick={() => {
+                                        if (!isCardClickable) return;
+                                        const url = card.cardLinkUrl;
+                                        if (url.startsWith("http://") || url.startsWith("https://")) {
+                                            window.location.href = url;
+                                        } else {
+                                            navigate(url);
+                                        }
+                                    }}
                                     onMouseEnter={e => { if (!adminMode) e.currentTarget.style.boxShadow = `0 20px 60px rgba(0,0,0,0.6), 0 0 40px ${accent}28, inset 0 1px 0 rgba(255,255,255,0.05)`; }}
                                     onMouseLeave={e => { e.currentTarget.style.boxShadow = "0 8px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)"; }}
                                 >
@@ -230,7 +255,7 @@ const ImageTextBlock = forwardRef(function ImageTextBlock(
                                                     style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", display: "block" }}
                                                 />
                                             )}
-                                            <div style={{
+                                            <div className="itb-img-overlay" style={{
                                                 position: "absolute", inset: 0,
                                                 background: imageIsLeft
                                                     ? "linear-gradient(to right, transparent 65%, rgba(10,8,6,0.4))"
@@ -332,16 +357,21 @@ const ImageTextBlock = forwardRef(function ImageTextBlock(
                                                 <ArrowUpRight size={13} style={{ color: accent, flexShrink: 0 }} />
                                             </div>
                                         ) : (
-                                            card.linkUrl && (
-                                                <Link
-                                                    to={card.linkUrl}
-                                                    className="itb-link"
-                                                    style={{ color: accent, fontSize: "0.78rem", fontWeight: 700, letterSpacing: "0.05em", textDecoration: "none", marginTop: "0.25rem", width: "fit-content", position: "relative" }}
-                                                >
-                                                    {card.linkText || "Learn more"}
-                                                    <ArrowUpRight size={13} />
-                                                </Link>
-                                            )
+                                            card.linkUrl && (() => {
+                                                const isExternal = card.linkUrl.startsWith("http://") || card.linkUrl.startsWith("https://");
+                                                const linkStyle = { color: accent, fontSize: "0.78rem", fontWeight: 700, letterSpacing: "0.05em", textDecoration: "none", marginTop: "0.25rem", width: "fit-content", position: "relative" };
+                                                return isExternal ? (
+                                                    <a href={card.linkUrl} className="itb-link" style={linkStyle}>
+                                                        {card.linkText || "Learn more"}
+                                                        <ArrowUpRight size={13} />
+                                                    </a>
+                                                ) : (
+                                                    <Link to={card.linkUrl} className="itb-link" style={linkStyle}>
+                                                        {card.linkText || "Learn more"}
+                                                        <ArrowUpRight size={13} />
+                                                    </Link>
+                                                );
+                                            })()
                                         )}
                                     </div>
                                 </div>
