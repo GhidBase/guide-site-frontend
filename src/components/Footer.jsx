@@ -1,10 +1,37 @@
-import { useRouteLoaderData } from "react-router";
+import { useRouteLoaderData, useLocation } from "react-router";
 import { useDarkMode } from "../contexts/ThemeProvider.jsx";
 
 export default function Footer() {
     const { gameData, isLDG } = useRouteLoaderData("main");
     const { darkMode } = useDarkMode();
-
+    const { pathname } = useLocation();
+    if (pathname === "/") return (
+        <div style={{
+            borderTop: "1px solid rgba(232,213,183,0.14)",
+            padding: "1rem 2.5rem",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "1.25rem",
+            fontSize: "0.68rem",
+            color: darkMode ? "rgba(232,213,183,0.65)" : "rgba(255,255,255,0.8)",
+            background: "linear-gradient(180deg, rgba(10,8,6,0.38) 0%, rgba(10,8,6,0.72) 100%)",
+            backdropFilter: "blur(28px) saturate(1.4)",
+            WebkitBackdropFilter: "blur(28px) saturate(1.4)",
+            boxShadow: "0 -4px 32px rgba(0,0,0,0.55)",
+        }}>
+            <span>© {new Date().getFullYear()} GuideCodex</span>
+            <span style={{ opacity: 0.4 }}>·</span>
+            <a
+                href="/pages/privacy-policy.html"
+                style={{ color: "inherit", textDecoration: "none", transition: "opacity 0.2s" }}
+                onMouseEnter={(e) => (e.currentTarget.style.opacity = 0.6)}
+                onMouseLeave={(e) => (e.currentTarget.style.opacity = 1)}
+            >
+                Privacy Policy
+            </a>
+        </div>
+    );
     const siteName = isLDG ? "LuckyDefenseGuides.com" : "GuideCodex";
     const gameName = gameData?.title ?? "this game";
 
