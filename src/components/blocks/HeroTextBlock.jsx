@@ -1,5 +1,6 @@
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { Trash2 } from "lucide-react";
+import { useDarkMode } from "../../contexts/ThemeProvider.jsx";
 
 const EMPTY = { title: "", subtitle: "", backgroundUrl: "", accentColor: "#9b6a4e" };
 
@@ -20,6 +21,7 @@ const HeroTextBlock = forwardRef(function HeroTextBlock(
     { block, adminMode, canDelete, deleteBlock, updateBlockContent, onDirty },
     ref,
 ) {
+    const { darkMode } = useDarkMode();
     const [data, setData] = useState(() => parse(block.content));
 
     useImperativeHandle(ref, () => ({
@@ -121,12 +123,12 @@ const HeroTextBlock = forwardRef(function HeroTextBlock(
                 {!adminMode && (title || subtitle) && (
                     <div style={{ width: "100%", userSelect: "none", display: "flex", flexDirection: "column", gap: 0 }}>
                         {title && (
-                            <div style={{ fontSize: "clamp(3rem, 10vw, 7rem)", lineHeight: 0.85, letterSpacing: "-0.04em", fontWeight: 900, fontFamily: "'Outfit', sans-serif", color: "#f5ede0", textShadow: `0 4px 60px ${accentColor}44`, textAlign: "right", margin: 0, padding: 0, paddingRight: "50%" }}>
+                            <div style={{ fontSize: "clamp(3rem, 10vw, 7rem)", lineHeight: 0.85, letterSpacing: "-0.04em", fontWeight: 900, fontFamily: "'Outfit', sans-serif", textAlign: "right", margin: 0, padding: 0, paddingRight: "50%", ...(darkMode ? { color: "#f5ede0", textShadow: `0 4px 60px ${accentColor}44` } : { background: "linear-gradient(135deg, #1a0800 0%, #7a3010 60%, #c45a20 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }) }}>
                                 {title}
                             </div>
                         )}
                         {subtitle && (
-                            <div style={{ fontSize: "clamp(3rem, 10vw, 7rem)", lineHeight: 0.85, letterSpacing: "-0.04em", fontWeight: 900, fontFamily: "'Outfit', sans-serif", color: accentColor, textShadow: `0 4px 60px ${accentColor}66`, textAlign: "left", margin: 0, padding: 0, paddingLeft: "50%" }}>
+                            <div style={{ fontSize: "clamp(3rem, 10vw, 7rem)", lineHeight: 0.85, letterSpacing: "-0.04em", fontWeight: 900, fontFamily: "'Outfit', sans-serif", textAlign: "left", margin: 0, padding: 0, paddingLeft: "50%", ...(darkMode ? { color: accentColor, textShadow: `0 4px 60px ${accentColor}66` } : { background: `linear-gradient(135deg, ${accentColor} 0%, #d4622d 60%, #e8893a 100%)`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }) }}>
                                 {subtitle}
                             </div>
                         )}
