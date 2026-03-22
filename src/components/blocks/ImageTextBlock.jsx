@@ -1,6 +1,6 @@
 import { forwardRef, useImperativeHandle, useState, useRef, useEffect } from "react";
 import { Link, useRouteLoaderData, useNavigate } from "react-router";
-import { ArrowUpRight, Pencil, Trash2, Plus, Check, X, Image } from "lucide-react";
+import { ArrowUpRight, Trash2, Image } from "lucide-react";
 import ImagePickerModal from "../ImagePickerModal.jsx";
 
 // Content shape: { sectionLabel: string, cards: Card[] }
@@ -12,33 +12,37 @@ function genId() {
 
 const DEFAULT_ACCENT = "#9b6a4e";
 
-const CARD_FIELDS = [
-    ["Title", "title", "text"],
-    ["Description", "description", "textarea"],
-    ["Card link URL (whole card)", "cardLinkUrl", "text"],
-    ["Link URL", "linkUrl", "text"],
-    ["Link text", "linkText", "text"],
-];
-
 const ImageTextBlock = forwardRef(function ImageTextBlock(
     { block, adminMode, canDelete, deleteBlock, updateBlockContent, onDirty },
     ref
 ) {
+    const DEFAULT_CARD = {
+        id: genId(),
+        title: "",
+        description: "",
+        imageUrl: "",
+        imageSide: "auto",
+        cardHeight: 260,
+        cardLinkUrl: "",
+        linkUrl: "",
+        linkText: "Learn more",
+        accentColor: DEFAULT_ACCENT,
+    };
+
     const [data, setData] = useState(() => {
-        if (!block.content) return { sectionLabel: "", cards: [] };
+        const empty = { sectionLabel: "", cards: [DEFAULT_CARD] };
+        if (!block.content) return empty;
         if (typeof block.content === "object") {
-            // Legacy: backend incorrectly wrapped the JSON string in a richText envelope
             if (block.content.type === "richText" && typeof block.content.content === "string") {
                 try { return JSON.parse(block.content.content); }
-                catch { return { sectionLabel: "", cards: [] }; }
+                catch { return empty; }
             }
             return block.content;
         }
         try { return JSON.parse(block.content); }
-        catch { return { sectionLabel: "", cards: [] }; }
+        catch { return empty; }
     });
-    const [editing, setEditing] = useState(null);
-    const [draft, setDraft] = useState(null);
+
     const [showPicker, setShowPicker] = useState(false);
     const cardRefs = useRef([]);
     const { gameData } = useRouteLoaderData("main");
@@ -53,6 +57,7 @@ const ImageTextBlock = forwardRef(function ImageTextBlock(
     }), [data]);
 
     useEffect(() => {
+        if (adminMode) return; // skip observer in edit mode
         const observer = new IntersectionObserver(
             (entries) => {
                 entries.forEach(entry => {
@@ -66,57 +71,20 @@ const ImageTextBlock = forwardRef(function ImageTextBlock(
         );
         cardRefs.current.forEach(el => el && observer.observe(el));
         return () => observer.disconnect();
-    }, [data.cards.length]);
+    }, [data.cards.length, adminMode]);
 
-    function startEdit(card) {
-        setEditing(card.id);
-        setDraft({ ...card });
-    }
-
-    function commitEdit() {
+    function updateCard(id, patch) {
         setData(prev => ({
             ...prev,
-            cards: prev.cards.map(c => c.id === draft.id ? { ...draft } : c),
+            cards: prev.cards.map(c => c.id === id ? { ...c, ...patch } : c),
         }));
-        onDirty?.(block.id, true);
-        setEditing(null);
-        setDraft(null);
-    }
-
-    function cancelEdit() {
-        // If it was a new (empty) card that was never filled in, remove it
-        if (draft && !draft.title && data.cards.find(c => c.id === draft.id)?.title === "New card") {
-            setData(prev => ({ ...prev, cards: prev.cards.filter(c => c.id !== draft.id) }));
-        }
-        setEditing(null);
-        setDraft(null);
-    }
-
-    function addCard() {
-        const card = {
-            id: genId(),
-            title: "New card",
-            description: "",
-            imageUrl: "",
-            imageSide: "auto",
-            cardHeight: 260,
-            cardLinkUrl: "",
-            linkUrl: "",
-            linkText: "Learn more",
-            accentColor: DEFAULT_ACCENT,
-        };
-        setData(prev => ({ ...prev, cards: [...prev.cards, card] }));
-        onDirty?.(block.id, true);
-        setEditing(card.id);
-        setDraft({ ...card });
-    }
-
-    function removeCard(id) {
-        setData(prev => ({ ...prev, cards: prev.cards.filter(c => c.id !== id) }));
         onDirty?.(block.id, true);
     }
 
     const { cards = [], sectionLabel = "" } = data;
+
+    // Which card is currently using the image picker
+    const [pickerCardId, setPickerCardId] = useState(null);
 
     return (
         <>
@@ -133,7 +101,8 @@ const ImageTextBlock = forwardRef(function ImageTextBlock(
                                 transform 0.9s cubic-bezier(0.16,1,0.3,1);
                     position: relative;
                 }
-                .itb-card[data-visible="true"] {
+                .itb-card[data-visible="true"],
+                .itb-card[data-admin="true"] {
                     opacity: 1;
                     transform: translateY(0) rotate(0deg);
                 }
@@ -141,16 +110,17 @@ const ImageTextBlock = forwardRef(function ImageTextBlock(
                     transition: transform 0.5s cubic-bezier(0.16,1,0.3,1),
                                 box-shadow 0.5s cubic-bezier(0.16,1,0.3,1);
                 }
-                .itb-card:hover .itb-card-inner { transform: translateY(-5px); }
+                .itb-card:not([data-admin="true"]):hover .itb-card-inner { transform: translateY(-5px); }
                 .itb-img { transition: transform 0.8s cubic-bezier(0.16,1,0.3,1); }
-                .itb-card:hover .itb-img { transform: scale(1.06); }
+                .itb-card:not([data-admin="true"]):hover .itb-img { transform: scale(1.06); }
                 .itb-title { transition: color 0.3s ease; }
-                .itb-card:hover .itb-title { color: #ffffff; }
+                .itb-card:not([data-admin="true"]):hover .itb-title { color: #ffffff; }
                 .itb-accent-bar {
                     width: 0;
                     transition: width 0.7s cubic-bezier(0.16,1,0.3,1) 0.1s;
                 }
-                .itb-card[data-visible="true"] .itb-accent-bar { width: 2.5rem; }
+                .itb-card[data-visible="true"] .itb-accent-bar,
+                .itb-card[data-admin="true"] .itb-accent-bar { width: 2.5rem; }
                 .itb-link {
                     position: relative;
                     display: inline-flex;
@@ -165,7 +135,18 @@ const ImageTextBlock = forwardRef(function ImageTextBlock(
                     background: currentColor;
                     transition: width 0.3s ease;
                 }
-                .itb-card:hover .itb-link::after { width: 100%; }
+                .itb-card:not([data-admin="true"]):hover .itb-link::after { width: 100%; }
+                .itb-inline-input {
+                    background: transparent;
+                    border: none;
+                    outline: none;
+                    font-family: inherit;
+                    color: inherit;
+                    width: 100%;
+                    padding: 0;
+                    resize: none;
+                }
+                .itb-inline-input::placeholder { opacity: 0.3; }
                 @media (max-width: 640px) {
                     .itb-card-inner { flex-direction: column !important; min-height: unset !important; }
                     .itb-img-panel { width: 100% !important; height: 200px !important; }
@@ -205,12 +186,11 @@ const ImageTextBlock = forwardRef(function ImageTextBlock(
                 )}
 
                 {/* Cards */}
-                <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: adminMode ? "2rem" : "1.5rem" }}>
                     {cards.map((card, i) => {
                         const isEven = i % 2 === 0;
                         const imageIsLeft = card.imageSide === "right" ? false : card.imageSide === "left" ? true : isEven;
                         const accent = card.accentColor || DEFAULT_ACCENT;
-                        const isEditing = editing === card.id;
                         const isCardClickable = card.cardLinkUrl && !adminMode;
 
                         return (
@@ -218,130 +198,9 @@ const ImageTextBlock = forwardRef(function ImageTextBlock(
                                 key={card.id}
                                 ref={el => (cardRefs.current[i] = el)}
                                 className="itb-card"
+                                data-admin={adminMode ? "true" : undefined}
                                 style={{ transitionDelay: `${i * 0.05}s` }}
                             >
-                                {/* Edit overlay */}
-                                {adminMode && isEditing && draft && (
-                                    <div style={{
-                                        position: "absolute", inset: 0, zIndex: 20,
-                                        background: "rgba(10,8,6,0.96)",
-                                        borderRadius: "12px",
-                                        padding: "1.25rem",
-                                        display: "flex", flexDirection: "column", gap: "0.6rem",
-                                        border: `1px solid ${accent}50`,
-                                        overflowY: "auto",
-                                    }}>
-                                        <p style={{ fontWeight: 600, fontSize: "0.85rem", margin: 0, color: "#e8d5b7" }}>Edit card</p>
-                                        {CARD_FIELDS.map(([label, key, type]) => (
-                                            <div key={key} style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
-                                                <label style={{ fontSize: "0.62rem", textTransform: "uppercase", letterSpacing: "0.1em", opacity: 0.4, color: "#e8d5b7" }}>{label}</label>
-                                                {type === "textarea" ? (
-                                                    <textarea
-                                                        value={draft[key] ?? ""}
-                                                        onChange={e => setDraft(p => ({ ...p, [key]: e.target.value }))}
-                                                        rows={3}
-                                                        style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(232,213,183,0.15)", borderRadius: "5px", color: "#e8d5b7", padding: "0.4rem 0.6rem", fontSize: "0.82rem", resize: "vertical", fontFamily: "inherit", width: "100%", boxSizing: "border-box" }}
-                                                    />
-                                                ) : (
-                                                    <input
-                                                        type="text"
-                                                        value={draft[key] ?? ""}
-                                                        onChange={e => setDraft(p => ({ ...p, [key]: e.target.value }))}
-                                                        style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(232,213,183,0.15)", borderRadius: "5px", color: "#e8d5b7", padding: "0.4rem 0.6rem", fontSize: "0.82rem", fontFamily: "inherit", width: "100%", boxSizing: "border-box" }}
-                                                    />
-                                                )}
-                                            </div>
-                                        ))}
-                                        <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
-                                            <label style={{ fontSize: "0.62rem", textTransform: "uppercase", letterSpacing: "0.1em", opacity: 0.4, color: "#e8d5b7" }}>Image</label>
-                                            <div style={{ display: "flex", gap: "0.4rem" }}>
-                                                <input
-                                                    type="text"
-                                                    value={draft.imageUrl ?? ""}
-                                                    onChange={e => setDraft(p => ({ ...p, imageUrl: e.target.value }))}
-                                                    placeholder="Paste URL or choose from pool"
-                                                    style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(232,213,183,0.15)", borderRadius: "5px", color: "#e8d5b7", padding: "0.4rem 0.6rem", fontSize: "0.82rem", fontFamily: "inherit", boxSizing: "border-box" }}
-                                                />
-                                                <button
-                                                    onClick={() => setShowPicker(true)}
-                                                    style={{ background: "rgba(155,106,78,0.2)", border: "1px solid rgba(155,106,78,0.4)", color: "#e8d5b7", borderRadius: "5px", padding: "0.4rem 0.6rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.78rem", whiteSpace: "nowrap" }}
-                                                >
-                                                    <Image size={12} /> Pool
-                                                </button>
-                                            </div>
-                                            {draft.imageUrl && (
-                                                <img src={draft.imageUrl} alt="" style={{ width: "100%", maxHeight: "100px", objectFit: "cover", borderRadius: "4px", marginTop: "0.25rem" }} />
-                                            )}
-                                        </div>
-                                        <div style={{ display: "flex", gap: "1rem" }}>
-                                        <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem", flex: 1 }}>
-                                            <label style={{ fontSize: "0.62rem", textTransform: "uppercase", letterSpacing: "0.1em", opacity: 0.4, color: "#e8d5b7" }}>Image side</label>
-                                            <div style={{ display: "flex", gap: "0.35rem" }}>
-                                                {[["auto", "Auto"], ["left", "Left"], ["right", "Right"]].map(([val, label]) => (
-                                                    <button
-                                                        key={val}
-                                                        onClick={() => setDraft(p => ({ ...p, imageSide: val }))}
-                                                        style={{
-                                                            padding: "0.3rem 0.65rem",
-                                                            fontSize: "0.75rem",
-                                                            borderRadius: "5px",
-                                                            cursor: "pointer",
-                                                            border: (draft.imageSide ?? "auto") === val
-                                                                ? "1px solid rgba(155,106,78,0.7)"
-                                                                : "1px solid rgba(232,213,183,0.15)",
-                                                            background: (draft.imageSide ?? "auto") === val
-                                                                ? "rgba(155,106,78,0.25)"
-                                                                : "rgba(255,255,255,0.04)",
-                                                            color: "#e8d5b7",
-                                                        }}
-                                                    >{label}</button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                        <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
-                                            <label style={{ fontSize: "0.62rem", textTransform: "uppercase", letterSpacing: "0.1em", opacity: 0.4, color: "#e8d5b7" }}>Height (px)</label>
-                                            <input
-                                                type="number"
-                                                min={100}
-                                                max={1200}
-                                                value={draft.cardHeight ?? 260}
-                                                onChange={e => setDraft(p => ({ ...p, cardHeight: +e.target.value }))}
-                                                style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(232,213,183,0.15)", borderRadius: "5px", color: "#e8d5b7", padding: "0.4rem 0.6rem", fontSize: "0.82rem", width: "80px", boxSizing: "border-box" }}
-                                            />
-                                        </div>
-                                        </div>
-                                        <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
-                                            <label style={{ fontSize: "0.62rem", textTransform: "uppercase", letterSpacing: "0.1em", opacity: 0.4, color: "#e8d5b7" }}>Accent color</label>
-                                            <input
-                                                type="color"
-                                                value={draft.accentColor || DEFAULT_ACCENT}
-                                                onChange={e => setDraft(p => ({ ...p, accentColor: e.target.value }))}
-                                                style={{ height: "30px", width: "56px", border: "none", background: "none", cursor: "pointer", padding: 0 }}
-                                            />
-                                        </div>
-                                        <div style={{ display: "flex", gap: "0.5rem", paddingTop: "0.25rem" }}>
-                                            <button onClick={commitEdit} style={{ background: "rgba(100,200,100,0.15)", border: "1px solid rgba(100,200,100,0.3)", color: "#a0e0a0", borderRadius: "6px", padding: "0.35rem 0.65rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.78rem" }}>
-                                                <Check size={12} /> Apply
-                                            </button>
-                                            <button onClick={cancelEdit} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(232,213,183,0.5)", borderRadius: "6px", padding: "0.35rem 0.65rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.78rem" }}>
-                                                <X size={12} /> Cancel
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Admin buttons (not editing) */}
-                                {adminMode && !isEditing && (
-                                    <div style={{ position: "absolute", top: "0.5rem", right: "0.5rem", zIndex: 10, display: "flex", gap: "0.35rem" }}>
-                                        <button onClick={() => startEdit(card)} style={{ background: "rgba(0,0,0,0.65)", border: "1px solid rgba(255,255,255,0.15)", color: "#e8d5b7", borderRadius: "5px", padding: "0.3rem 0.45rem", cursor: "pointer", display: "flex", alignItems: "center" }}>
-                                            <Pencil size={11} />
-                                        </button>
-                                        <button onClick={() => removeCard(card.id)} style={{ background: "rgba(200,50,50,0.2)", border: "1px solid rgba(200,50,50,0.3)", color: "#f08080", borderRadius: "5px", padding: "0.3rem 0.45rem", cursor: "pointer", display: "flex", alignItems: "center" }}>
-                                            <Trash2 size={11} />
-                                        </button>
-                                    </div>
-                                )}
-
                                 {/* Card */}
                                 <div
                                     className="itb-card-inner"
@@ -357,17 +216,20 @@ const ImageTextBlock = forwardRef(function ImageTextBlock(
                                         cursor: isCardClickable ? "pointer" : "default",
                                     }}
                                     onClick={() => { if (isCardClickable) navigate(card.cardLinkUrl); }}
-                                    onMouseEnter={e => { e.currentTarget.style.boxShadow = `0 20px 60px rgba(0,0,0,0.6), 0 0 40px ${accent}28, inset 0 1px 0 rgba(255,255,255,0.05)`; }}
+                                    onMouseEnter={e => { if (!adminMode) e.currentTarget.style.boxShadow = `0 20px 60px rgba(0,0,0,0.6), 0 0 40px ${accent}28, inset 0 1px 0 rgba(255,255,255,0.05)`; }}
                                     onMouseLeave={e => { e.currentTarget.style.boxShadow = "0 8px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)"; }}
                                 >
-                                    {card.imageUrl && (
-                                        <div className="itb-img-panel" style={{ width: "42%", flexShrink: 0, overflow: "hidden", position: "relative", alignSelf: "stretch" }}>
-                                            <img
-                                                src={card.imageUrl}
-                                                alt={card.title}
-                                                className="itb-img"
-                                                style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", display: "block" }}
-                                            />
+                                    {/* Image panel */}
+                                    {(card.imageUrl || adminMode) && (
+                                        <div className="itb-img-panel" style={{ width: "42%", flexShrink: 0, overflow: "hidden", position: "relative", alignSelf: "stretch", background: card.imageUrl ? undefined : "rgba(255,255,255,0.03)" }}>
+                                            {card.imageUrl && (
+                                                <img
+                                                    src={card.imageUrl}
+                                                    alt={card.title}
+                                                    className="itb-img"
+                                                    style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", display: "block" }}
+                                                />
+                                            )}
                                             <div style={{
                                                 position: "absolute", inset: 0,
                                                 background: imageIsLeft
@@ -375,9 +237,30 @@ const ImageTextBlock = forwardRef(function ImageTextBlock(
                                                     : "linear-gradient(to left, transparent 65%, rgba(10,8,6,0.4))",
                                                 pointerEvents: "none",
                                             }} />
+                                            {adminMode && (
+                                                <button
+                                                    onClick={() => { setPickerCardId(card.id); setShowPicker(true); }}
+                                                    style={{
+                                                        position: "absolute", inset: 0, width: "100%", height: "100%",
+                                                        background: card.imageUrl ? "rgba(0,0,0,0.35)" : "rgba(0,0,0,0.15)",
+                                                        border: "none", cursor: "pointer",
+                                                        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                                                        gap: "0.4rem", color: "rgba(232,213,183,0.6)", fontSize: "0.75rem",
+                                                        opacity: card.imageUrl ? 0 : 1,
+                                                        transition: "opacity 0.2s",
+                                                        zIndex: 2,
+                                                    }}
+                                                    onMouseEnter={e => { e.currentTarget.style.opacity = "1"; }}
+                                                    onMouseLeave={e => { e.currentTarget.style.opacity = card.imageUrl ? "0" : "1"; }}
+                                                >
+                                                    <Image size={20} />
+                                                    {card.imageUrl ? "Change image" : "Add image"}
+                                                </button>
+                                            )}
                                         </div>
                                     )}
 
+                                    {/* Text panel */}
                                     <div className="itb-card-text" style={{
                                         flex: 1,
                                         background: `linear-gradient(135deg, ${accent}14 0%, #0e0b08 50%, #0a0806 100%)`,
@@ -403,28 +286,164 @@ const ImageTextBlock = forwardRef(function ImageTextBlock(
                                             </span>
                                         </div>
 
-                                        <h2 className="itb-title" style={{ fontSize: "clamp(1.5rem, 3vw, 2.5rem)", fontWeight: 800, lineHeight: 1.05, letterSpacing: "-0.03em", color: "#f5ede0", margin: 0, position: "relative" }}>
-                                            {card.title}
-                                        </h2>
-
-                                        {card.description && (
-                                            <p style={{ fontSize: "0.875rem", lineHeight: 1.75, color: "rgba(232,213,183,0.52)", maxWidth: "48ch", margin: 0, position: "relative" }}>
-                                                {card.description}
-                                            </p>
+                                        {/* Title */}
+                                        {adminMode ? (
+                                            <input
+                                                className="itb-inline-input itb-title"
+                                                value={card.title}
+                                                onChange={e => updateCard(card.id, { title: e.target.value })}
+                                                placeholder="Title"
+                                                style={{ fontSize: "clamp(1.5rem, 3vw, 2.5rem)", fontWeight: 800, lineHeight: 1.05, letterSpacing: "-0.03em", color: "#f5ede0", caretColor: accent }}
+                                            />
+                                        ) : (
+                                            <h2 className="itb-title" style={{ fontSize: "clamp(1.5rem, 3vw, 2.5rem)", fontWeight: 800, lineHeight: 1.05, letterSpacing: "-0.03em", color: "#f5ede0", margin: 0, position: "relative" }}>
+                                                {card.title}
+                                            </h2>
                                         )}
 
-                                        {card.linkUrl && (
-                                            <Link
-                                                to={card.linkUrl}
-                                                className="itb-link"
-                                                style={{ color: accent, fontSize: "0.78rem", fontWeight: 700, letterSpacing: "0.05em", textDecoration: "none", marginTop: "0.25rem", width: "fit-content", position: "relative" }}
-                                            >
-                                                {card.linkText || "Learn more"}
-                                                <ArrowUpRight size={13} />
-                                            </Link>
+                                        {/* Description */}
+                                        {adminMode ? (
+                                            <textarea
+                                                className="itb-inline-input"
+                                                value={card.description}
+                                                onChange={e => updateCard(card.id, { description: e.target.value })}
+                                                placeholder="Description"
+                                                rows={3}
+                                                style={{ fontSize: "0.875rem", lineHeight: 1.75, color: "rgba(232,213,183,0.52)", caretColor: accent }}
+                                            />
+                                        ) : (
+                                            card.description && (
+                                                <p style={{ fontSize: "0.875rem", lineHeight: 1.75, color: "rgba(232,213,183,0.52)", maxWidth: "48ch", margin: 0, position: "relative" }}>
+                                                    {card.description}
+                                                </p>
+                                            )
+                                        )}
+
+                                        {/* Link */}
+                                        {adminMode ? (
+                                            <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                                                <input
+                                                    className="itb-inline-input itb-link"
+                                                    value={card.linkText}
+                                                    onChange={e => updateCard(card.id, { linkText: e.target.value })}
+                                                    placeholder="Link text"
+                                                    style={{ color: accent, fontSize: "0.78rem", fontWeight: 700, letterSpacing: "0.05em", width: "auto", flex: 1, caretColor: "#e8d5b7" }}
+                                                />
+                                                <ArrowUpRight size={13} style={{ color: accent, flexShrink: 0 }} />
+                                            </div>
+                                        ) : (
+                                            card.linkUrl && (
+                                                <Link
+                                                    to={card.linkUrl}
+                                                    className="itb-link"
+                                                    style={{ color: accent, fontSize: "0.78rem", fontWeight: 700, letterSpacing: "0.05em", textDecoration: "none", marginTop: "0.25rem", width: "fit-content", position: "relative" }}
+                                                >
+                                                    {card.linkText || "Learn more"}
+                                                    <ArrowUpRight size={13} />
+                                                </Link>
+                                            )
                                         )}
                                     </div>
                                 </div>
+
+                                {/* Settings strip — admin only */}
+                                {adminMode && (
+                                    <div style={{
+                                        marginTop: "0.5rem",
+                                        display: "flex", flexWrap: "wrap", gap: "0.5rem", alignItems: "center",
+                                        padding: "0.5rem 0.75rem",
+                                        background: "rgba(10,8,6,0.6)",
+                                        borderRadius: "0 0 8px 8px",
+                                        border: "1px solid rgba(232,213,183,0.08)",
+                                        borderTop: "none",
+                                        fontSize: "0.72rem",
+                                        color: "rgba(232,213,183,0.5)",
+                                    }}>
+                                        {/* Link URL */}
+                                        <label style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
+                                            <span style={{ opacity: 0.5 }}>Link URL</span>
+                                            <input
+                                                value={card.linkUrl}
+                                                onChange={e => updateCard(card.id, { linkUrl: e.target.value })}
+                                                placeholder="—"
+                                                style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(232,213,183,0.12)", borderRadius: "4px", color: "#e8d5b7", padding: "0.2rem 0.4rem", fontSize: "0.72rem", width: "140px", fontFamily: "monospace" }}
+                                            />
+                                        </label>
+
+                                        <div style={{ width: "1px", height: "14px", background: "rgba(232,213,183,0.15)" }} />
+
+                                        {/* Card link */}
+                                        <label style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
+                                            <span style={{ opacity: 0.5 }}>Card link</span>
+                                            <input
+                                                value={card.cardLinkUrl}
+                                                onChange={e => updateCard(card.id, { cardLinkUrl: e.target.value })}
+                                                placeholder="—"
+                                                style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(232,213,183,0.12)", borderRadius: "4px", color: "#e8d5b7", padding: "0.2rem 0.4rem", fontSize: "0.72rem", width: "140px", fontFamily: "monospace" }}
+                                            />
+                                        </label>
+
+                                        <div style={{ width: "1px", height: "14px", background: "rgba(232,213,183,0.15)" }} />
+
+                                        {/* Image side */}
+                                        <label style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
+                                            <span style={{ opacity: 0.5 }}>Image</span>
+                                            {[["auto", "Auto"], ["left", "Left"], ["right", "Right"]].map(([val, label]) => (
+                                                <button
+                                                    key={val}
+                                                    onClick={() => updateCard(card.id, { imageSide: val })}
+                                                    style={{
+                                                        padding: "0.15rem 0.45rem", fontSize: "0.7rem", borderRadius: "4px", cursor: "pointer",
+                                                        border: (card.imageSide ?? "auto") === val ? "1px solid rgba(155,106,78,0.7)" : "1px solid rgba(232,213,183,0.12)",
+                                                        background: (card.imageSide ?? "auto") === val ? "rgba(155,106,78,0.2)" : "rgba(255,255,255,0.04)",
+                                                        color: "#e8d5b7",
+                                                    }}
+                                                >{label}</button>
+                                            ))}
+                                        </label>
+
+                                        <div style={{ width: "1px", height: "14px", background: "rgba(232,213,183,0.15)" }} />
+
+                                        {/* Height */}
+                                        <label style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
+                                            <span style={{ opacity: 0.5 }}>Height</span>
+                                            <input
+                                                type="number"
+                                                min={100} max={1200}
+                                                value={card.cardHeight ?? 260}
+                                                onChange={e => updateCard(card.id, { cardHeight: +e.target.value })}
+                                                style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(232,213,183,0.12)", borderRadius: "4px", color: "#e8d5b7", padding: "0.2rem 0.4rem", fontSize: "0.72rem", width: "64px" }}
+                                            />
+                                            <span style={{ opacity: 0.4 }}>px</span>
+                                        </label>
+
+                                        <div style={{ width: "1px", height: "14px", background: "rgba(232,213,183,0.15)" }} />
+
+                                        {/* Accent color */}
+                                        <label style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
+                                            <span style={{ opacity: 0.5 }}>Accent</span>
+                                            <input
+                                                type="color"
+                                                value={card.accentColor || DEFAULT_ACCENT}
+                                                onChange={e => updateCard(card.id, { accentColor: e.target.value })}
+                                                style={{ height: "20px", width: "28px", border: "none", background: "none", cursor: "pointer", padding: 0 }}
+                                            />
+                                        </label>
+
+                                        {/* Delete block */}
+                                        {canDelete && (
+                                            <>
+                                                <div style={{ flex: 1 }} />
+                                                <button
+                                                    onClick={deleteBlock}
+                                                    style={{ background: "rgba(200,50,50,0.1)", border: "1px solid rgba(200,50,50,0.25)", color: "#f08080", borderRadius: "6px", padding: "0.25rem 0.6rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.7rem" }}
+                                                >
+                                                    <Trash2 size={11} /> Delete block
+                                                </button>
+                                            </>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         );
                     })}
@@ -433,29 +452,13 @@ const ImageTextBlock = forwardRef(function ImageTextBlock(
                 {showPicker && (
                     <ImagePickerModal
                         gameId={gameId}
-                        onSelect={(url) => { setDraft(p => ({ ...p, imageUrl: url })); setShowPicker(false); }}
-                        onClose={() => setShowPicker(false)}
+                        onSelect={(url) => {
+                            if (pickerCardId) updateCard(pickerCardId, { imageUrl: url });
+                            setShowPicker(false);
+                            setPickerCardId(null);
+                        }}
+                        onClose={() => { setShowPicker(false); setPickerCardId(null); }}
                     />
-                )}
-
-                {/* Admin footer */}
-                {adminMode && (
-                    <div style={{ display: "flex", justifyContent: "center", gap: "0.75rem", paddingTop: "0.25rem" }}>
-                        <button
-                            onClick={addCard}
-                            style={{ background: "rgba(255,255,255,0.05)", border: "1px dashed rgba(232,213,183,0.2)", color: "rgba(232,213,183,0.6)", borderRadius: "8px", padding: "0.5rem 1rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.8rem" }}
-                        >
-                            <Plus size={13} /> Add card
-                        </button>
-                        {canDelete && (
-                            <button
-                                onClick={deleteBlock}
-                                style={{ background: "rgba(200,50,50,0.1)", border: "1px solid rgba(200,50,50,0.25)", color: "#f08080", borderRadius: "8px", padding: "0.5rem 0.75rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.35rem", fontSize: "0.78rem" }}
-                            >
-                                <Trash2 size={12} /> Delete block
-                            </button>
-                        )}
-                    </div>
                 )}
             </div>
         </>
