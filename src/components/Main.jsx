@@ -94,23 +94,47 @@ export default function Main() {
         <div
             id="main-page-sections"
             className="h-full w-full flex flex-col grow box-border bg-(--surface-background)"
-            style={themeToStyle(activeTheme)}
+            style={{
+                ...themeToStyle(activeTheme),
+                ...(pathname === "/" ? {
+                    background: darkMode
+                        ? "linear-gradient(90deg, #140f0a, #0c0906, #0c0906, #0c0906, #0c0906, #0c0906, #140f0a)"
+                        : "linear-gradient(90deg, #f4e9d8, #faf5ee, #faf5ee, #faf5ee, #faf5ee, #faf5ee, #f4e9d8)",
+                    backgroundSize: "500% 100%",
+                    animation: "homepage-bg-lr 40s ease-in-out infinite alternate",
+                } : {}),
+            }}
         >
             {/* Ambient flares */}
-            <div aria-hidden="true" style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0, overflow: "hidden" }}>
-                <div style={{
-                    position: "absolute", left: "-12vw", top: "15%",
-                    width: "45vw", height: "70vh",
-                    background: `radial-gradient(ellipse at center, ${accentColor}18 0%, transparent 70%)`,
-                    filter: "blur(8px)",
-                }} />
-                <div style={{
-                    position: "absolute", right: "-12vw", top: "30%",
-                    width: "40vw", height: "60vh",
-                    background: `radial-gradient(ellipse at center, ${accentColor}12 0%, transparent 70%)`,
-                    filter: "blur(8px)",
-                }} />
-            </div>
+            <style>{`
+                @keyframes homepage-bg-shift {
+                    0%   { background-position: 0% 50%; }
+                    50%  { background-position: 100% 50%; }
+                    100% { background-position: 0% 50%; }
+                }
+                @keyframes homepage-bg-lr {
+                    0%   { background-position: 0% 50%; }
+                    100% { background-position: 100% 50%; }
+                }
+                @keyframes flare-drift-1 {
+                    0%   { transform: translate(0, 0) scale(1); }
+                    33%  { transform: translate(4vw, -6vh) scale(1.08); }
+                    66%  { transform: translate(-3vw, 4vh) scale(0.95); }
+                    100% { transform: translate(0, 0) scale(1); }
+                }
+                @keyframes flare-drift-2 {
+                    0%   { transform: translate(0, 0) scale(1); }
+                    40%  { transform: translate(-5vw, 5vh) scale(1.1); }
+                    70%  { transform: translate(3vw, -4vh) scale(0.92); }
+                    100% { transform: translate(0, 0) scale(1); }
+                }
+                @keyframes flare-drift-3 {
+                    0%   { transform: translate(0, 0) scale(1); }
+                    50%  { transform: translate(6vw, 8vh) scale(1.12); }
+                    100% { transform: translate(0, 0) scale(1); }
+                }
+            `}</style>
+            <div aria-hidden="true" />
             <div id="sticky-header" className={`sticky top-0 z-40 ${pathname === "/" ? "" : "border-b-4 border-(--outline)"}`}>
                 <TopBar navbarLayout={navbarLayout} toggleNavbarLayout={toggleNavbarLayout} />
                 {sectionsMap && navbarLayout === "horizontal" && (
@@ -122,7 +146,7 @@ export default function Main() {
             <div
                 id="side-bar-and-content"
                 className={`relative w-full box-border flex flex-1
-                bg-(--surface-background)
+                ${pathname === "/" ? "" : "bg-(--surface-background)"}
                 transition-[padding] duration-300 ease-in-out
                 ${gameData && !sidebarCollapsed && navbarLayout === "vertical" && "xl:pr-30 2xl:pr-60"} `}
             >
