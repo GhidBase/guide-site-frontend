@@ -134,7 +134,7 @@ export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
     return (
         <div
             className="flex items-center gap-3 px-4 h-14 shrink-0 border-b border-(--outline)/30"
-            style={{ background: darkMode ? "rgba(15,12,10,0.62)" : "var(--primary)", backdropFilter: "blur(20px) saturate(1.4)", WebkitBackdropFilter: "blur(20px) saturate(1.4)", textShadow: "none", fontFamily: "'Outfit', sans-serif", color: "#fef3c7" }}
+            style={{ background: darkMode ? "rgba(15,12,10,0.62)" : "color-mix(in srgb, var(--primary) 92%, transparent)", backdropFilter: "blur(20px) saturate(1.4)", WebkitBackdropFilter: "blur(20px) saturate(1.4)", textShadow: "none", fontFamily: "'Outfit', sans-serif", color: "#fef3c7" }}
         >
 
             {/* Logo / site name */}

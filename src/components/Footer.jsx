@@ -40,7 +40,7 @@ export default function Footer() {
     const gameName = gameData?.title ?? "this game";
 
     return (
-        <footer className="w-full border-t border-(--outline)/40 px-4 py-3" style={{ background: darkMode ? "#0f0c0a" : "var(--primary)" }}>
+        <footer className="w-full border-t border-(--outline)/40 px-4 py-3" style={{ background: darkMode ? "rgba(15,12,10,0.62)" : "color-mix(in srgb, var(--primary) 92%, transparent)", backdropFilter: "blur(20px) saturate(1.4)", WebkitBackdropFilter: "blur(20px) saturate(1.4)" }}>
             <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-center gap-y-1 sm:gap-0 text-center text-xs text-amber-50/80 flex-wrap">
                 <span>
                     © {new Date().getFullYear()} {siteName}. This site is not affiliated with or endorsed by the creators of {gameName}.
