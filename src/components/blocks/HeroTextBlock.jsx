@@ -58,7 +58,7 @@ const HeroTextBlock = forwardRef(function HeroTextBlock(
                 style={{
                     background: backgroundUrl
                         ? `linear-gradient(to bottom, rgba(10,8,6,0.5), rgba(10,8,6,0.8)), url(${backgroundUrl}) center/cover no-repeat`
-                        : `linear-gradient(135deg, ${accentColor}22 0%, #0e0b08 60%, #0a0806 100%)`,
+                        : "transparent",
                     color: "#e8d5b7",
                     fontFamily: "'Outfit', sans-serif",
                 }}
