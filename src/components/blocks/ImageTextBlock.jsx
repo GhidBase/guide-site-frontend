@@ -254,7 +254,8 @@ const ImageTextBlock = forwardRef(function ImageTextBlock(
                                                     src={card.imageUrl}
                                                     alt={card.title}
                                                     className="itb-img"
-                                                    style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", display: "block" }}
+                                                    style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", display: "block", opacity: 0, transition: "opacity 0.5s ease" }}
+                                                    onLoad={e => { e.currentTarget.style.opacity = 1; }}
                                                 />
                                             )}
                                             <div className="itb-img-overlay" style={{
