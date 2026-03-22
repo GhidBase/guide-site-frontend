@@ -229,7 +229,7 @@ export default function HorizontalNavbar() {
 
     return (
         <div ref={navRef} className="flex items-center gap-1 px-4 py-1.5 border-t-4 border-(--outline)"
-            style={{ background: darkMode ? "#0f0c0a" : "var(--primary)", fontFamily: "'Outfit', sans-serif" }}>
+            style={{ background: darkMode ? "rgba(15,12,10,0.62)" : "var(--primary)", backdropFilter: "blur(20px) saturate(1.4)", WebkitBackdropFilter: "blur(20px) saturate(1.4)", fontFamily: "'Outfit', sans-serif" }}>
 
             {/* Hidden measurement clone — renders all sections offscreen to measure widths */}
             <div
