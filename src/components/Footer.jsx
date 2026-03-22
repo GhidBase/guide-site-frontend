@@ -7,18 +7,22 @@ export default function Footer() {
     const { pathname } = useLocation();
     if (pathname === "/") return (
         <div style={{
-            borderTop: "1px solid rgba(232,213,183,0.14)",
+            borderTop: darkMode
+                ? "1px solid rgba(232,213,183,0.06)"
+                : "1px solid rgba(180,90,30,0.10)",
             padding: "1rem 2.5rem",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             gap: "1.25rem",
             fontSize: "0.68rem",
-            color: darkMode ? "rgba(232,213,183,0.65)" : "rgba(255,255,255,0.8)",
-            background: "linear-gradient(180deg, rgba(10,8,6,0.38) 0%, rgba(10,8,6,0.72) 100%)",
-            backdropFilter: "blur(28px) saturate(1.4)",
-            WebkitBackdropFilter: "blur(28px) saturate(1.4)",
-            boxShadow: "0 -4px 32px rgba(0,0,0,0.55)",
+            color: darkMode ? "rgba(232,213,183,0.65)" : "#5a2a0a",
+            background: darkMode
+                ? "linear-gradient(180deg, rgba(10,8,6,0.38) 0%, rgba(10,8,6,0.72) 100%)"
+                : "rgba(255,240,215,0.45)",
+            backdropFilter: "blur(28px) saturate(1.6)",
+            WebkitBackdropFilter: "blur(28px) saturate(1.6)",
+            boxShadow: "none",
         }}>
             <span>© {new Date().getFullYear()} GuideCodex</span>
             <span style={{ opacity: 0.4 }}>·</span>
