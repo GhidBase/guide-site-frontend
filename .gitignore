@@ -27,6 +27,7 @@ dist-ssr
 notes.txt
 bugs.txt
 .env
+CLAUDE.md
 
 # React Router auto-generated types
 .react-router/
