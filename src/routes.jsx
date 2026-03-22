@@ -1,3 +1,4 @@
+import { Navigate } from "react-router";
 import Checklist from "./components/Checklist";
 import Main from "./components/Main";
 import PageManager from "./components/PageManager";
@@ -74,6 +75,7 @@ const mainRoute = {
             handle: { title: "Dashboard" },
         },
         { path: "access-denied", element: <AccessDeniedPage /> },
+        { path: "index.html", element: <Navigate to="/" replace /> },
         { path: "404/", element: <NotFound />, handle: { title: "404" } },
         { path: "*", element: <NotFound />, handle: { title: "404" } },
     ],
@@ -114,6 +116,7 @@ const luckyDefenseRoute = {
             handle: { title: "Dashboard" },
         },
         { path: "access-denied", element: <AccessDeniedPage /> },
+        { path: "index.html", element: <Navigate to="/" replace /> },
         { path: "404/", element: <NotFound /> },
     ],
 };
