@@ -1,4 +1,5 @@
 import ldgLogo from "../assets/LDG_Title.webp";
+import discordLogo from "../assets/icons8-discord-50.png";
 import { useRouteLoaderData, useNavigate, Link, useMatches } from "react-router";
 import { useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
@@ -92,6 +93,19 @@ export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
                 >
                     {adminMode ? <Eye className="w-4 h-4" /> : <Pencil className="w-4 h-4" />}
                 </button>
+            )}
+
+            {/* Discord — desktop only */}
+            {gameData?.discordUrl && (
+                <a
+                    href={gameData.discordUrl}
+                    title="Join the Discord"
+                    className="hidden lg:flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded border border-[#5865f2]/50 text-white hover:opacity-80 transition-colors shrink-0"
+                    style={{ background: "#5865f2" }}
+                >
+                    <img src={discordLogo} className="h-4 w-4 object-contain" alt="" />
+                    <span className="text-xs font-semibold">Discord</span>
+                </a>
             )}
 
             {/* Auth */}
