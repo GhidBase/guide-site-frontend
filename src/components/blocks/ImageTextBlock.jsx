@@ -2,6 +2,7 @@ import { forwardRef, useImperativeHandle, useState, useRef, useEffect } from "re
 import { Link, useRouteLoaderData, useNavigate } from "react-router";
 import { ArrowUpRight, Trash2, Image } from "lucide-react";
 import ImagePickerModal from "../ImagePickerModal.jsx";
+import { useDarkMode } from "../../contexts/ThemeProvider.jsx";
 
 // Content shape: { sectionLabel: string, cards: Card[] }
 // Card shape: { id, title, description, imageUrl, imageSide, cardHeight, cardLinkUrl, linkUrl, linkText, accentColor }
@@ -45,6 +46,7 @@ const ImageTextBlock = forwardRef(function ImageTextBlock(
 
     const [showPicker, setShowPicker] = useState(false);
     const cardRefs = useRef([]);
+    const { darkMode } = useDarkMode();
     const { gameData } = useRouteLoaderData("main");
     const gameId = gameData?.id;
     const navigate = useNavigate();
@@ -194,11 +196,11 @@ const ImageTextBlock = forwardRef(function ImageTextBlock(
                                 }}
                             />
                         ) : (
-                            <span style={{ fontSize: "0.65rem", letterSpacing: "0.25em", textTransform: "uppercase", opacity: 0.35, whiteSpace: "nowrap" }}>
+                            <span style={{ fontSize: "0.65rem", letterSpacing: "0.25em", textTransform: "uppercase", opacity: darkMode ? 0.35 : 0.7, color: darkMode ? "inherit" : "#3a1f0d", whiteSpace: "nowrap" }}>
                                 {sectionLabel}
                             </span>
                         )}
-                        <div style={{ flex: 1, height: "1px", background: "linear-gradient(to right, rgba(232,213,183,0.12), transparent)" }} />
+                        <div style={{ flex: 1, height: "1px", background: darkMode ? "linear-gradient(to right, rgba(232,213,183,0.12), transparent)" : "linear-gradient(to right, rgba(58,31,13,0.18), transparent)" }} />
                     </div>
                 )}
 
