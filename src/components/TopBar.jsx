@@ -1,5 +1,5 @@
 import ldgLogo from "../assets/LDG_Title.webp";
-import { useRouteLoaderData, useNavigate, Link, useMatches } from "react-router";
+import { useRouteLoaderData, useNavigate, Link, useMatches, useLocation } from "react-router";
 import { useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { PanelTop, PanelLeft, Sun, Moon, LogOut, LogIn, UserPlus, Pencil, Eye, Settings } from "lucide-react";
@@ -19,9 +19,100 @@ export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
         if (pageData?.notFound) navigate("/404", { replace: true });
     }, [pageSlug]);
 
+    const { pathname } = useLocation();
+    const isHomepage = pathname === "/";
+
     const hardCodedTitle = matches?.find((m) => m.handle?.title)?.handle.title;
     const pageTitle = hardCodedTitle ?? pageData?.page?.title;
     const isLDGHomepage = pageTitle === "LD Homepage";
+
+    if (isHomepage) {
+        return (
+            <div
+                style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "1rem 2.5rem",
+                    background: "linear-gradient(180deg, rgba(10,8,6,0.72) 0%, rgba(10,8,6,0.38) 100%)",
+                    backdropFilter: "blur(28px) saturate(1.4)",
+                    WebkitBackdropFilter: "blur(28px) saturate(1.4)",
+                    borderBottom: "1px solid rgba(232,213,183,0.14)",
+                    boxShadow: "0 1px 0 rgba(255,255,255,0.03), 0 4px 32px rgba(0,0,0,0.55), 0 16px 48px rgba(0,0,0,0.2)",
+                    color: darkMode ? "#e8d5b7" : "#ffffff",
+                    fontFamily: "'Outfit', sans-serif",
+                    position: "relative",
+                }}
+            >
+                <span style={{
+                    fontSize: "0.58rem",
+                    letterSpacing: "0.32em",
+                    textTransform: "uppercase",
+                    opacity: 0.6,
+                    fontWeight: 700,
+                    textShadow: "0 0 20px rgba(232,213,183,0.3)",
+                }}>
+                    GuideCodex
+                </span>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                    <button
+                        onClick={toggleDarkMode}
+                        title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+                        style={{ opacity: 0.5, cursor: "pointer", background: "none", border: "none", color: "inherit", display: "flex", alignItems: "center", transition: "opacity 0.2s" }}
+                        onMouseEnter={(e) => (e.currentTarget.style.opacity = 0.8)}
+                        onMouseLeave={(e) => (e.currentTarget.style.opacity = 0.5)}
+                    >
+                        {darkMode ? <Sun size={13} /> : <Moon size={13} />}
+                    </button>
+                    {(user?.role === "ADMIN" || user?.role === "CONTRIBUTOR") && (
+                        <button
+                            onClick={() => {
+                                if (adminMode && dirtyBlocks.size > 0) {
+                                    if (!window.confirm("You have unsaved changes. Exit edit mode anyway?")) return;
+                                }
+                                setAdminMode(m => !m);
+                            }}
+                            title={adminMode ? "Exit edit mode" : "Enter edit mode"}
+                            style={{ opacity: adminMode ? 0.9 : 0.5, cursor: "pointer", background: "none", border: "none", color: "inherit", display: "flex", alignItems: "center", transition: "opacity 0.2s" }}
+                            onMouseEnter={(e) => (e.currentTarget.style.opacity = 0.9)}
+                            onMouseLeave={(e) => (e.currentTarget.style.opacity = adminMode ? 0.9 : 0.5)}
+                        >
+                            {adminMode ? <Eye size={13} /> : <Pencil size={13} />}
+                        </button>
+                    )}
+                    {isAuthenticated ? (
+                        <>
+                            <span style={{ fontSize: "0.68rem", opacity: 0.45 }}>{user?.username}</span>
+                            <button
+                                onClick={logout}
+                                title="Logout"
+                                style={{ opacity: 0.6, cursor: "pointer", background: "none", border: "none", color: "inherit", display: "flex", alignItems: "center", transition: "opacity 0.2s" }}
+                                onMouseEnter={(e) => (e.currentTarget.style.opacity = 0.9)}
+                                onMouseLeave={(e) => (e.currentTarget.style.opacity = 0.6)}
+                            >
+                                <LogOut size={13} />
+                            </button>
+                        </>
+                    ) : (
+                        <Link
+                            to="/login"
+                            title="Sign in"
+                            style={{
+                                color: "rgba(232,220,200,0.7)", textDecoration: "none",
+                                border: "1px solid rgba(232,220,200,0.2)", borderRadius: "4px",
+                                padding: "0.25rem 0.4rem", transition: "all 0.2s",
+                                background: "rgba(255,255,255,0.05)", display: "flex", alignItems: "center",
+                            }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.1)"; e.currentTarget.style.color = "rgba(232,220,200,1)"; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "rgba(232,220,200,0.7)"; }}
+                        >
+                            <LogIn size={13} />
+                        </Link>
+                    )}
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div
