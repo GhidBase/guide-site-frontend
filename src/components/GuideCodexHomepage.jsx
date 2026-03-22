@@ -1,64 +1,36 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { Link } from "react-router";
 import { useRouteLoaderData } from "react-router";
-import { currentAPI } from "../config/api";
 import { useAuth } from "../hooks/useAuth";
 import { LogOut, ArrowUpRight, LogIn } from "lucide-react";
-
-// ── Helpers ──────────────────────────────────────────────────────
-
-function findGameBlocks(blocks, gameTitle) {
-    const sorted = [...blocks].sort((a, b) => a.order - b.order);
-    const textIdx = sorted.findIndex(
-        (b) =>
-            b.content?.type === "richText" &&
-            b.content?.content?.includes(`<h3>${gameTitle}</h3>`),
-    );
-    if (textIdx === -1) return { textBlock: null, imageBlock: null };
-    const textBlock = sorted[textIdx];
-    const nearby = sorted.slice(textIdx, textIdx + 3);
-    const imageBlock = nearby.find((b) => b.type === "single-image") ?? null;
-    return { textBlock, imageBlock };
-}
-
-function decodeEntities(str) {
-    return str
-        .replace(/&rsquo;|&#8217;/g, "'")
-        .replace(/&lsquo;|&#8216;/g, "'")
-        .replace(/&rdquo;|&#8221;/g, '"')
-        .replace(/&ldquo;|&#8220;/g, '"')
-        .replace(/&amp;/g, "&")
-        .replace(/&nbsp;/g, " ")
-        .replace(/&lt;/g, "<")
-        .replace(/&gt;/g, ">")
-        .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
-        .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCharCode(parseInt(n, 16)));
-}
-
-function stripHtml(html) {
-    return decodeEntities(html?.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim() ?? "");
-}
-
-function extractDescription(html) {
-    const withoutH3 = html?.replace(/<h3>[^<]*<\/h3>/g, "") ?? "";
-    return stripHtml(withoutH3);
-}
 
 // ── Component ────────────────────────────────────────────────────
 
 export default function GuideCodexHomepage() {
     const { pageData } = useRouteLoaderData("main");
     const { isAuthenticated, user, logout } = useAuth();
-    const [games, setGames] = useState([]);
     const blocks = pageData?.blocks ?? [];
-    const cardRefs = useRef([]);
+    function parseBlockCards(block) {
+        const c = block.content;
+        if (!c) return [];
+        let data;
+        if (typeof c === "object") {
+            if (c.type === "richText" && typeof c.content === "string") {
+                try { data = JSON.parse(c.content); } catch { return []; }
+            } else {
+                data = c;
+            }
+        } else if (typeof c === "string") {
+            try { data = JSON.parse(c); } catch { return []; }
+        }
+        return data?.cards ?? [];
+    }
 
-    useEffect(() => {
-        fetch(`${currentAPI}/games`)
-            .then((r) => (r.ok ? r.json() : []))
-            .then((data) => setGames(data.filter((g) => g.isActive !== false).sort((a, b) => (a.slug === "lucky-defense" ? -1 : b.slug === "lucky-defense" ? 1 : 0))))
-            .catch(() => {});
-    }, []);
+    const allCards = blocks
+        .filter((b) => b.type === "image-text")
+        .sort((a, b) => a.order - b.order)
+        .flatMap((b) => parseBlockCards(b));
+    const cardRefs = useRef([]);
 
     useEffect(() => {
         const observer = new IntersectionObserver(
@@ -74,7 +46,7 @@ export default function GuideCodexHomepage() {
         );
         cardRefs.current.forEach((el) => el && observer.observe(el));
         return () => observer.disconnect();
-    }, [games]);
+    }, [allCards]);
 
     return (
         <>
@@ -230,6 +202,67 @@ export default function GuideCodexHomepage() {
                 }}
             />
 
+            {/* ── Header ── */}
+            <header
+                className="gcx-header"
+                style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "1.25rem 2.5rem",
+                    position: "fixed",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    zIndex: 1000,
+                    background: "rgba(10,8,6,0.8)",
+                    backdropFilter: "blur(24px)",
+                    borderBottom: "1px solid rgba(232,213,183,0.05)",
+                    boxShadow: "0 1px 32px rgba(0,0,0,0.4)",
+                    color: "#e8d5b7",
+                }}
+            >
+                <span style={{
+                    fontSize: "0.6rem",
+                    letterSpacing: "0.28em",
+                    textTransform: "uppercase",
+                    opacity: 0.35,
+                    fontWeight: 700,
+                }}>
+                    GuideCodex
+                </span>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                    {isAuthenticated ? (
+                        <>
+                            <span style={{ fontSize: "0.68rem", opacity: 0.28 }}>{user?.username}</span>
+                            <button
+                                onClick={logout}
+                                style={{ opacity: 0.5, cursor: "pointer", background: "none", border: "none", color: "inherit", display: "flex", alignItems: "center", transition: "opacity 0.2s" }}
+                                onMouseEnter={(e) => (e.currentTarget.style.opacity = 0.7)}
+                                onMouseLeave={(e) => (e.currentTarget.style.opacity = 0.28)}
+                            >
+                                <LogOut size={13} />
+                            </button>
+                        </>
+                    ) : (
+                        <Link
+                            to="/login"
+                            title="Sign in"
+                            style={{
+                                color: "rgba(232,220,200,0.7)", textDecoration: "none",
+                                border: "1px solid rgba(232,220,200,0.2)", borderRadius: "4px",
+                                padding: "0.25rem 0.4rem", transition: "all 0.2s",
+                                background: "rgba(255,255,255,0.05)", display: "flex", alignItems: "center",
+                            }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.1)"; e.currentTarget.style.color = "rgba(232,220,200,1)"; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "rgba(232,220,200,0.7)"; }}
+                        >
+                            <LogIn size={13} />
+                        </Link>
+                    )}
+                </div>
+            </header>
+
             <div
                 style={{
                     background: "#0a0806",
@@ -242,69 +275,9 @@ export default function GuideCodexHomepage() {
                     zIndex: 1,
                 }}
             >
-                {/* ── Header ── */}
-                <header
-                    className="gcx-header"
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        padding: "1.25rem 2.5rem",
-                        position: "sticky",
-                        top: 0,
-                        zIndex: 10,
-                        background: "rgba(10,8,6,0.8)",
-                        backdropFilter: "blur(24px)",
-                        borderBottom: "1px solid rgba(232,213,183,0.05)",
-                        boxShadow: "0 1px 32px rgba(0,0,0,0.4)",
-                    }}
-                >
-                    <span style={{
-                        fontSize: "0.6rem",
-                        letterSpacing: "0.28em",
-                        textTransform: "uppercase",
-                        opacity: 0.35,
-                        fontWeight: 700,
-                    }}>
-                        GuideCodex
-                    </span>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                        {isAuthenticated ? (
-                            <>
-                                <span style={{ fontSize: "0.68rem", opacity: 0.28 }}>{user?.username}</span>
-                                <button
-                                    onClick={logout}
-                                    style={{ opacity: 0.5, cursor: "pointer", background: "none", border: "none", color: "inherit", display: "flex", alignItems: "center", transition: "opacity 0.2s" }}
-                                    onMouseEnter={(e) => (e.currentTarget.style.opacity = 0.7)}
-                                    onMouseLeave={(e) => (e.currentTarget.style.opacity = 0.28)}
-                                >
-                                    <LogOut size={13} />
-                                </button>
-                            </>
-                        ) : (
-                            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "0.15rem" }}>
-                                <Link
-                                    to="/login"
-                                    title="Sign in"
-                                    style={{
-                                        color: "rgba(232,220,200,0.7)", textDecoration: "none",
-                                        border: "1px solid rgba(232,220,200,0.2)", borderRadius: "4px",
-                                        padding: "0.25rem 0.4rem", transition: "all 0.2s",
-                                        background: "rgba(255,255,255,0.05)", display: "flex", alignItems: "center",
-                                    }}
-                                    onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.1)"; e.currentTarget.style.color = "rgba(232,220,200,1)"; }}
-                                    onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "rgba(232,220,200,0.7)"; }}
-                                >
-                                    <LogIn size={13} />
-                                </Link>
-                            </div>
-                        )}
-                    </div>
-                </header>
-
                 {/* ── Hero ── */}
                 <section style={{
-                    padding: "12vh 2.5rem 10vh",
+                    padding: "calc(12vh + 4rem) 2.5rem 10vh",
                     maxWidth: "1280px",
                     width: "100%",
                     margin: "0 auto",
@@ -353,7 +326,7 @@ export default function GuideCodexHomepage() {
                 </section>
 
                 {/* ── Games ── */}
-                {games.length > 0 && (
+                {allCards.length > 0 && (
                     <section style={{
                         maxWidth: "1280px",
                         width: "100%",
@@ -372,16 +345,14 @@ export default function GuideCodexHomepage() {
                         </div>
 
                         <div style={{ display: "flex", flexDirection: "column", gap: "1.75rem" }}>
-                            {games.map((game, i) => {
-                                const { textBlock, imageBlock } = findGameBlocks(blocks, game.title);
-                                const description = extractDescription(textBlock?.content?.content ?? "");
-                                const imageUrl = imageBlock?.files?.[0]?.url;
-                                const primary = game.theme?.primary ?? "#9b6a4e";
+                            {allCards.map((card, i) => {
+                                const primary = card.accentColor || "#9b6a4e";
                                 const isEven = i % 2 === 0;
+                                const isExternal = card.linkUrl?.startsWith("http://") || card.linkUrl?.startsWith("https://");
 
                                 return (
                                     <div
-                                        key={game.id}
+                                        key={card.id ?? i}
                                         ref={(el) => (cardRefs.current[i] = el)}
                                         className="gcx-card"
                                         style={{ transitionDelay: `${i * 0.06}s` }}
@@ -405,18 +376,17 @@ export default function GuideCodexHomepage() {
                                             }}
                                         >
                                             {/* Image panel */}
-                                            {imageUrl && (
+                                            {card.imageUrl && (
                                                 <div
                                                     className="gcx-img-panel"
                                                     style={{ width: "45%", flexShrink: 0, overflow: "hidden", position: "relative" }}
                                                 >
                                                     <img
-                                                        src={imageUrl}
-                                                        alt={game.title}
+                                                        src={card.imageUrl}
+                                                        alt={card.title}
                                                         className="gcx-img"
                                                         style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", display: "block" }}
                                                     />
-                                                    {/* Edge fade toward text */}
                                                     <div style={{
                                                         position: "absolute", inset: 0,
                                                         background: isEven
@@ -442,7 +412,6 @@ export default function GuideCodexHomepage() {
                                                 position: "relative",
                                                 overflow: "hidden",
                                             }}>
-                                                {/* Subtle corner glow */}
                                                 <div style={{
                                                     position: "absolute",
                                                     [isEven ? "left" : "right"]: "-40px",
@@ -474,10 +443,10 @@ export default function GuideCodexHomepage() {
                                                         position: "relative",
                                                     }}
                                                 >
-                                                    {game.title}
+                                                    {card.title}
                                                 </h2>
 
-                                                {description && (
+                                                {card.description && (
                                                     <p style={{
                                                         fontSize: "0.875rem",
                                                         lineHeight: 1.75,
@@ -486,27 +455,31 @@ export default function GuideCodexHomepage() {
                                                         margin: 0,
                                                         position: "relative",
                                                     }}>
-                                                        {description}
+                                                        {card.description}
                                                     </p>
                                                 )}
 
-                                                <Link
-                                                    to={`/games/${game.slug}`}
-                                                    className="gcx-link"
-                                                    style={{
-                                                        color: primary,
-                                                        fontSize: "0.8rem",
-                                                        fontWeight: 700,
-                                                        letterSpacing: "0.05em",
-                                                        textDecoration: "none",
-                                                        marginTop: "0.5rem",
-                                                        width: "fit-content",
-                                                        position: "relative",
-                                                    }}
-                                                >
-                                                    Explore guides
-                                                    <ArrowUpRight size={14} />
-                                                </Link>
+                                                {card.linkUrl && (
+                                                    isExternal ? (
+                                                        <a
+                                                            href={card.linkUrl}
+                                                            className="gcx-link"
+                                                            style={{ color: primary, fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.05em", textDecoration: "none", marginTop: "0.5rem", width: "fit-content", position: "relative" }}
+                                                        >
+                                                            {card.linkText || "Explore guides"}
+                                                            <ArrowUpRight size={14} />
+                                                        </a>
+                                                    ) : (
+                                                        <Link
+                                                            to={card.linkUrl}
+                                                            className="gcx-link"
+                                                            style={{ color: primary, fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.05em", textDecoration: "none", marginTop: "0.5rem", width: "fit-content", position: "relative" }}
+                                                        >
+                                                            {card.linkText || "Explore guides"}
+                                                            <ArrowUpRight size={14} />
+                                                        </Link>
+                                                    )
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -516,30 +489,6 @@ export default function GuideCodexHomepage() {
                     </section>
                 )}
 
-                {/* ── Footer ── */}
-                <div style={{
-                    marginTop: "auto",
-                    borderTop: "1px solid rgba(232,213,183,0.05)",
-                    padding: "1.75rem 2.5rem",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "1.25rem",
-                    fontSize: "0.68rem",
-                    color: "rgba(232,213,183,0.5)",
-                    background: "linear-gradient(to top, rgba(0,0,0,0.2), transparent)",
-                }}>
-                    <span>© 2025 GuideCodex</span>
-                    <span style={{ opacity: 0.4 }}>·</span>
-                    <a
-                        href="/pages/privacy-policy.html"
-                        style={{ color: "inherit", textDecoration: "none", transition: "opacity 0.2s" }}
-                        onMouseEnter={(e) => (e.currentTarget.style.opacity = 0.6)}
-                        onMouseLeave={(e) => (e.currentTarget.style.opacity = 1)}
-                    >
-                        Privacy Policy
-                    </a>
-                </div>
             </div>
         </>
     );
