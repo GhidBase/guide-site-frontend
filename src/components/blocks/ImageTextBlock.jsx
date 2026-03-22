@@ -1,6 +1,7 @@
 import { forwardRef, useImperativeHandle, useState, useRef, useEffect } from "react";
-import { Link } from "react-router";
-import { ArrowUpRight, Pencil, Trash2, Plus, Check, X } from "lucide-react";
+import { Link, useRouteLoaderData } from "react-router";
+import { ArrowUpRight, Pencil, Trash2, Plus, Check, X, Image } from "lucide-react";
+import ImagePickerModal from "../ImagePickerModal.jsx";
 
 // Content shape: { sectionLabel: string, cards: Card[] }
 // Card shape: { id, title, description, imageUrl, linkUrl, linkText, accentColor }
@@ -14,7 +15,6 @@ const DEFAULT_ACCENT = "#9b6a4e";
 const CARD_FIELDS = [
     ["Title", "title", "text"],
     ["Description", "description", "textarea"],
-    ["Image URL", "imageUrl", "text"],
     ["Link URL", "linkUrl", "text"],
     ["Link text", "linkText", "text"],
 ];
@@ -38,7 +38,10 @@ const ImageTextBlock = forwardRef(function ImageTextBlock(
     });
     const [editing, setEditing] = useState(null);
     const [draft, setDraft] = useState(null);
+    const [showPicker, setShowPicker] = useState(false);
     const cardRefs = useRef([]);
+    const { gameData } = useRouteLoaderData("main");
+    const gameId = gameData?.id;
 
     useImperativeHandle(ref, () => ({
         save: async () => {
@@ -243,6 +246,27 @@ const ImageTextBlock = forwardRef(function ImageTextBlock(
                                             </div>
                                         ))}
                                         <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
+                                            <label style={{ fontSize: "0.62rem", textTransform: "uppercase", letterSpacing: "0.1em", opacity: 0.4, color: "#e8d5b7" }}>Image</label>
+                                            <div style={{ display: "flex", gap: "0.4rem" }}>
+                                                <input
+                                                    type="text"
+                                                    value={draft.imageUrl ?? ""}
+                                                    onChange={e => setDraft(p => ({ ...p, imageUrl: e.target.value }))}
+                                                    placeholder="Paste URL or choose from pool"
+                                                    style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(232,213,183,0.15)", borderRadius: "5px", color: "#e8d5b7", padding: "0.4rem 0.6rem", fontSize: "0.82rem", fontFamily: "inherit", boxSizing: "border-box" }}
+                                                />
+                                                <button
+                                                    onClick={() => setShowPicker(true)}
+                                                    style={{ background: "rgba(155,106,78,0.2)", border: "1px solid rgba(155,106,78,0.4)", color: "#e8d5b7", borderRadius: "5px", padding: "0.4rem 0.6rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.78rem", whiteSpace: "nowrap" }}
+                                                >
+                                                    <Image size={12} /> Pool
+                                                </button>
+                                            </div>
+                                            {draft.imageUrl && (
+                                                <img src={draft.imageUrl} alt="" style={{ width: "100%", maxHeight: "100px", objectFit: "cover", borderRadius: "4px", marginTop: "0.25rem" }} />
+                                            )}
+                                        </div>
+                                        <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
                                             <label style={{ fontSize: "0.62rem", textTransform: "uppercase", letterSpacing: "0.1em", opacity: 0.4, color: "#e8d5b7" }}>Accent color</label>
                                             <input
                                                 type="color"
@@ -359,6 +383,14 @@ const ImageTextBlock = forwardRef(function ImageTextBlock(
                         );
                     })}
                 </div>
+
+                {showPicker && (
+                    <ImagePickerModal
+                        gameId={gameId}
+                        onSelect={(url) => { setDraft(p => ({ ...p, imageUrl: url })); setShowPicker(false); }}
+                        onClose={() => setShowPicker(false)}
+                    />
+                )}
 
                 {/* Admin footer */}
                 {adminMode && (

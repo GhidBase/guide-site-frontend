@@ -128,7 +128,6 @@ const HeroTextBlock = forwardRef(function HeroTextBlock(
                     background: backgroundUrl
                         ? `linear-gradient(to bottom, rgba(10,8,6,0.5), rgba(10,8,6,0.8)), url(${backgroundUrl}) center/cover no-repeat`
                         : `linear-gradient(135deg, ${accentColor}22 0%, #0e0b08 60%, #0a0806 100%)`,
-                    borderBottom: `3px solid ${accentColor}`,
                     color: "#e8d5b7",
                     fontFamily: "'Outfit', sans-serif",
                 }}
@@ -147,12 +146,17 @@ const HeroTextBlock = forwardRef(function HeroTextBlock(
                     </h1>
                 )}
                 {subtitle && (
-                    <p
-                        className="mt-4 mb-0 max-w-prose leading-relaxed"
-                        style={{ fontSize: "1rem", color: "rgba(232,213,183,0.6)" }}
+                    <h1
+                        className="m-0 font-black leading-none tracking-tight"
+                        style={{
+                            fontSize: "clamp(3rem, 10vw, 7rem)",
+                            letterSpacing: "-0.04em",
+                            color: accentColor,
+                            textShadow: `0 4px 60px ${accentColor}66`,
+                        }}
                     >
                         {subtitle}
-                    </p>
+                    </h1>
                 )}
                 {!title && !subtitle && adminMode && (
                     <span className="opacity-30 text-sm">Empty hero block — click Edit to add content</span>

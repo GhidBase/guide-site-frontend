@@ -75,6 +75,9 @@ export default function NavigationPanel() {
     const [showSupportButton, setShowSupportButton] = useState(gameData?.showSupportButton !== false);
 
     // ── IMAGE POOL ────────────────────────────────────────────────────────────
+    const imagesBaseUrl = gameId
+        ? `${currentAPI}/games/${gameId}/images`
+        : `${currentAPI}/images`;
     const [images, setImages] = useState([]);
     const [imagePoolOpen, setImagePoolOpen] = useState(false);
     const [imageUploadFile, setImageUploadFile] = useState(null);
@@ -86,12 +89,11 @@ export default function NavigationPanel() {
     const [bulkProgress, setBulkProgress] = useState(null); // null | { done, total }
 
     useEffect(() => {
-        if (!gameId) return;
-        fetch(currentAPI + "/games/" + gameId + "/images")
+        fetch(imagesBaseUrl)
             .then((r) => r.json())
             .then(setImages)
             .catch(() => {});
-    }, [gameId]);
+    }, [imagesBaseUrl]);
 
     async function uploadImage() {
         if (!imageUploadFile) return;
@@ -103,7 +105,7 @@ export default function NavigationPanel() {
             formData.append("category", imageUploadCategory.trim());
         }
         try {
-            const res = await fetch(currentAPI + "/games/" + gameId + "/images", {
+            const res = await fetch(imagesBaseUrl, {
                 method: "POST",
                 credentials: "include",
                 body: formData,
@@ -130,7 +132,7 @@ export default function NavigationPanel() {
             formData.append("title", file.name.replace(/\.[^.]+$/, ""));
             if (category.trim()) formData.append("category", category.trim());
             try {
-                const res = await fetch(currentAPI + "/games/" + gameId + "/images", {
+                const res = await fetch(imagesBaseUrl, {
                     method: "POST",
                     credentials: "include",
                     body: formData,
@@ -154,7 +156,7 @@ export default function NavigationPanel() {
         if (!confirm(`Delete all ${group.length} image${group.length !== 1 ? "s" : ""} in "${cat || "Uncategorized"}"?`)) return;
         for (const img of group) {
             try {
-                await fetch(currentAPI + "/games/" + gameId + "/images/" + img.id, {
+                await fetch(`${imagesBaseUrl}/${img.id}`, {
                     method: "DELETE",
                     credentials: "include",
                 });
@@ -167,7 +169,7 @@ export default function NavigationPanel() {
 
     async function deleteImage(imageId) {
         try {
-            await fetch(currentAPI + "/games/" + gameId + "/images/" + imageId, {
+            await fetch(`${imagesBaseUrl}/${imageId}`, {
                 method: "DELETE",
                 credentials: "include",
             });

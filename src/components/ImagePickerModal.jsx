@@ -8,7 +8,10 @@ export default function ImagePickerModal({ gameId, onSelect, onClose }) {
     const [activeCategory, setActiveCategory] = useState("all");
 
     useEffect(() => {
-        fetch(currentAPI + "/games/" + gameId + "/images")
+        const url = gameId
+            ? currentAPI + "/games/" + gameId + "/images"
+            : currentAPI + "/images";
+        fetch(url)
             .then((r) => r.json())
             .then(setImages);
     }, [gameId]);
