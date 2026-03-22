@@ -25,7 +25,7 @@ export default function Main() {
     function toggleNavbarLayout() {
         setNavbarLayout((prev) => (prev === "vertical" ? "horizontal" : "vertical"));
     }
-    const { gameData, sectionsMap } = useLoaderData();
+    const { gameData, sectionsMap, pageData } = useLoaderData();
     const { setTheme } = useTheme();
     const { darkMode } = useDarkMode();
 
@@ -85,6 +85,9 @@ export default function Main() {
         }
     }, [navOpen]);
 
+    const isWide = pageData?.page?.wide ?? false;
+    const accentColor = activeTheme?.primary ?? "#9b6a4e";
+
     return (
         <EditModeProvider>
         <div
@@ -92,6 +95,21 @@ export default function Main() {
             className="h-full w-full flex flex-col grow box-border bg-(--surface-background)"
             style={themeToStyle(activeTheme)}
         >
+            {/* Ambient flares */}
+            <div aria-hidden="true" style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0, overflow: "hidden" }}>
+                <div style={{
+                    position: "absolute", left: "-12vw", top: "15%",
+                    width: "45vw", height: "70vh",
+                    background: `radial-gradient(ellipse at center, ${accentColor}18 0%, transparent 70%)`,
+                    filter: "blur(8px)",
+                }} />
+                <div style={{
+                    position: "absolute", right: "-12vw", top: "30%",
+                    width: "40vw", height: "60vh",
+                    background: `radial-gradient(ellipse at center, ${accentColor}12 0%, transparent 70%)`,
+                    filter: "blur(8px)",
+                }} />
+            </div>
             <div id="sticky-header" className="sticky top-0 z-40 border-b-4 border-(--outline)">
                 <TopBar navbarLayout={navbarLayout} toggleNavbarLayout={toggleNavbarLayout} />
                 {sectionsMap && navbarLayout === "horizontal" && (
@@ -150,7 +168,7 @@ export default function Main() {
                 )}
                 <div
                     id="page-outer-bounds"
-                    className={`gap-4 sm:px-4 pb-4 flex flex-col w-full max-w-230 mx-auto text-(--text-color)`}
+                    className={`gap-4 sm:px-4 pb-4 flex flex-col w-full mx-auto text-(--text-color) ${isWide ? "max-w-[1440px]" : "max-w-230"}`}
                 >
                     <Outlet />
                 </div>

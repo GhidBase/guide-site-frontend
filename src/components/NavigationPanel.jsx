@@ -62,6 +62,7 @@ export default function NavigationPanel() {
     const [detailPage, setDetailPage] = useState(null);
     const [detailTitle, setDetailTitle] = useState("");
     const [detailSlug, setDetailSlug] = useState("");
+    const [detailWide, setDetailWide] = useState(false);
     const [detailDescription, setDetailDescription] = useState("");
 
     const { theme, setTheme } = useTheme();
@@ -791,6 +792,7 @@ export default function NavigationPanel() {
             setDetailTitle(detailPage.title ?? "");
             setDetailSlug(detailPage.slug ?? "");
             setDetailDescription(detailPage.description ?? "");
+            setDetailWide(detailPage.wide ?? false);
         }
     }, [detailPage]);
 
@@ -863,13 +865,15 @@ export default function NavigationPanel() {
         const titleChanged = detailTitle !== detailPage.title;
         const slugChanged = detailSlug !== (detailPage.slug ?? "");
         const descriptionChanged = detailDescription !== (detailPage.description ?? "");
+        const wideChanged = detailWide !== (detailPage.wide ?? false);
 
         try {
-            if (titleChanged || slugChanged || descriptionChanged) {
+            if (titleChanged || slugChanged || descriptionChanged || wideChanged) {
                 const body = {};
                 if (titleChanged) body.title = detailTitle;
                 if (slugChanged) body.slug = detailSlug;
                 if (descriptionChanged) body.description = detailDescription;
+                if (wideChanged) body.wide = detailWide;
                 await fetch(pageUrl(id), {
                         method: "PUT",
                         headers: { "Content-Type": "application/json" },
@@ -885,6 +889,7 @@ export default function NavigationPanel() {
                 title: detailTitle,
                 slug: detailSlug,
                 description: detailDescription,
+                wide: detailWide,
             };
             let foundInSection = false;
             for (const section of sectionsMap.values()) {
@@ -2313,6 +2318,20 @@ export default function NavigationPanel() {
                                     placeholder="Short description shown in Discord link previews…"
                                     className="bg-(--accent) text-(--accent-text) px-3 py-1.5 rounded w-full text-sm resize-y"
                                 />
+                            </div>
+
+                            {/* Wide page toggle */}
+                            <div className="border-t border-(--outline) pt-4">
+                                <label className="flex items-center gap-3 cursor-pointer select-none">
+                                    <input
+                                        type="checkbox"
+                                        checked={detailWide}
+                                        onChange={(e) => setDetailWide(e.target.checked)}
+                                        className="w-4 h-4 accent-(--primary) cursor-pointer"
+                                    />
+                                    <span className="text-(--accent-text) font-semibold text-sm">Wide page layout</span>
+                                </label>
+                                <p className="text-(--text-color) text-xs mt-1 opacity-60">Expands content area to ~1440px instead of the default width.</p>
                             </div>
 
                             {/* Save button */}
