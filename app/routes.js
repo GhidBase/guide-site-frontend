@@ -6,6 +6,7 @@ export default [
 
     layout("routes/layout.jsx", { id: "main" }, [
         index("routes/home.jsx"),
+        route("index.html", "routes/redirect-index-html.jsx"),
         route(":pageSlug", "routes/page-slug.jsx"),
 
         route("games/:gameSlug", "routes/game-layout.jsx", [
