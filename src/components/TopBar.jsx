@@ -34,12 +34,18 @@ export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
                     alignItems: "center",
                     justifyContent: "space-between",
                     padding: "1rem 2.5rem",
-                    background: "linear-gradient(180deg, rgba(10,8,6,0.72) 0%, rgba(10,8,6,0.38) 100%)",
-                    backdropFilter: "blur(28px) saturate(1.4)",
-                    WebkitBackdropFilter: "blur(28px) saturate(1.4)",
-                    borderBottom: "1px solid rgba(232,213,183,0.14)",
-                    boxShadow: "0 1px 0 rgba(255,255,255,0.03), 0 4px 32px rgba(0,0,0,0.55), 0 16px 48px rgba(0,0,0,0.2)",
-                    color: darkMode ? "#e8d5b7" : "#ffffff",
+                    background: darkMode
+                        ? "linear-gradient(180deg, rgba(10,8,6,0.72) 0%, rgba(10,8,6,0.38) 100%)"
+                        : "rgba(255,240,215,0.45)",
+                    backdropFilter: "blur(28px) saturate(1.6)",
+                    WebkitBackdropFilter: "blur(28px) saturate(1.6)",
+                    borderBottom: darkMode
+                        ? "1px solid rgba(232,213,183,0.06)"
+                        : "1px solid rgba(180,90,30,0.10)",
+                    boxShadow: darkMode
+                        ? "0 1px 0 rgba(255,255,255,0.03), 0 4px 32px rgba(0,0,0,0.55), 0 16px 48px rgba(0,0,0,0.2)"
+                        : "none",
+                    color: darkMode ? "#e8d5b7" : "#2d1206",
                     fontFamily: "'Outfit', sans-serif",
                     position: "relative",
                 }}
@@ -55,6 +61,17 @@ export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
                     GuideCodex
                 </span>
                 <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                    {user?.role === "ADMIN" && (
+                        <a
+                            href="/navigation-panel"
+                            title="Navigation Panel"
+                            style={{ opacity: 0.5, color: "inherit", display: "flex", alignItems: "center", transition: "opacity 0.2s" }}
+                            onMouseEnter={(e) => (e.currentTarget.style.opacity = 0.8)}
+                            onMouseLeave={(e) => (e.currentTarget.style.opacity = 0.5)}
+                        >
+                            <Settings size={13} />
+                        </a>
+                    )}
                     <button
                         onClick={toggleDarkMode}
                         title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
