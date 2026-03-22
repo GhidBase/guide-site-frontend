@@ -923,7 +923,7 @@ export default function NavigationPanel() {
 
     return (
         <>
-        <div className="px-4 sm:px-0">
+        <div className="px-4 sm:px-8 max-w-4xl mx-auto w-full">
             {/* ── Quick Links ───────────────────────────────────────────────── */}
             <div className="mt-8 max-w-4xl mb-6 flex flex-wrap gap-3">
                 <Link to="../board-builder"
