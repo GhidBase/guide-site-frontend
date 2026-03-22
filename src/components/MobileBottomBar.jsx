@@ -3,7 +3,7 @@ import { Pencil, Eye, Settings } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useEditMode } from "../contexts/EditModeContext.jsx";
 import { useDarkMode } from "../contexts/ThemeProvider.jsx";
-import { useRouteLoaderData, useNavigate } from "react-router";
+import { useRouteLoaderData, useNavigate, useLocation } from "react-router";
 
 export default function MobileBottomBar({ toggleNav }) {
     const { user, isAuthenticated } = useAuth();
@@ -13,6 +13,7 @@ export default function MobileBottomBar({ toggleNav }) {
     const { darkMode } = useDarkMode();
     const { gameData, isLDG } = useRouteLoaderData("main");
     const navigate = useNavigate();
+    const { pathname } = useLocation();
 
     const btnBase = "flex items-center justify-center w-12 h-12 rounded-lg cursor-pointer hover:opacity-80 transition-opacity";
     const btnStyle = { background: darkMode ? "rgba(255,235,200,0.10)" : "var(--primary)" };
@@ -25,7 +26,7 @@ export default function MobileBottomBar({ toggleNav }) {
     return (
         <div
             className="lg:hidden sticky bottom-0 z-20 flex w-full items-center justify-center gap-3 px-4 py-2 border-t-4 border-(--outline)"
-            style={{ background: darkMode ? "#0f0c0a" : "var(--red-brown)" }}
+            style={{ background: darkMode ? "#0f0c0a" : "var(--red-brown)", opacity: pathname === "/" ? 0 : 1, pointerEvents: pathname === "/" ? "none" : "auto", transition: "opacity 0.3s ease" }}
         >
             {isAdmin && (
                 <button
