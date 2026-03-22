@@ -1,5 +1,5 @@
 import "../css/tables.css";
-import { Outlet, useLoaderData } from "react-router";
+import { Outlet, useLoaderData, useLocation } from "react-router";
 import Navbar from "./navbar/Navbar.jsx";
 import HorizontalNavbar from "./navbar/HorizontalNavbar.jsx";
 import TopBar from "./TopBar.jsx";
@@ -26,6 +26,7 @@ export default function Main() {
         setNavbarLayout((prev) => (prev === "vertical" ? "horizontal" : "vertical"));
     }
     const { gameData, sectionsMap, pageData } = useLoaderData();
+    const { pathname } = useLocation();
     const { setTheme } = useTheme();
     const { darkMode } = useDarkMode();
 
@@ -110,7 +111,7 @@ export default function Main() {
                     filter: "blur(8px)",
                 }} />
             </div>
-            <div id="sticky-header" className="sticky top-0 z-40 border-b-4 border-(--outline)">
+            <div id="sticky-header" className={`sticky top-0 z-40 ${pathname === "/" ? "" : "border-b-4 border-(--outline)"}`}>
                 <TopBar navbarLayout={navbarLayout} toggleNavbarLayout={toggleNavbarLayout} />
                 {sectionsMap && navbarLayout === "horizontal" && (
                     <div className="hidden lg:block">
