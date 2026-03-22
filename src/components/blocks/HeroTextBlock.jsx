@@ -105,13 +105,7 @@ const HeroTextBlock = forwardRef(function HeroTextBlock(
                         placeholder="Title"
                         style={{ ...inputBase, color: "#f5ede0", textShadow: `0 4px 60px ${accentColor}44` }}
                     />
-                ) : (
-                    title && (
-                        <h1 className="m-0 font-black leading-none tracking-tight" style={{ fontSize: "clamp(3rem, 10vw, 7rem)", letterSpacing: "-0.04em", color: "#f5ede0", textShadow: `0 4px 60px ${accentColor}44` }}>
-                            {title}
-                        </h1>
-                    )
-                )}
+                ) : null}
 
                 {/* Subtitle */}
                 {adminMode ? (
@@ -121,12 +115,22 @@ const HeroTextBlock = forwardRef(function HeroTextBlock(
                         placeholder="Subtitle"
                         style={{ ...inputBase, color: accentColor, textShadow: `0 4px 60px ${accentColor}66` }}
                     />
-                ) : (
-                    subtitle && (
-                        <h1 className="m-0 font-black leading-none tracking-tight" style={{ fontSize: "clamp(3rem, 10vw, 7rem)", letterSpacing: "-0.04em", color: accentColor, textShadow: `0 4px 60px ${accentColor}66` }}>
-                            {subtitle}
-                        </h1>
-                    )
+                ) : null}
+
+                {/* Non-admin: staggered title + subtitle */}
+                {!adminMode && (title || subtitle) && (
+                    <div style={{ width: "100%", userSelect: "none", display: "flex", flexDirection: "column", gap: 0 }}>
+                        {title && (
+                            <div style={{ fontSize: "clamp(3rem, 10vw, 7rem)", lineHeight: 0.85, letterSpacing: "-0.04em", fontWeight: 900, fontFamily: "'Outfit', sans-serif", color: "#f5ede0", textShadow: `0 4px 60px ${accentColor}44`, textAlign: "right", margin: 0, padding: 0, paddingRight: "50%" }}>
+                                {title}
+                            </div>
+                        )}
+                        {subtitle && (
+                            <div style={{ fontSize: "clamp(3rem, 10vw, 7rem)", lineHeight: 0.85, letterSpacing: "-0.04em", fontWeight: 900, fontFamily: "'Outfit', sans-serif", color: accentColor, textShadow: `0 4px 60px ${accentColor}66`, textAlign: "left", margin: 0, padding: 0, paddingLeft: "50%" }}>
+                                {subtitle}
+                            </div>
+                        )}
+                    </div>
                 )}
 
                 {!adminMode && !title && !subtitle && (
