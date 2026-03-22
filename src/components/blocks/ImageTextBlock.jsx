@@ -171,7 +171,7 @@ const ImageTextBlock = forwardRef(function ImageTextBlock(
                 }
             `}</style>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", padding: "0.5rem 0" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", padding: adminMode ? "0.5rem 0 0" : "0.5rem 0" }}>
                 {/* Section label */}
                 {(sectionLabel || adminMode) && (
                     <div className="itb-section-label" style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
@@ -383,9 +383,10 @@ const ImageTextBlock = forwardRef(function ImageTextBlock(
                                         display: "flex", flexWrap: "wrap", gap: "0.5rem", alignItems: "center",
                                         padding: "0.5rem 0.75rem",
                                         background: "rgba(10,8,6,0.6)",
-                                        borderRadius: "0 0 8px 8px",
-                                        border: "1px solid rgba(232,213,183,0.08)",
+                                        borderRadius: 0,
+                                        border: "1px solid rgba(232,213,183,0.5)",
                                         borderTop: "none",
+                                        borderBottom: "none",
                                         fontSize: "0.72rem",
                                         color: "rgba(232,213,183,0.5)",
                                     }}>

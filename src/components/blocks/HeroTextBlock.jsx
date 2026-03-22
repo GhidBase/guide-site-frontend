@@ -52,7 +52,7 @@ const HeroTextBlock = forwardRef(function HeroTextBlock(
     };
 
     return (
-        <div className="relative my-2">
+        <div className={adminMode ? "relative border border-b-0 border-(--outline-brown)/50 md:rounded-t" : "relative my-2"}>
             <div
                 className="relative flex flex-col items-center justify-center text-center rounded-xl overflow-hidden py-20 px-8 min-h-48"
                 style={{
