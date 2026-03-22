@@ -228,8 +228,8 @@ export default function HorizontalNavbar() {
     }
 
     return (
-        <div ref={navRef} className="flex items-center gap-1 px-4 py-1.5 border-t-4 border-(--outline)"
-            style={{ background: darkMode ? "rgba(15,12,10,0.62)" : "color-mix(in srgb, var(--primary) 92%, transparent)", backdropFilter: "blur(20px) saturate(1.4)", WebkitBackdropFilter: "blur(20px) saturate(1.4)", fontFamily: "'Outfit', sans-serif" }}>
+        <div ref={navRef} className="flex items-center gap-1 px-4 py-1.5 border-t border-(--outline)/50"
+            style={{ background: darkMode ? "rgba(15,12,10,0.62)" : "color-mix(in srgb, var(--primary) 92%, transparent)", backdropFilter: "blur(20px) saturate(1.4)", WebkitBackdropFilter: "blur(20px) saturate(1.4)", fontFamily: "'Outfit', sans-serif", boxShadow: darkMode ? "0 6px 32px rgba(0,0,0,0.7), 0 2px 12px rgba(255,180,80,0.18)" : "0 6px 28px rgba(0,0,0,0.32), 0 2px 10px rgba(0,0,0,0.12)" }}>
 
             {/* Hidden measurement clone — renders all sections offscreen to measure widths */}
             <div

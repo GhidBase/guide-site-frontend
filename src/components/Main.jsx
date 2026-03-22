@@ -135,7 +135,7 @@ export default function Main() {
                 }
             `}</style>
             <div aria-hidden="true" />
-            <div id="sticky-header" className={`sticky top-0 z-40 ${pathname === "/" ? "" : "border-b-4 border-(--outline)"}`}>
+            <div id="sticky-header" className={`sticky top-0 z-40 ${pathname === "/" ? "" : "border-b border-(--outline)/50"}`}>
                 <TopBar navbarLayout={navbarLayout} toggleNavbarLayout={toggleNavbarLayout} />
                 {sectionsMap && navbarLayout === "horizontal" && (
                     <div className="hidden lg:block">
