@@ -1,10 +1,10 @@
 import { forwardRef, useImperativeHandle, useState, useRef, useEffect } from "react";
-import { Link, useRouteLoaderData } from "react-router";
+import { Link, useRouteLoaderData, useNavigate } from "react-router";
 import { ArrowUpRight, Pencil, Trash2, Plus, Check, X, Image } from "lucide-react";
 import ImagePickerModal from "../ImagePickerModal.jsx";
 
 // Content shape: { sectionLabel: string, cards: Card[] }
-// Card shape: { id, title, description, imageUrl, linkUrl, linkText, accentColor }
+// Card shape: { id, title, description, imageUrl, imageSide, cardHeight, cardLinkUrl, linkUrl, linkText, accentColor }
 
 function genId() {
     return Math.random().toString(36).slice(2, 10);
@@ -15,6 +15,7 @@ const DEFAULT_ACCENT = "#9b6a4e";
 const CARD_FIELDS = [
     ["Title", "title", "text"],
     ["Description", "description", "textarea"],
+    ["Card link URL (whole card)", "cardLinkUrl", "text"],
     ["Link URL", "linkUrl", "text"],
     ["Link text", "linkText", "text"],
 ];
@@ -42,6 +43,7 @@ const ImageTextBlock = forwardRef(function ImageTextBlock(
     const cardRefs = useRef([]);
     const { gameData } = useRouteLoaderData("main");
     const gameId = gameData?.id;
+    const navigate = useNavigate();
 
     useImperativeHandle(ref, () => ({
         save: async () => {
@@ -96,6 +98,9 @@ const ImageTextBlock = forwardRef(function ImageTextBlock(
             title: "New card",
             description: "",
             imageUrl: "",
+            imageSide: "auto",
+            cardHeight: 260,
+            cardLinkUrl: "",
             linkUrl: "",
             linkText: "Learn more",
             accentColor: DEFAULT_ACCENT,
@@ -203,8 +208,10 @@ const ImageTextBlock = forwardRef(function ImageTextBlock(
                 <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
                     {cards.map((card, i) => {
                         const isEven = i % 2 === 0;
+                        const imageIsLeft = card.imageSide === "right" ? false : card.imageSide === "left" ? true : isEven;
                         const accent = card.accentColor || DEFAULT_ACCENT;
                         const isEditing = editing === card.id;
+                        const isCardClickable = card.cardLinkUrl && !adminMode;
 
                         return (
                             <div
@@ -266,6 +273,43 @@ const ImageTextBlock = forwardRef(function ImageTextBlock(
                                                 <img src={draft.imageUrl} alt="" style={{ width: "100%", maxHeight: "100px", objectFit: "cover", borderRadius: "4px", marginTop: "0.25rem" }} />
                                             )}
                                         </div>
+                                        <div style={{ display: "flex", gap: "1rem" }}>
+                                        <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem", flex: 1 }}>
+                                            <label style={{ fontSize: "0.62rem", textTransform: "uppercase", letterSpacing: "0.1em", opacity: 0.4, color: "#e8d5b7" }}>Image side</label>
+                                            <div style={{ display: "flex", gap: "0.35rem" }}>
+                                                {[["auto", "Auto"], ["left", "Left"], ["right", "Right"]].map(([val, label]) => (
+                                                    <button
+                                                        key={val}
+                                                        onClick={() => setDraft(p => ({ ...p, imageSide: val }))}
+                                                        style={{
+                                                            padding: "0.3rem 0.65rem",
+                                                            fontSize: "0.75rem",
+                                                            borderRadius: "5px",
+                                                            cursor: "pointer",
+                                                            border: (draft.imageSide ?? "auto") === val
+                                                                ? "1px solid rgba(155,106,78,0.7)"
+                                                                : "1px solid rgba(232,213,183,0.15)",
+                                                            background: (draft.imageSide ?? "auto") === val
+                                                                ? "rgba(155,106,78,0.25)"
+                                                                : "rgba(255,255,255,0.04)",
+                                                            color: "#e8d5b7",
+                                                        }}
+                                                    >{label}</button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
+                                            <label style={{ fontSize: "0.62rem", textTransform: "uppercase", letterSpacing: "0.1em", opacity: 0.4, color: "#e8d5b7" }}>Height (px)</label>
+                                            <input
+                                                type="number"
+                                                min={100}
+                                                max={1200}
+                                                value={draft.cardHeight ?? 260}
+                                                onChange={e => setDraft(p => ({ ...p, cardHeight: +e.target.value }))}
+                                                style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(232,213,183,0.15)", borderRadius: "5px", color: "#e8d5b7", padding: "0.4rem 0.6rem", fontSize: "0.82rem", width: "80px", boxSizing: "border-box" }}
+                                            />
+                                        </div>
+                                        </div>
                                         <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
                                             <label style={{ fontSize: "0.62rem", textTransform: "uppercase", letterSpacing: "0.1em", opacity: 0.4, color: "#e8d5b7" }}>Accent color</label>
                                             <input
@@ -303,28 +347,30 @@ const ImageTextBlock = forwardRef(function ImageTextBlock(
                                     className="itb-card-inner"
                                     style={{
                                         display: "flex",
-                                        flexDirection: isEven ? "row" : "row-reverse",
+                                        flexDirection: imageIsLeft ? "row" : "row-reverse",
                                         borderRadius: "12px",
                                         overflow: "hidden",
                                         boxShadow: "0 8px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)",
-                                        minHeight: "260px",
+                                        minHeight: `${card.cardHeight ?? 260}px`,
                                         border: "1px solid rgba(232,213,183,0.07)",
                                         background: "#0a0806",
+                                        cursor: isCardClickable ? "pointer" : "default",
                                     }}
+                                    onClick={() => { if (isCardClickable) navigate(card.cardLinkUrl); }}
                                     onMouseEnter={e => { e.currentTarget.style.boxShadow = `0 20px 60px rgba(0,0,0,0.6), 0 0 40px ${accent}28, inset 0 1px 0 rgba(255,255,255,0.05)`; }}
                                     onMouseLeave={e => { e.currentTarget.style.boxShadow = "0 8px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)"; }}
                                 >
                                     {card.imageUrl && (
-                                        <div className="itb-img-panel" style={{ width: "42%", flexShrink: 0, overflow: "hidden", position: "relative" }}>
+                                        <div className="itb-img-panel" style={{ width: "42%", flexShrink: 0, overflow: "hidden", position: "relative", alignSelf: "stretch" }}>
                                             <img
                                                 src={card.imageUrl}
                                                 alt={card.title}
                                                 className="itb-img"
-                                                style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", display: "block" }}
+                                                style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", display: "block" }}
                                             />
                                             <div style={{
                                                 position: "absolute", inset: 0,
-                                                background: isEven
+                                                background: imageIsLeft
                                                     ? "linear-gradient(to right, transparent 65%, rgba(10,8,6,0.4))"
                                                     : "linear-gradient(to left, transparent 65%, rgba(10,8,6,0.4))",
                                                 pointerEvents: "none",
@@ -335,8 +381,8 @@ const ImageTextBlock = forwardRef(function ImageTextBlock(
                                     <div className="itb-card-text" style={{
                                         flex: 1,
                                         background: `linear-gradient(135deg, ${accent}14 0%, #0e0b08 50%, #0a0806 100%)`,
-                                        borderLeft: isEven ? `3px solid ${accent}` : "none",
-                                        borderRight: !isEven ? `3px solid ${accent}` : "none",
+                                        borderLeft: imageIsLeft ? `3px solid ${accent}` : "none",
+                                        borderRight: !imageIsLeft ? `3px solid ${accent}` : "none",
                                         padding: "2.5rem",
                                         display: "flex",
                                         flexDirection: "column",
@@ -348,7 +394,7 @@ const ImageTextBlock = forwardRef(function ImageTextBlock(
                                         color: "#e8d5b7",
                                         fontFamily: "'Outfit', sans-serif",
                                     }}>
-                                        <div style={{ position: "absolute", [isEven ? "left" : "right"]: "-30px", top: "-30px", width: "160px", height: "160px", background: `radial-gradient(circle, ${accent}1a 0%, transparent 70%)`, pointerEvents: "none" }} />
+                                        <div style={{ position: "absolute", [imageIsLeft ? "left" : "right"]: "-30px", top: "-30px", width: "160px", height: "160px", background: `radial-gradient(circle, ${accent}1a 0%, transparent 70%)`, pointerEvents: "none" }} />
 
                                         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", position: "relative" }}>
                                             <div className="itb-accent-bar" style={{ height: "2px", background: accent, borderRadius: "2px", flexShrink: 0 }} />
