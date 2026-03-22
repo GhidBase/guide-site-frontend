@@ -56,7 +56,7 @@ export default function MobileBottomBar({ toggleNav }) {
             )}
 
             <button onClick={toggleNav} className={btnBase} style={btnStyle}>
-                <img src={menuIcon} className="h-6 w-6" alt="Menu" style={darkMode ? { filter: "brightness(0) invert(1)" } : undefined} />
+                <img src={menuIcon} className="h-6 w-6" alt="Menu" style={{ filter: "brightness(0) invert(1)" }} />
             </button>
         </div>
     );
