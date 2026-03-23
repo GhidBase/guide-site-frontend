@@ -127,6 +127,14 @@ export default async function gameAndPageLoader({ params, request }) {
         throw redirect("/");
     }
 
+    const pathname = new URL(request.url).pathname;
+    const isMainHomepage = pathname === "/" && !gameSlug && !pageSlug;
+    const isGameHomepage = !!gameSlug && !pageSlug && pathname === `/games/${gameSlug}`;
+    const isTrackable = !!pageSlug || isMainHomepage || isGameHomepage;
+    if (pageData?.page?.id && isTrackable) {
+        fetch(`${currentAPI}/pages/by-id/${pageData.page.id}/view`, { method: "POST" }).catch(() => {});
+    }
+
     const sectionsMap = await fetchNavbar();
     const origin = new URL(request.url).origin;
 

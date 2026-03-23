@@ -64,6 +64,7 @@ export default function NavigationPanel() {
     const [detailSlug, setDetailSlug] = useState("");
     const [detailWide, setDetailWide] = useState(false);
     const [detailDescription, setDetailDescription] = useState("");
+    const [detailViews, setDetailViews] = useState(0);
 
     const { theme, setTheme } = useTheme();
     const [themeOpen, setThemeOpen] = useState(false);
@@ -793,6 +794,7 @@ export default function NavigationPanel() {
             setDetailSlug(detailPage.slug ?? "");
             setDetailDescription(detailPage.description ?? "");
             setDetailWide(detailPage.wide ?? false);
+            setDetailViews(detailPage.views ?? 0);
         }
     }, [detailPage]);
 
@@ -866,14 +868,16 @@ export default function NavigationPanel() {
         const slugChanged = detailSlug !== (detailPage.slug ?? "");
         const descriptionChanged = detailDescription !== (detailPage.description ?? "");
         const wideChanged = detailWide !== (detailPage.wide ?? false);
+        const viewsChanged = detailViews !== (detailPage.views ?? 0);
 
         try {
-            if (titleChanged || slugChanged || descriptionChanged || wideChanged) {
+            if (titleChanged || slugChanged || descriptionChanged || wideChanged || viewsChanged) {
                 const body = {};
                 if (titleChanged) body.title = detailTitle;
                 if (slugChanged) body.slug = detailSlug;
                 if (descriptionChanged) body.description = detailDescription;
                 if (wideChanged) body.wide = detailWide;
+                if (viewsChanged) body.views = detailViews;
                 await fetch(pageUrl(id), {
                         method: "PUT",
                         headers: { "Content-Type": "application/json" },
@@ -890,6 +894,7 @@ export default function NavigationPanel() {
                 slug: detailSlug,
                 description: detailDescription,
                 wide: detailWide,
+                views: detailViews,
             };
             let foundInSection = false;
             for (const section of sectionsMap.values()) {
@@ -1417,6 +1422,9 @@ export default function NavigationPanel() {
                                                                 <span className="text-(--accent-text) flex-1 truncate">
                                                                     {page.title}
                                                                 </span>
+                                                                <span className="text-xs text-(--text-color) opacity-50 shrink-0">
+                                                                    {page.views ?? 0}
+                                                                </span>
                                                                 <PencilIcon
                                                                     size={14}
                                                                     className="cursor-pointer shrink-0 text-(--text-color)"
@@ -1787,6 +1795,9 @@ export default function NavigationPanel() {
                                                     <span className="flex-1 truncate text-sm text-(--accent-text)">
                                                         {page.title}
                                                     </span>
+                                                    <span className="text-xs text-(--text-color) opacity-50 shrink-0">
+                                                        {page.views ?? 0}
+                                                    </span>
                                                     <PencilIcon
                                                         size={18}
                                                         className="cursor-pointer shrink-0 text-(--text-color) p-0.5"
@@ -1990,6 +2001,9 @@ export default function NavigationPanel() {
                                                 <span className="flex-1">
                                                     {page.title}
                                                 </span>
+                                                <span className="text-xs text-(--text-color) opacity-50 shrink-0">
+                                                    {page.views ?? 0}
+                                                </span>
                                                 <PencilIcon
                                                     size={14}
                                                     className="cursor-pointer shrink-0 text-(--text-color)"
@@ -2095,6 +2109,9 @@ export default function NavigationPanel() {
                                     <>
                                         <span className="flex-1 truncate text-sm text-(--accent-text)">
                                             {page.title}
+                                        </span>
+                                        <span className="text-xs text-(--text-color) opacity-50 shrink-0">
+                                            {page.views ?? 0}
                                         </span>
                                         <PencilIcon
                                             size={14}
@@ -2305,6 +2322,17 @@ export default function NavigationPanel() {
                                 <div>
                                     <p className="text-(--text-color) font-semibold mb-0.5">Page ID</p>
                                     <p className="text-(--accent-text) font-mono">{detailPage.id}</p>
+                                </div>
+
+                                <div>
+                                    <label className="text-(--text-color) font-semibold block mb-1">View count</label>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        value={detailViews}
+                                        onChange={(e) => setDetailViews(Math.max(0, parseInt(e.target.value) || 0))}
+                                        className="bg-(--accent) text-(--accent-text) px-3 py-1.5 rounded w-full font-mono"
+                                    />
                                 </div>
                             </div>
 
