@@ -1,4 +1,4 @@
-import { Menu, Pencil, Eye, Settings } from "lucide-react";
+import { Menu, Pencil, Eye, Settings, Save } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useEditMode } from "../contexts/EditModeContext.jsx";
 import { useDarkMode, useTheme, THEME_DEFAULTS } from "../contexts/ThemeProvider.jsx";
@@ -17,7 +17,7 @@ export default function MobileBottomBar({ toggleNav }) {
     const { user, isAuthenticated } = useAuth();
     const isAdmin = user?.role === "ADMIN";
     const isContributor = isAuthenticated && !isAdmin;
-    const { adminMode, setAdminMode, dirtyBlocks } = useEditMode();
+    const { adminMode, setAdminMode, dirtyBlocks, saveAll } = useEditMode();
     const { darkMode } = useDarkMode();
     const { theme } = useTheme();
     const { gameData, isLDG } = useRouteLoaderData("main");
@@ -62,6 +62,17 @@ export default function MobileBottomBar({ toggleNav }) {
                     style={btnStyle}
                 >
                     {adminMode ? <Eye className="w-5 h-5" /> : <Pencil className="w-5 h-5" />}
+                </button>
+            )}
+
+            {adminMode && dirtyBlocks.size > 0 && saveAll && (
+                <button
+                    onClick={saveAll}
+                    title={`Save (${dirtyBlocks.size})`}
+                    className={btnBase}
+                    style={{ ...btnStyle, background: "rgba(21,128,61,0.7)" }}
+                >
+                    <Save className="w-5 h-5" />
                 </button>
             )}
 
