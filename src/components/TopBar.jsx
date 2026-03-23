@@ -1,6 +1,6 @@
 import ldgLogo from "../assets/LDG_Title.webp";
 import discordLogo from "../assets/icons8-discord-50.png";
-import { useRouteLoaderData, useNavigate, Link, useMatches, useLocation } from "react-router";
+import { useRouteLoaderData, useNavigate, Link, useMatches } from "react-router";
 import { useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { PanelTop, PanelLeft, Sun, Moon, LogOut, LogIn, Pencil, Eye, Settings } from "lucide-react";
@@ -118,20 +118,17 @@ export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
         if (pageData?.notFound) navigate("/404", { replace: true });
     }, [pageSlug]);
 
-    const { pathname } = useLocation();
-    const isHomepage = pathname === "/";
-
     const hardCodedTitle = matches?.find((m) => m.handle?.title)?.handle.title;
     const pageTitle = hardCodedTitle ?? pageData?.page?.title;
     const isLDGHomepage = pageTitle === "LD Homepage";
 
-    if (isHomepage) {
+    if (!gameData) {
         return (
             <GlassBar style={BAR_STYLE}>
                 <span style={{ fontSize: "0.58rem", letterSpacing: "0.32em", textTransform: "uppercase", opacity: 0.6, fontWeight: 700, textShadow: "0 0 20px rgba(232,213,183,0.3)" }}>
                     GuideCodex
                 </span>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                <div className="hidden lg:flex" style={{ alignItems: "center", gap: "0.75rem" }}>
                     <BarAdminControls isLDG={isLDG} gameData={gameData} />
                     <BarDarkToggle />
                     <BarAuth showUsername={false} />
@@ -157,14 +154,14 @@ export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
                     )}
                 </Link>
                 {pageTitle && !isLDGHomepage && (
-                    <span style={{ fontSize: "0.72rem", opacity: 0.6 }} className="hidden md:block truncate">
+                    <span style={{ fontSize: "0.72rem", opacity: 0.6 }} className="truncate">
                         / {pageTitle}
                     </span>
                 )}
             </div>
 
-            {/* Right: actions */}
-            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+            {/* Right: actions — hidden on mobile (MobileBottomBar handles those) */}
+            <div className="hidden lg:flex" style={{ alignItems: "center", gap: "0.75rem" }}>
                 {adminMode && dirtyBlocks.size > 0 && saveAll && (
                     <button
                         onClick={saveAll}
