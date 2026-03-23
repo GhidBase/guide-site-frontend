@@ -3,7 +3,7 @@ import { useRouteLoaderData, useNavigate } from "react-router";
 import { useAuth } from "@/hooks/useAuth";
 import { useEditMode } from "../../contexts/EditModeContext.jsx";
 import { useDarkMode } from "../../contexts/ThemeProvider.jsx";
-import { ChevronDown, Search, X, Pencil, Eye, Trophy, Settings } from "lucide-react";
+import { ChevronDown, Search, X, Pencil, Eye, Trophy } from "lucide-react";
 import GlassBar from "../GlassBar.jsx";
 
 function HorizontalSearch({ gameData, isLDG, sectionsMap }) {
@@ -90,7 +90,7 @@ function HorizontalSearch({ gameData, isLDG, sectionsMap }) {
                 <button
                     onClick={handleExpand}
                     title="Search pages"
-                    className="p-1.5 cursor-pointer hover:opacity-70 transition-opacity"
+                    className="p-1.5 cursor-pointer hover:opacity-60 transition-opacity"
                 >
                     <Search className="w-4 h-4" />
                 </button>
@@ -294,21 +294,11 @@ export default function HorizontalNavbar() {
                 <button
                     onClick={() => navigateTo(buildSlug("leaderboard"))}
                     title="Leaderboard"
-                    className="p-1.5 cursor-pointer hover:opacity-70 transition-opacity"
+                    className="p-1.5 cursor-pointer hover:opacity-60 transition-opacity"
                     style={{ textShadow: "none" }}
                 >
                     <Trophy className="w-4 h-4" />
                 </button>
-                {isAdmin && (
-                    <button
-                        onClick={() => navigateTo(buildSlug("navigation-panel"))}
-                        title="Admin Panel"
-                        className="p-1.5 cursor-pointer hover:opacity-70 transition-opacity"
-                        style={{ textShadow: "none" }}
-                    >
-                        <Settings className="w-4 h-4" />
-                    </button>
-                )}
 
                 <HorizontalSearch gameData={gameData} isLDG={isLDG} sectionsMap={sectionsMap} />
 
@@ -322,7 +312,7 @@ export default function HorizontalNavbar() {
                         }}
                         title={adminMode ? "Exit edit mode" : "Enter edit mode"}
                         style={{ textShadow: "none" }}
-                        className="p-1.5 cursor-pointer hover:opacity-70 transition-opacity"
+                        className="p-1.5 cursor-pointer hover:opacity-60 transition-opacity"
                     >
                         {adminMode ? <Eye className="w-4 h-4" /> : <Pencil className="w-4 h-4" />}
                         {adminMode && dirtyBlocks.size > 0 && (
