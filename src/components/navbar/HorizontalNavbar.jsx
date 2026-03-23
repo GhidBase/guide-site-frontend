@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useEditMode } from "../../contexts/EditModeContext.jsx";
 import { useDarkMode } from "../../contexts/ThemeProvider.jsx";
 import { ChevronDown, Search, X, Pencil, Eye, Trophy, Settings } from "lucide-react";
+import GlassBar from "../GlassBar.jsx";
 
 function HorizontalSearch({ gameData, isLDG, sectionsMap }) {
     const [query, setQuery] = useState("");
@@ -68,20 +69,20 @@ function HorizontalSearch({ gameData, isLDG, sectionsMap }) {
     return (
         <div ref={containerRef} className="relative flex items-center" style={{ textShadow: "none" }}>
             {expanded ? (
-                <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-amber-50/15 border border-amber-50/30 w-48 transition-all">
-                    <Search className="w-3.5 h-3.5 text-amber-50/50 shrink-0" />
+                <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-black/10 border border-black/15 w-48 transition-all">
+                    <Search className="w-3.5 h-3.5 opacity-40 shrink-0" />
                     <input
                         ref={inputRef}
                         type="text"
                         value={query}
                         placeholder="Search..."
                         onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
-                        className="flex-1 min-w-0 bg-transparent text-amber-50 text-xs outline-none placeholder:text-amber-50/40"
-                        style={{ textShadow: "none" }}
+                        className="flex-1 min-w-0 bg-transparent text-xs outline-none placeholder:opacity-40"
+                        style={{ textShadow: "none", color: "inherit" }}
                     />
                     {query && (
                         <button onClick={() => { setQuery(""); setOpen(false); }} className="opacity-50 hover:opacity-90 cursor-pointer">
-                            <X className="w-3.5 h-3.5 text-amber-50" />
+                            <X className="w-3.5 h-3.5" />
                         </button>
                     )}
                 </div>
@@ -89,7 +90,7 @@ function HorizontalSearch({ gameData, isLDG, sectionsMap }) {
                 <button
                     onClick={handleExpand}
                     title="Search pages"
-                    className="p-1.5 text-amber-50 cursor-pointer hover:opacity-70 transition-opacity"
+                    className="p-1.5 cursor-pointer hover:opacity-70 transition-opacity"
                 >
                     <Search className="w-4 h-4" />
                 </button>
@@ -202,15 +203,15 @@ export default function HorizontalNavbar() {
             <div key={section.id} className="relative shrink-0">
                 <button
                     onClick={() => setOpenSection(openSection === section.id ? null : section.id)}
-                    className={`flex items-center gap-1 px-3 py-1 text-sm text-amber-50 rounded-md transition-colors whitespace-nowrap font-medium
-                        ${openSection === section.id ? "bg-amber-50/20" : "hover:bg-amber-50/10"}`}
+                    className={`flex items-center gap-1 px-3 py-1 text-sm rounded-md transition-colors whitespace-nowrap font-medium
+                        ${openSection === section.id ? "bg-black/10" : "hover:bg-black/5"}`}
                     style={{ textShadow: "none" }}
                 >
                     {section.title}
                     <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${openSection === section.id ? "rotate-180" : ""}`} />
                 </button>
                 {openSection === section.id && pages.length > 0 && (
-                    <div className="absolute top-full left-0 mt-1 z-50 bg-(--primary) border-2 border-(--outline) rounded-lg shadow-xl min-w-52 max-h-80 overflow-y-auto" style={{ animation: "dropdown-in 150ms ease forwards" }}>
+                    <div className="absolute top-full left-0 mt-1 z-50 border border-(--outline)/40 rounded-lg shadow-xl min-w-52 max-h-80 overflow-y-auto" style={{ animation: "dropdown-in 150ms ease forwards", background: "#1a1208" }}>
                         {pages.map((page) => (
                             <button
                                 key={page.id}
@@ -228,8 +229,7 @@ export default function HorizontalNavbar() {
     }
 
     return (
-        <div ref={navRef} className="flex items-center gap-1 px-4 py-1.5 border-t-4 border-(--outline)"
-            style={{ background: darkMode ? "#0f0c0a" : "var(--primary)", fontFamily: "'Outfit', sans-serif" }}>
+        <GlassBar ref={navRef} className="flex items-center gap-1 px-4 py-1.5 border-t border-(--outline)/50">
 
             {/* Hidden measurement clone — renders all sections offscreen to measure widths */}
             <div
@@ -254,15 +254,15 @@ export default function HorizontalNavbar() {
                     <div ref={moreRef} className="relative shrink-0">
                         <button
                             onClick={() => setMoreOpen(o => !o)}
-                            className={`flex items-center gap-1 px-3 py-1 text-sm text-amber-50 rounded-md transition-colors whitespace-nowrap font-medium
-                                ${moreOpen ? "bg-amber-50/20" : "hover:bg-amber-50/10"}`}
+                            className={`flex items-center gap-1 px-3 py-1 text-sm rounded-md transition-colors whitespace-nowrap font-medium
+                                ${moreOpen ? "bg-black/10" : "hover:bg-black/5"}`}
                             style={{ textShadow: "none" }}
                         >
                             More
                             <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${moreOpen ? "rotate-180" : ""}`} />
                         </button>
                         {moreOpen && (
-                            <div className="absolute top-full left-0 mt-1 z-50 bg-(--primary) border-2 border-(--outline) rounded-lg shadow-xl min-w-52 max-h-[80vh] overflow-y-auto" style={{ animation: "dropdown-in 150ms ease forwards" }}>
+                            <div className="absolute top-full left-0 mt-1 z-50 border border-(--outline)/40 rounded-lg shadow-xl min-w-52 max-h-[80vh] overflow-y-auto" style={{ animation: "dropdown-in 150ms ease forwards", background: "#1a1208" }}>
                                 {overflowSections.map(section => {
                                     const pages = [...(section.pages ?? [])].sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0));
                                     return (
@@ -294,7 +294,7 @@ export default function HorizontalNavbar() {
                 <button
                     onClick={() => navigateTo(buildSlug("leaderboard"))}
                     title="Leaderboard"
-                    className="p-1.5 text-amber-50 cursor-pointer hover:opacity-70 transition-opacity"
+                    className="p-1.5 cursor-pointer hover:opacity-70 transition-opacity"
                     style={{ textShadow: "none" }}
                 >
                     <Trophy className="w-4 h-4" />
@@ -303,7 +303,7 @@ export default function HorizontalNavbar() {
                     <button
                         onClick={() => navigateTo(buildSlug("navigation-panel"))}
                         title="Admin Panel"
-                        className="p-1.5 text-amber-50 cursor-pointer hover:opacity-70 transition-opacity"
+                        className="p-1.5 cursor-pointer hover:opacity-70 transition-opacity"
                         style={{ textShadow: "none" }}
                     >
                         <Settings className="w-4 h-4" />
@@ -322,7 +322,7 @@ export default function HorizontalNavbar() {
                         }}
                         title={adminMode ? "Exit edit mode" : "Enter edit mode"}
                         style={{ textShadow: "none" }}
-                        className="p-1.5 text-amber-50 cursor-pointer hover:opacity-70 transition-opacity"
+                        className="p-1.5 cursor-pointer hover:opacity-70 transition-opacity"
                     >
                         {adminMode ? <Eye className="w-4 h-4" /> : <Pencil className="w-4 h-4" />}
                         {adminMode && dirtyBlocks.size > 0 && (
@@ -333,6 +333,6 @@ export default function HorizontalNavbar() {
                     </button>
                 )}
             </div>
-        </div>
+        </GlassBar>
     );
 }
