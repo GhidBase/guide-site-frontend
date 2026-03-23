@@ -184,7 +184,7 @@ export default function Main() {
                 />
             )}
 
-            <MobileBottomBar toggleNav={toggleNav} />
+            {gameData && <MobileBottomBar toggleNav={toggleNav} />}
         </div>
         </EditModeProvider>
     );
