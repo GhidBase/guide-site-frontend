@@ -1,57 +1,64 @@
-import { useRouteLoaderData } from "react-router";
+import { useRouteLoaderData, useLocation } from "react-router";
 import { useDarkMode } from "../contexts/ThemeProvider.jsx";
-
+import GlassBar from "./GlassBar.jsx";
 export default function Footer() {
     const { gameData, isLDG } = useRouteLoaderData("main");
     const { darkMode } = useDarkMode();
-
+    const { pathname } = useLocation();
+    if (pathname === "/") return (
+        <GlassBar borderSide="top" style={{ padding: "1rem 2.5rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "1.25rem", fontSize: "0.68rem", color: darkMode ? "rgba(232,213,183,0.65)" : "#5a2a0a", boxShadow: "none" }}>
+            <span>© {new Date().getFullYear()} GuideCodex</span>
+            <span style={{ opacity: 0.4 }}>·</span>
+            <a
+                href="/pages/privacy-policy.html"
+                style={{ color: "inherit", textDecoration: "none", transition: "opacity 0.2s" }}
+                onMouseEnter={(e) => (e.currentTarget.style.opacity = 0.6)}
+                onMouseLeave={(e) => (e.currentTarget.style.opacity = 1)}
+            >
+                Privacy Policy
+            </a>
+        </GlassBar>
+    );
     const siteName = isLDG ? "LuckyDefenseGuides.com" : "GuideCodex";
     const gameName = gameData?.title ?? "this game";
 
+    const linkStyle = { color: "inherit", textDecoration: "none", opacity: 0.85, transition: "opacity 0.2s" };
+
     return (
-        <footer className="w-full border-t border-(--outline)/40 px-4 py-3" style={{ background: darkMode ? "#0f0c0a" : "var(--primary)" }}>
-            <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-center gap-y-1 sm:gap-0 text-center text-xs text-amber-50/80 flex-wrap">
-                <span>
-                    © {new Date().getFullYear()} {siteName}. This site is not affiliated with or endorsed by the creators of {gameName}.
-                </span>
-                <span className="hidden sm:inline mx-2">|</span>
-                <div className="flex items-center gap-0">
+        <GlassBar as="footer" borderSide="top" style={{ padding: "1rem 2.5rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "1.25rem", flexWrap: "wrap", fontSize: "0.68rem", color: darkMode ? "rgba(232,213,183,0.9)" : "#3a1800", boxShadow: "none" }}>
+            <span>© {new Date().getFullYear()} {siteName}. Not affiliated with the creators of {gameName}.</span>
+            <span style={{ opacity: 0.4 }}>·</span>
+            <a href="https://guidecodex.com" target="_blank" rel="noopener noreferrer"
+                style={linkStyle}
+                onMouseEnter={(e) => (e.currentTarget.style.opacity = 1)}
+                onMouseLeave={(e) => (e.currentTarget.style.opacity = 0.7)}
+            >GuideCodex</a>
+            <span style={{ opacity: 0.4 }}>·</span>
+            <a href="/privacy-policy"
+                style={linkStyle}
+                onMouseEnter={(e) => (e.currentTarget.style.opacity = 1)}
+                onMouseLeave={(e) => (e.currentTarget.style.opacity = 0.7)}
+            >Privacy Policy</a>
+            {gameData?.showSupportButton !== false && (
+                <>
+                    <span style={{ opacity: 0.4 }}>·</span>
                     <a
-                        href="https://guidecodex.com"
+                        href="https://buymeacoffee.com/ghidward"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="hover:text-amber-50 underline underline-offset-2"
+                        style={{ ...linkStyle, display: "flex", alignItems: "center", gap: "0.4rem" }}
+                        onMouseEnter={(e) => (e.currentTarget.style.opacity = 1)}
+                        onMouseLeave={(e) => (e.currentTarget.style.opacity = 0.7)}
                     >
-                        GuideCodex
+                        <img
+                            src="https://cdn.buymeacoffee.com/buttons/bmc-new-btn-logo.svg"
+                            alt=""
+                            style={{ width: "0.9rem", height: "0.9rem", filter: darkMode ? "brightness(0) invert(0.7)" : "brightness(0) opacity(0.5)" }}
+                        />
+                        Support the Developer
                     </a>
-                    <span className="mx-2">|</span>
-                    <a
-                        href="/privacy-policy"
-                        className="hover:text-amber-50 underline underline-offset-2"
-                    >
-                        Privacy Policy
-                    </a>
-                </div>
-                {gameData?.showSupportButton !== false && (
-                    <>
-                        <span className="hidden sm:inline mx-2">|</span>
-                        <a
-                            href="https://buymeacoffee.com/ghidward"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1.5 hover:text-amber-50 text-amber-50/80 font-medium transition-colors mt-1 sm:mt-0"
-                        >
-                            <img
-                                src="https://cdn.buymeacoffee.com/buttons/bmc-new-btn-logo.svg"
-                                alt="Buy me a coffee"
-                                className="w-4 h-4"
-                                style={darkMode ? { filter: "brightness(0) invert(1)" } : undefined}
-                            />
-                            Support the Developer
-                        </a>
-                    </>
-                )}
-            </div>
-        </footer>
+                </>
+            )}
+        </GlassBar>
     );
 }
