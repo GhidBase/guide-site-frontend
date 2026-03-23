@@ -25,54 +25,7 @@ function BarBtn({ onClick, title, className, resting = 1, children }) {
     );
 }
 
-function BarIconLink({ href, title, className, children }) {
-    return (
-        <a
-            href={href}
-            title={title}
-            className={className}
-            style={{ opacity: 1, color: "inherit", display: "flex", alignItems: "center", transition: "opacity 0.2s", textDecoration: "none" }}
-            onMouseEnter={(e) => (e.currentTarget.style.opacity = 0.65)}
-            onMouseLeave={(e) => (e.currentTarget.style.opacity = 1)}
-        >
-            {children}
-        </a>
-    );
-}
-
 // ── Shared composed items ────────────────────────────────────────────────────
-
-function BarSettings({ isLDG, gameData, className }) {
-    const { user } = useAuth();
-    if (user?.role !== "ADMIN") return null;
-    const href = isLDG || !gameData ? "/navigation-panel" : `/games/${gameData.slug}/navigation-panel`;
-    return (
-        <BarIconLink href={href} title="Navigation Panel" className={className}>
-            <Settings size={13} />
-        </BarIconLink>
-    );
-}
-
-function BarEditToggle({ className }) {
-    const { adminMode, setAdminMode, dirtyBlocks } = useEditMode();
-    const { user } = useAuth();
-    if (user?.role !== "ADMIN" && user?.role !== "CONTRIBUTOR") return null;
-    return (
-        <BarBtn
-            onClick={() => {
-                if (adminMode && dirtyBlocks.size > 0) {
-                    if (!window.confirm("You have unsaved changes. Exit edit mode anyway?")) return;
-                }
-                setAdminMode(m => !m);
-            }}
-            title={adminMode ? "Exit edit mode" : "Enter edit mode"}
-            resting={1}
-            className={className}
-        >
-            {adminMode ? <Eye size={13} /> : <Pencil size={13} />}
-        </BarBtn>
-    );
-}
 
 function BarDarkToggle() {
     const { darkMode, toggleDarkMode } = useDarkMode();
@@ -115,6 +68,42 @@ function BarAuth({ showUsername = true }) {
     );
 }
 
+function BarAdminControls({ isLDG, gameData }) {
+    const { user, isAuthenticated } = useAuth();
+    const isAdmin = user?.role === "ADMIN";
+    const isContributor = isAuthenticated && !isAdmin;
+    const { adminMode, setAdminMode, dirtyBlocks } = useEditMode();
+
+    if (!isAdmin && !isContributor) return null;
+
+    return (
+        <>
+            {isAdmin && (
+                <a
+                    href={isLDG || !gameData ? "/navigation-panel" : `/games/${gameData.slug}/navigation-panel`}
+                    title="Navigation Panel"
+                    style={{ opacity: 1, color: "inherit", display: "flex", alignItems: "center", transition: "opacity 0.2s", textDecoration: "none" }}
+                    onMouseEnter={(e) => (e.currentTarget.style.opacity = 0.65)}
+                    onMouseLeave={(e) => (e.currentTarget.style.opacity = 1)}
+                >
+                    <Settings size={13} />
+                </a>
+            )}
+            <BarBtn
+                onClick={() => {
+                    if (adminMode && dirtyBlocks.size > 0) {
+                        if (!window.confirm("You have unsaved changes. Exit edit mode anyway?")) return;
+                    }
+                    setAdminMode(m => !m);
+                }}
+                title={adminMode ? "Exit edit mode" : "Enter edit mode"}
+            >
+                {adminMode ? <Eye size={13} /> : <Pencil size={13} />}
+            </BarBtn>
+        </>
+    );
+}
+
 // ── Main component ───────────────────────────────────────────────────────────
 
 const BAR_STYLE = { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem 2.5rem", position: "relative" };
@@ -143,9 +132,8 @@ export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
                     GuideCodex
                 </span>
                 <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                    <BarSettings isLDG={isLDG} gameData={gameData} />
+                    <BarAdminControls isLDG={isLDG} gameData={gameData} />
                     <BarDarkToggle />
-                    <BarEditToggle />
                     <BarAuth showUsername={false} />
                 </div>
             </GlassBar>
@@ -200,9 +188,8 @@ export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
                         <span className="text-xs font-semibold">Discord</span>
                     </a>
                 )}
-                <BarSettings isLDG={isLDG} gameData={gameData} className="hidden lg:flex" />
-                <BarEditToggle className="hidden lg:flex" />
                 <BarAuth />
+                {!sectionsMap && <BarAdminControls isLDG={isLDG} gameData={gameData} />}
                 <BarDarkToggle />
                 {sectionsMap && (
                     <BarBtn

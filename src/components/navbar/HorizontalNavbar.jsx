@@ -3,7 +3,7 @@ import { useRouteLoaderData, useNavigate } from "react-router";
 import { useAuth } from "@/hooks/useAuth";
 import { useEditMode } from "../../contexts/EditModeContext.jsx";
 import { useDarkMode } from "../../contexts/ThemeProvider.jsx";
-import { ChevronDown, Search, X, Pencil, Eye, Trophy } from "lucide-react";
+import { ChevronDown, Search, X, Pencil, Eye, Trophy, Settings } from "lucide-react";
 import GlassBar from "../GlassBar.jsx";
 
 function HorizontalSearch({ gameData, isLDG, sectionsMap }) {
@@ -301,6 +301,17 @@ export default function HorizontalNavbar() {
                 </button>
 
                 <HorizontalSearch gameData={gameData} isLDG={isLDG} sectionsMap={sectionsMap} />
+
+                {isAdmin && (
+                    <a
+                        href={isLDG || !gameData ? "/navigation-panel" : `/games/${gameData.slug}/navigation-panel`}
+                        title="Navigation Panel"
+                        className="p-1.5 hover:opacity-60 transition-opacity"
+                        style={{ textShadow: "none", color: "inherit", display: "flex", alignItems: "center" }}
+                    >
+                        <Settings className="w-4 h-4" />
+                    </a>
+                )}
 
                 {(isAdmin || isContributor) && (
                     <button

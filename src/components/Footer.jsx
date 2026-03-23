@@ -6,7 +6,7 @@ export default function Footer() {
     const { darkMode } = useDarkMode();
     const { pathname } = useLocation();
     if (pathname === "/") return (
-        <GlassBar borderSide="top" style={{ padding: "1rem 2.5rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "1.25rem", fontSize: "0.68rem", color: darkMode ? "rgba(232,213,183,0.65)" : "#5a2a0a", boxShadow: "none" }}>
+        <GlassBar borderSide="top" style={{ padding: "1rem 2.5rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "1.25rem", fontSize: "0.68rem", opacity: 0.75, boxShadow: "none" }}>
             <span>© {new Date().getFullYear()} GuideCodex</span>
             <span style={{ opacity: 0.4 }}>·</span>
             <a
@@ -25,7 +25,7 @@ export default function Footer() {
     const linkStyle = { color: "inherit", textDecoration: "none", opacity: 0.85, transition: "opacity 0.2s" };
 
     return (
-        <GlassBar as="footer" borderSide="top" style={{ padding: "1rem 2.5rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "1.25rem", flexWrap: "wrap", fontSize: "0.68rem", color: darkMode ? "rgba(232,213,183,0.9)" : "#3a1800", boxShadow: "none" }}>
+        <GlassBar as="footer" borderSide="top" style={{ padding: "1rem 2.5rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "1.25rem", flexWrap: "wrap", fontSize: "0.68rem", boxShadow: "none" }}>
             <span>© {new Date().getFullYear()} {siteName}. Not affiliated with the creators of {gameName}.</span>
             <span style={{ opacity: 0.4 }}>·</span>
             <a href="https://guidecodex.com" target="_blank" rel="noopener noreferrer"
