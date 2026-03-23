@@ -323,12 +323,12 @@ export default function HorizontalNavbar() {
                         }}
                         title={adminMode ? "Exit edit mode" : "Enter edit mode"}
                         style={{ textShadow: "none" }}
-                        className="p-1.5 cursor-pointer hover:opacity-60 transition-opacity"
+                        className="relative p-1.5 cursor-pointer hover:opacity-60 transition-opacity"
                     >
                         {adminMode ? <Eye className="w-4 h-4" /> : <Pencil className="w-4 h-4" />}
                         {adminMode && dirtyBlocks.size > 0 && (
-                            <span className="ml-1.5 text-xs bg-green-600/60 px-1.5 py-0.5 rounded">
-                                {dirtyBlocks.size} unsaved
+                            <span className="absolute -top-2 -right-2 text-xs bg-green-600/80 px-1 py-0.5 rounded leading-none whitespace-nowrap" style={{ fontSize: "0.6rem" }}>
+                                {dirtyBlocks.size}
                             </span>
                         )}
                     </button>
