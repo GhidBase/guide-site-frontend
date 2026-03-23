@@ -1,4 +1,5 @@
 import ldgLogo from "../assets/LDG_Title.webp";
+import discordLogo from "../assets/icons8-discord-50.png";
 import { useRouteLoaderData, useNavigate, Link, useMatches, useLocation } from "react-router";
 import { useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
@@ -9,14 +10,14 @@ import GlassBar from "./GlassBar.jsx";
 
 // ── Primitives ───────────────────────────────────────────────────────────────
 
-function BarBtn({ onClick, title, className, resting = 0.75, children }) {
+function BarBtn({ onClick, title, className, resting = 1, children }) {
     return (
         <button
             onClick={onClick}
             title={title}
             className={className}
             style={{ opacity: resting, cursor: "pointer", background: "none", border: "none", color: "inherit", display: "flex", alignItems: "center", transition: "opacity 0.2s" }}
-            onMouseEnter={(e) => (e.currentTarget.style.opacity = 1)}
+            onMouseEnter={(e) => (e.currentTarget.style.opacity = 0.65)}
             onMouseLeave={(e) => (e.currentTarget.style.opacity = resting)}
         >
             {children}
@@ -30,9 +31,9 @@ function BarIconLink({ href, title, className, children }) {
             href={href}
             title={title}
             className={className}
-            style={{ opacity: 0.75, color: "inherit", display: "flex", alignItems: "center", transition: "opacity 0.2s", textDecoration: "none" }}
-            onMouseEnter={(e) => (e.currentTarget.style.opacity = 1)}
-            onMouseLeave={(e) => (e.currentTarget.style.opacity = 0.75)}
+            style={{ opacity: 1, color: "inherit", display: "flex", alignItems: "center", transition: "opacity 0.2s", textDecoration: "none" }}
+            onMouseEnter={(e) => (e.currentTarget.style.opacity = 0.65)}
+            onMouseLeave={(e) => (e.currentTarget.style.opacity = 1)}
         >
             {children}
         </a>
@@ -65,7 +66,7 @@ function BarEditToggle({ className }) {
                 setAdminMode(m => !m);
             }}
             title={adminMode ? "Exit edit mode" : "Enter edit mode"}
-            resting={adminMode ? 1 : 0.75}
+            resting={1}
             className={className}
         >
             {adminMode ? <Eye size={13} /> : <Pencil size={13} />}
@@ -88,7 +89,7 @@ function BarAuth({ showUsername = true }) {
         return (
             <>
                 {showUsername && (
-                    <span className="hidden lg:block" style={{ fontSize: "0.68rem", opacity: 0.75 }}>{user?.username}</span>
+                    <span className="hidden lg:block" style={{ fontSize: "0.68rem" }}>{user?.username}</span>
                 )}
                 <BarBtn onClick={logout} title="Logout">
                     <LogOut size={13} />
@@ -154,7 +155,7 @@ export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
     return (
         <GlassBar style={BAR_STYLE}>
             {/* Left: logo + page title */}
-            <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", minWidth: 0 }}>
+            <div style={{ display: "flex", alignItems: "baseline", gap: "0.6rem", minWidth: 0 }}>
                 <Link
                     to={gameData ? (isLDG ? "/" : "/games/" + gameData.slug) : "/"}
                     style={{ display: "flex", alignItems: "center", flexShrink: 0, color: "inherit", textDecoration: "none" }}
@@ -185,6 +186,19 @@ export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
                     >
                         Save ({dirtyBlocks.size})
                     </button>
+                )}
+                {gameData?.discordUrl && (
+                    <a
+                        href={gameData.discordUrl}
+                        title="Join the Discord"
+                        className="hidden lg:flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded shrink-0"
+                        style={{ background: "#5865f2", color: "#fff", textDecoration: "none", opacity: 0.9, transition: "opacity 0.2s" }}
+                        onMouseEnter={(e) => (e.currentTarget.style.opacity = 1)}
+                        onMouseLeave={(e) => (e.currentTarget.style.opacity = 0.9)}
+                    >
+                        <img src={discordLogo} className="h-4 w-4 object-contain" alt="" />
+                        <span className="text-xs font-semibold">Discord</span>
+                    </a>
                 )}
                 <BarSettings isLDG={isLDG} gameData={gameData} className="hidden lg:flex" />
                 <BarEditToggle className="hidden lg:flex" />
