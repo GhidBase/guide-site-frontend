@@ -42,6 +42,9 @@ export default [
             route("comment-overview", "routes/comment-overview.jsx", {
                 id: "game-comment-overview",
             }),
+            route("analytics", "routes/analytics.jsx", {
+                id: "game-analytics",
+            }),
         ]),
 
         // Top-level LDG-mode special routes
@@ -73,6 +76,9 @@ export default [
         }),
         route("comment-overview", "routes/comment-overview.jsx", {
             id: "top-comment-overview",
+        }),
+        route("analytics", "routes/analytics.jsx", {
+            id: "top-analytics",
         }),
 
         route("404", "routes/not-found.jsx", { id: "not-found-404" }),

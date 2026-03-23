@@ -1422,6 +1422,11 @@ export default function NavigationPanel() {
                                                                 <span className="text-(--accent-text) flex-1 truncate">
                                                                     {page.title}
                                                                 </span>
+                                                                {page.claimedBy && (
+                                                                    <span className="text-xs text-(--text-color) opacity-50 shrink-0 truncate max-w-16" title={page.claimedBy.username}>
+                                                                        @{page.claimedBy.username}
+                                                                    </span>
+                                                                )}
                                                                 <span className="text-xs text-(--text-color) opacity-50 shrink-0">
                                                                     {page.views ?? 0}
                                                                 </span>
@@ -1795,6 +1800,11 @@ export default function NavigationPanel() {
                                                     <span className="flex-1 truncate text-sm text-(--accent-text)">
                                                         {page.title}
                                                     </span>
+                                                    {page.claimedBy && (
+                                                        <span className="text-xs text-(--text-color) opacity-50 shrink-0 truncate max-w-20" title={page.claimedBy.username}>
+                                                            @{page.claimedBy.username}
+                                                        </span>
+                                                    )}
                                                     <span className="text-xs text-(--text-color) opacity-50 shrink-0">
                                                         {page.views ?? 0}
                                                     </span>
@@ -2001,6 +2011,11 @@ export default function NavigationPanel() {
                                                 <span className="flex-1">
                                                     {page.title}
                                                 </span>
+                                                {page.claimedBy && (
+                                                    <span className="text-xs text-(--text-color) opacity-50 shrink-0 truncate max-w-16" title={page.claimedBy.username}>
+                                                        @{page.claimedBy.username}
+                                                    </span>
+                                                )}
                                                 <span className="text-xs text-(--text-color) opacity-50 shrink-0">
                                                     {page.views ?? 0}
                                                 </span>
@@ -2110,6 +2125,11 @@ export default function NavigationPanel() {
                                         <span className="flex-1 truncate text-sm text-(--accent-text)">
                                             {page.title}
                                         </span>
+                                        {page.claimedBy && (
+                                            <span className="text-xs text-(--text-color) opacity-50 shrink-0 truncate max-w-20" title={page.claimedBy.username}>
+                                                @{page.claimedBy.username}
+                                            </span>
+                                        )}
                                         <span className="text-xs text-(--text-color) opacity-50 shrink-0">
                                             {page.views ?? 0}
                                         </span>

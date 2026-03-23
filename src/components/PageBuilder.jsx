@@ -20,6 +20,7 @@ export default function PageBuilder() {
     const { user } = useAuth();
     const [blocks, setBlocks] = useState(pageData?.blocks ?? []);
     const isAdmin = user?.role == "ADMIN";
+    const [claimedBy, setClaimedBy] = useState(pageData?.page?.claimedBy ?? null);
     const { adminMode, dirtyBlocks, setDirtyBlocks, setSaveAll } = useEditMode();
     const [showPendingNotification, setShowPendingNotification] = useState(false);
     const blockRefs = useRef({});
@@ -320,6 +321,45 @@ export default function PageBuilder() {
                     ))}
                 </div>
             )}
+            {user && pageData?.page?.id && (() => {
+                const pageId = pageData.page.id;
+                const isContributor = pageData.page.contributors?.some((c) => c.id === user.id);
+                const isClaimedByMe = claimedBy?.id === user.id;
+                const canClaim = isAdmin || isContributor;
+
+                async function handleClaim() {
+                    const baseUrl = gameId ? `${currentAPI}/games/${gameId}/pages` : `${currentAPI}/pages`;
+                    await fetch(`${baseUrl}/by-id/${pageId}/claim`, { method: "POST", credentials: "include" });
+                    setClaimedBy({ id: user.id, username: user.username });
+                }
+
+                async function handleUnclaim() {
+                    const baseUrl = gameId ? `${currentAPI}/games/${gameId}/pages` : `${currentAPI}/pages`;
+                    await fetch(`${baseUrl}/by-id/${pageId}/claim`, { method: "DELETE", credentials: "include" });
+                    setClaimedBy(null);
+                }
+
+                if (!canClaim && !claimedBy) return null;
+
+                return (
+                    <div className="px-8 py-3 border-t border-(--outline) text-sm text-(--text-color) flex items-center gap-3">
+                        {claimedBy ? (
+                            <>
+                                <span>Page claimed by <span className="font-semibold">{claimedBy.username}</span></span>
+                                {(isClaimedByMe || isAdmin) && (
+                                    <button onClick={handleUnclaim} className="text-xs text-(--text-color) opacity-60 hover:opacity-100 underline">
+                                        Unclaim
+                                    </button>
+                                )}
+                            </>
+                        ) : canClaim ? (
+                            <button onClick={handleClaim} className="text-xs underline opacity-60 hover:opacity-100">
+                                Claim this page
+                            </button>
+                        ) : null}
+                    </div>
+                );
+            })()}
             {gameData && <Comments pageId={pageData?.page?.id} />}
         </div>
         </Fragment>
