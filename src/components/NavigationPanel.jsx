@@ -943,6 +943,10 @@ export default function NavigationPanel() {
                     className="px-4 py-2 bg-(--primary) text-amber-50 rounded hover:opacity-90 text-sm font-medium">
                     Comment Overview
                 </Link>
+                <Link to="../analytics"
+                    className="px-4 py-2 bg-(--primary) text-amber-50 rounded hover:opacity-90 text-sm font-medium">
+                    Analytics
+                </Link>
                 <Link to="/dashboard"
                     className="px-4 py-2 bg-(--primary) text-amber-50 rounded hover:opacity-90 text-sm font-medium">
                     Dashboard
