@@ -17,7 +17,7 @@ export default function Leaderboard() {
     const gameName = gameData?.title;
 
     const [scope, setScope] = useState(gameData ? "game" : "global");
-    const [metric, setMetric] = useState("contributions");
+    const [metric, setMetric] = useState("views");
     const [periodIdx, setPeriodIdx] = useState(0);
     const [expanded, setExpanded] = useState(new Set());
 
