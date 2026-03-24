@@ -112,7 +112,7 @@ export default function Main() {
             </div>
             <div id="sticky-header" className="sticky top-0 z-40 border-b-4 border-(--outline)">
                 <TopBar navbarLayout={navbarLayout} toggleNavbarLayout={toggleNavbarLayout} />
-                {sectionsMap && navbarLayout === "horizontal" && (
+                {gameData && sectionsMap && navbarLayout === "horizontal" && (
                     <div className="hidden lg:block">
                         <HorizontalNavbar />
                     </div>
