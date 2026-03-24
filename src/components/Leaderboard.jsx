@@ -5,10 +5,41 @@ import { currentAPI } from "../config/api";
 const MEDALS = ["🥇", "🥈", "🥉"];
 
 const PERIODS = [
-    { label: "All Time", since: null },
-    { label: "This Month", since: () => { const d = new Date(); d.setDate(1); d.setHours(0,0,0,0); return d.toISOString(); } },
-    { label: "This Week",  since: () => { const d = new Date(); d.setDate(d.getDate() - d.getDay()); d.setHours(0,0,0,0); return d.toISOString(); } },
+    { label: "All Time" },
+    { label: "This Month" },
+    { label: "This Week" },
+    { label: "Custom" },
 ];
+
+function getPeriodRange(periodIdx, customMode, customDate, customFrom, customTo) {
+    if (periodIdx === 1) {
+        const d = new Date(); d.setDate(1); d.setHours(0, 0, 0, 0);
+        return { since: d.toISOString(), until: null };
+    }
+    if (periodIdx === 2) {
+        const d = new Date(); d.setDate(d.getDate() - d.getDay()); d.setHours(0, 0, 0, 0);
+        return { since: d.toISOString(), until: null };
+    }
+    if (periodIdx === 3) {
+        if (customMode === "day" && customDate) {
+            const from = new Date(customDate + "T00:00:00");
+            const to = new Date(from);
+            to.setDate(to.getDate() + 1);
+            return { since: from.toISOString(), until: to.toISOString() };
+        }
+        if (customMode === "range" && customFrom) {
+            const from = new Date(customFrom + "T00:00:00");
+            let until = null;
+            if (customTo) {
+                const t = new Date(customTo + "T00:00:00");
+                t.setDate(t.getDate() + 1);
+                until = t.toISOString();
+            }
+            return { since: from.toISOString(), until };
+        }
+    }
+    return { since: null, until: null };
+}
 
 export default function Leaderboard() {
     const { gameData } = useRouteLoaderData("main");
@@ -21,19 +52,32 @@ export default function Leaderboard() {
     const [periodIdx, setPeriodIdx] = useState(0);
     const [expanded, setExpanded] = useState(new Set());
 
+    const [customMode, setCustomMode] = useState("day");
+    const [customDate, setCustomDate] = useState("");
+    const [customFrom, setCustomFrom] = useState("");
+    const [customTo, setCustomTo] = useState("");
+
     const [viewData, setViewData] = useState(null);
     const [viewLoading, setViewLoading] = useState(false);
 
     useEffect(() => {
         if (metric !== "views") return;
+
+        const { since, until } = getPeriodRange(periodIdx, customMode, customDate, customFrom, customTo);
+
+        // Don't fetch custom period until a date is selected
+        if (periodIdx === 3 && !since) return;
+
         setViewLoading(true);
         setViewData(null);
 
-        const since = PERIODS[periodIdx].since ? PERIODS[periodIdx].since() : null;
-        const sinceParam = since ? `?since=${encodeURIComponent(since)}` : "";
+        const params = new URLSearchParams();
+        if (since) params.set("since", since);
+        if (until) params.set("until", until);
+        const qs = params.toString() ? `?${params.toString()}` : "";
 
-        const gameUrl  = gameId  ? `${currentAPI}/games/${gameId}/pages/view-leaderboard${sinceParam}` : null;
-        const globalUrl = `${currentAPI}/pages/view-leaderboard${sinceParam}`;
+        const gameUrl   = gameId ? `${currentAPI}/games/${gameId}/pages/view-leaderboard${qs}` : null;
+        const globalUrl = `${currentAPI}/pages/view-leaderboard${qs}`;
 
         Promise.all([
             gameUrl ? fetch(gameUrl).then((r) => r.json()) : Promise.resolve(null),
@@ -42,7 +86,7 @@ export default function Leaderboard() {
             setViewData({ game, global });
             setViewLoading(false);
         }).catch(() => setViewLoading(false));
-    }, [metric, periodIdx, gameId]);
+    }, [metric, periodIdx, customMode, customDate, customFrom, customTo, gameId]);
 
     const contribEntries = scope === "game" ? leaderboardGame : leaderboardGlobal;
     const viewEntries    = scope === "game" ? viewData?.game  : viewData?.global;
@@ -80,7 +124,7 @@ export default function Leaderboard() {
             </div>
 
             {/* Metric + period row */}
-            <div className="flex flex-wrap items-center gap-2 mb-6">
+            <div className="flex flex-wrap items-center gap-2 mb-3">
                 <button
                     onClick={() => setMetric("contributions")}
                     className={`px-3 py-1 rounded text-sm cursor-pointer ${metric === "contributions" ? "bg-(--accent) text-(--accent-text) font-semibold" : "opacity-50 hover:opacity-80"}`}
@@ -95,7 +139,7 @@ export default function Leaderboard() {
                 </button>
 
                 {metric === "views" && (
-                    <div className="flex gap-1 ml-auto">
+                    <div className="flex gap-1 ml-auto flex-wrap">
                         {PERIODS.map((p, i) => (
                             <button
                                 key={p.label}
@@ -108,6 +152,55 @@ export default function Leaderboard() {
                     </div>
                 )}
             </div>
+
+            {/* Custom date picker */}
+            {metric === "views" && periodIdx === 3 && (
+                <div className="flex flex-col gap-2 mb-3">
+                    <div className="flex gap-1">
+                        <button
+                            onClick={() => setCustomMode("day")}
+                            className={`px-2.5 py-1 rounded text-xs cursor-pointer ${customMode === "day" ? "bg-(--accent) text-(--accent-text) font-semibold" : "opacity-50 hover:opacity-80"}`}
+                        >
+                            Single Day
+                        </button>
+                        <button
+                            onClick={() => setCustomMode("range")}
+                            className={`px-2.5 py-1 rounded text-xs cursor-pointer ${customMode === "range" ? "bg-(--accent) text-(--accent-text) font-semibold" : "opacity-50 hover:opacity-80"}`}
+                        >
+                            Date Range
+                        </button>
+                    </div>
+                    {customMode === "day" ? (
+                        <input
+                            type="date"
+                            value={customDate}
+                            onChange={(e) => setCustomDate(e.target.value)}
+                            className="w-fit px-2 py-1 rounded text-sm bg-(--accent) text-(--accent-text) border border-(--outline)/30"
+                        />
+                    ) : (
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="date"
+                                value={customFrom}
+                                onChange={(e) => setCustomFrom(e.target.value)}
+                                className="px-2 py-1 rounded text-sm bg-(--accent) text-(--accent-text) border border-(--outline)/30"
+                            />
+                            <span className="text-xs opacity-50">to</span>
+                            <input
+                                type="date"
+                                value={customTo}
+                                onChange={(e) => setCustomTo(e.target.value)}
+                                className="px-2 py-1 rounded text-sm bg-(--accent) text-(--accent-text) border border-(--outline)/30"
+                            />
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* Tracking note */}
+            {metric === "views" && periodIdx !== 0 && (
+                <p className="text-xs opacity-50 mb-4">View tracking began March 23, 2026.</p>
+            )}
 
             {loading && <p className="text-(--text-color) italic">Loading...</p>}
 
