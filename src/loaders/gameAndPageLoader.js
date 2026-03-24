@@ -66,7 +66,7 @@ export default async function gameAndPageLoader({ params, request }) {
         const res = await fetch(url);
         if (!res.ok) return;
         const data = await res.json();
-        if (!Array.isArray(data) || data.length === 0) return;
+        if (!Array.isArray(data) || data.length === 0) return new Map();
 
         const navbarMap = new Map();
         data.forEach((section) => {
