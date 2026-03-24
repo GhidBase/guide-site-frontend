@@ -23,11 +23,10 @@ export default function Analytics() {
         const url = gameId
             ? `${currentAPI}/games/${gameId}/pages/analytics${sinceParam}`
             : `${currentAPI}/pages/analytics${sinceParam}`;
-        console.log("[Analytics] fetching:", url);
         fetch(url, { credentials: "include" })
             .then((r) => r.json())
-            .then((d) => { console.log("[Analytics] data received, pages[0]:", d?.pages?.[0]); setData(d); })
-            .catch((e) => { console.error("[Analytics] fetch error:", e); });
+            .then(setData)
+            .catch(() => {});
     }, [gameId, periodIdx]);
 
     if (!data) {
