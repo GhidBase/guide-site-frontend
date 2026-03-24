@@ -9,6 +9,7 @@ export default [
         route("index.html", "routes/redirect-index-html.jsx"),
         route(":pageSlug", "routes/page-slug.jsx"),
 
+        route("games", "routes/games-redirect.jsx"),
         route("games/:gameSlug", "routes/game-layout.jsx", [
             index("routes/game-home.jsx"),
             route(":pageSlug", "routes/game-page.jsx", {
