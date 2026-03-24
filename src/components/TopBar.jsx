@@ -106,7 +106,7 @@ function BarAdminControls({ isLDG, gameData }) {
 
 // ── Main component ───────────────────────────────────────────────────────────
 
-const BAR_STYLE = { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem 2.5rem", position: "relative" };
+const BAR_STYLE = { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.6rem 1rem", position: "relative" };
 
 export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
     const { pageData, pageSlug, gameData, sectionsMap, isLDG } = useRouteLoaderData("main");
