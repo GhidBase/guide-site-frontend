@@ -3,7 +3,8 @@ import discordLogo from "../assets/icons8-discord-50.png";
 import { useRouteLoaderData, useNavigate, Link, useMatches } from "react-router";
 import { useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
-import { PanelTop, PanelLeft, Sun, Moon, LogOut, LogIn, Pencil, Eye, Settings } from "lucide-react";
+import { useUserProfile } from "../hooks/useUserProfile.js";
+import { PanelTop, PanelLeft, Sun, Moon, LogIn, Pencil, Eye, Settings, UserCircle2 } from "lucide-react";
 import { useDarkMode } from "../contexts/ThemeProvider.jsx";
 import { useEditMode } from "../contexts/EditModeContext.jsx";
 import GlassBar from "./GlassBar.jsx";
@@ -36,34 +37,39 @@ function BarDarkToggle() {
     );
 }
 
-function BarAuth({ showUsername = true }) {
-    const { isAuthenticated, user, logout } = useAuth();
-    if (isAuthenticated) {
+// Always-visible user icon (mobile + desktop)
+function BarUserSection({ avatarUrl }) {
+    const { isAuthenticated } = useAuth();
+    if (!isAuthenticated) {
         return (
-            <>
-                {showUsername && (
-                    <span className="hidden lg:block" style={{ fontSize: "0.68rem" }}>{user?.username}</span>
-                )}
-                <BarBtn onClick={logout} title="Logout">
-                    <LogOut size={13} />
-                </BarBtn>
-            </>
+            <Link
+                to="/login"
+                title="Sign in"
+                style={{ color: "inherit", textDecoration: "none", display: "flex", alignItems: "center", opacity: 0.7, transition: "opacity 0.2s" }}
+                onMouseEnter={(e) => (e.currentTarget.style.opacity = 1)}
+                onMouseLeave={(e) => (e.currentTarget.style.opacity = 0.7)}
+            >
+                <LogIn size={13} />
+            </Link>
         );
     }
     return (
         <Link
-            to="/login"
-            title="Sign in"
+            to="/account"
+            title="Account settings"
             style={{
-                color: "rgba(232,220,200,0.7)", textDecoration: "none",
-                border: "1px solid rgba(232,220,200,0.2)", borderRadius: "4px",
-                padding: "0.25rem 0.4rem", transition: "all 0.2s",
-                background: "rgba(255,255,255,0.05)", display: "flex", alignItems: "center",
+                color: "inherit", textDecoration: "none",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                opacity: 1, transition: "opacity 0.2s",
+                width: 22, height: 22, borderRadius: "50%", overflow: "hidden",
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.1)"; e.currentTarget.style.color = "rgba(232,220,200,1)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "rgba(232,220,200,0.7)"; }}
+            onMouseEnter={(e) => (e.currentTarget.style.opacity = 0.65)}
+            onMouseLeave={(e) => (e.currentTarget.style.opacity = 1)}
         >
-            <LogIn size={13} />
+            {avatarUrl
+                ? <img src={avatarUrl} style={{ width: 22, height: 22, borderRadius: "50%", objectFit: "cover" }} alt="" />
+                : <UserCircle2 size={16} />
+            }
         </Link>
     );
 }
@@ -111,6 +117,8 @@ const BAR_STYLE = { display: "flex", alignItems: "center", justifyContent: "spac
 export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
     const { pageData, pageSlug, gameData, sectionsMap, isLDG } = useRouteLoaderData("main");
     const { adminMode, dirtyBlocks, saveAll } = useEditMode();
+    const { user } = useAuth();
+    const { avatarUrl } = useUserProfile();
     const navigate = useNavigate();
     const matches = useMatches();
 
@@ -128,10 +136,12 @@ export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
                 <span style={{ fontSize: "0.58rem", letterSpacing: "0.32em", textTransform: "uppercase", opacity: 0.6, fontWeight: 700, textShadow: "0 0 20px rgba(232,213,183,0.3)" }}>
                     GuideCodex
                 </span>
-                <div className="hidden lg:flex" style={{ alignItems: "center", gap: "0.75rem" }}>
-                    <BarAdminControls isLDG={isLDG} gameData={gameData} />
-                    <BarDarkToggle />
-                    <BarAuth showUsername={false} />
+                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                    <div className="hidden lg:flex" style={{ alignItems: "center", gap: "0.75rem" }}>
+                        <BarAdminControls isLDG={isLDG} gameData={gameData} />
+                        <BarDarkToggle />
+                    </div>
+                    <BarUserSection avatarUrl={avatarUrl} />
                 </div>
             </GlassBar>
         );
@@ -154,49 +164,56 @@ export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
                     )}
                 </Link>
                 {pageTitle && !isLDGHomepage && (
-                    <span style={{ fontSize: "0.72rem", opacity: 0.6 }} className="truncate">
+                    <span style={{ fontSize: "0.72rem", opacity: 0.6 }} className="hidden md:block truncate">
                         / {pageTitle}
                     </span>
                 )}
             </div>
 
-            {/* Right: actions — hidden on mobile (MobileBottomBar handles those) */}
-            <div className="hidden lg:flex" style={{ alignItems: "center", gap: "0.75rem" }}>
-                {adminMode && dirtyBlocks.size > 0 && saveAll && (
-                    <button
-                        onClick={saveAll}
-                        style={{ cursor: "pointer", background: "rgba(21,128,61,0.55)", border: "none", color: "#fff", borderRadius: "4px", padding: "0.25rem 0.6rem", fontSize: "0.75rem", fontWeight: 600, transition: "background 0.2s" }}
-                        onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(21,128,61,0.8)")}
-                        onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(21,128,61,0.55)")}
-                    >
-                        Save ({dirtyBlocks.size})
-                    </button>
-                )}
-                {gameData?.discordUrl && (
-                    <a
-                        href={gameData.discordUrl}
-                        title="Join the Discord"
-                        className="hidden lg:flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded shrink-0"
-                        style={{ background: "#5865f2", color: "#fff", textDecoration: "none", opacity: 0.9, transition: "opacity 0.2s" }}
-                        onMouseEnter={(e) => (e.currentTarget.style.opacity = 1)}
-                        onMouseLeave={(e) => (e.currentTarget.style.opacity = 0.9)}
-                    >
-                        <img src={discordLogo} className="h-4 w-4 object-contain" alt="" />
-                        <span className="text-xs font-semibold">Discord</span>
-                    </a>
-                )}
-                <BarAuth />
-                {!sectionsMap && <BarAdminControls isLDG={isLDG} gameData={gameData} />}
-                <BarDarkToggle />
-                {sectionsMap && (
-                    <BarBtn
-                        onClick={toggleNavbarLayout}
-                        title={navbarLayout === "horizontal" ? "Switch to vertical sidebar" : "Switch to horizontal navbar"}
-                        className="hidden lg:flex"
-                    >
-                        {navbarLayout === "horizontal" ? <PanelLeft size={13} /> : <PanelTop size={13} />}
-                    </BarBtn>
-                )}
+            {/* Right */}
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                {/* Desktop-only actions */}
+                <div className="hidden lg:flex" style={{ alignItems: "center", gap: "0.75rem" }}>
+                    {user?.username && (
+                        <span className="hidden lg:block" style={{ fontSize: "0.68rem", opacity: 0.6 }}>{user.username}</span>
+                    )}
+                    {adminMode && dirtyBlocks.size > 0 && saveAll && (
+                        <button
+                            onClick={saveAll}
+                            style={{ cursor: "pointer", background: "rgba(21,128,61,0.55)", border: "none", color: "#fff", borderRadius: "4px", padding: "0.25rem 0.6rem", fontSize: "0.75rem", fontWeight: 600, transition: "background 0.2s" }}
+                            onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(21,128,61,0.8)")}
+                            onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(21,128,61,0.55)")}
+                        >
+                            Save ({dirtyBlocks.size})
+                        </button>
+                    )}
+                    {gameData?.discordUrl && (
+                        <a
+                            href={gameData.discordUrl}
+                            title="Join the Discord"
+                            className="flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded shrink-0"
+                            style={{ background: "#5865f2", color: "#fff", textDecoration: "none", opacity: 0.9, transition: "opacity 0.2s" }}
+                            onMouseEnter={(e) => (e.currentTarget.style.opacity = 1)}
+                            onMouseLeave={(e) => (e.currentTarget.style.opacity = 0.9)}
+                        >
+                            <img src={discordLogo} className="h-4 w-4 object-contain" alt="" />
+                            <span className="text-xs font-semibold">Discord</span>
+                        </a>
+                    )}
+                    <BarAdminControls isLDG={isLDG} gameData={gameData} />
+                    <BarDarkToggle />
+                    {sectionsMap && (
+                        <BarBtn
+                            onClick={toggleNavbarLayout}
+                            title={navbarLayout === "horizontal" ? "Switch to vertical sidebar" : "Switch to horizontal navbar"}
+                        >
+                            {navbarLayout === "horizontal" ? <PanelLeft size={13} /> : <PanelTop size={13} />}
+                        </BarBtn>
+                    )}
+                </div>
+
+                {/* Always visible — user icon (mobile + desktop) */}
+                <BarUserSection avatarUrl={avatarUrl} />
             </div>
         </GlassBar>
     );
