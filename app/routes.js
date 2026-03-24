@@ -57,6 +57,7 @@ export default [
         route("board-builder-admin", "routes/board-builder.jsx", { id: "top-board-builder" }),
         route("tier-list", "routes/tier-list.jsx", { id: "top-tier-list" }),
 
+        route("account", "routes/account.jsx"),
         route("login", "routes/login.jsx"),
         route("signup", "routes/signup.jsx"),
         route("dashboard", "routes/dashboard.jsx"),
