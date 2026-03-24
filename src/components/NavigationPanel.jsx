@@ -65,6 +65,9 @@ export default function NavigationPanel() {
     const [detailWide, setDetailWide] = useState(false);
     const [detailDescription, setDetailDescription] = useState("");
     const [detailViews, setDetailViews] = useState(0);
+    const [detailClaimedBy, setDetailClaimedBy] = useState(null);
+    const [allUsers, setAllUsers] = useState([]);
+    const [usersLoaded, setUsersLoaded] = useState(false);
 
     const { theme, setTheme } = useTheme();
     const [themeOpen, setThemeOpen] = useState(false);
@@ -795,6 +798,13 @@ export default function NavigationPanel() {
             setDetailDescription(detailPage.description ?? "");
             setDetailWide(detailPage.wide ?? false);
             setDetailViews(detailPage.views ?? 0);
+            setDetailClaimedBy(detailPage.claimedBy ?? null);
+            if (!usersLoaded) {
+                fetch(`${currentAPI}/users`, { credentials: "include" })
+                    .then((r) => r.json())
+                    .then((users) => { setAllUsers(users); setUsersLoaded(true); })
+                    .catch(() => {});
+            }
         }
     }, [detailPage]);
 
@@ -869,15 +879,17 @@ export default function NavigationPanel() {
         const descriptionChanged = detailDescription !== (detailPage.description ?? "");
         const wideChanged = detailWide !== (detailPage.wide ?? false);
         const viewsChanged = detailViews !== (detailPage.views ?? 0);
+        const claimedByChanged = (detailClaimedBy?.id ?? null) !== (detailPage.claimedBy?.id ?? null);
 
         try {
-            if (titleChanged || slugChanged || descriptionChanged || wideChanged || viewsChanged) {
+            if (titleChanged || slugChanged || descriptionChanged || wideChanged || viewsChanged || claimedByChanged) {
                 const body = {};
                 if (titleChanged) body.title = detailTitle;
                 if (slugChanged) body.slug = detailSlug;
                 if (descriptionChanged) body.description = detailDescription;
                 if (wideChanged) body.wide = detailWide;
                 if (viewsChanged) body.views = detailViews;
+                if (claimedByChanged) body.claimedById = detailClaimedBy?.id ?? null;
                 await fetch(pageUrl(id), {
                         method: "PUT",
                         headers: { "Content-Type": "application/json" },
@@ -895,6 +907,7 @@ export default function NavigationPanel() {
                 description: detailDescription,
                 wide: detailWide,
                 views: detailViews,
+                claimedBy: detailClaimedBy,
             };
             let foundInSection = false;
             for (const section of sectionsMap.values()) {
@@ -2357,6 +2370,27 @@ export default function NavigationPanel() {
                                         onChange={(e) => setDetailViews(Math.max(0, parseInt(e.target.value) || 0))}
                                         className="bg-(--accent) text-(--accent-text) px-3 py-1.5 rounded w-full font-mono"
                                     />
+                                </div>
+
+                                <div>
+                                    <label className="text-(--text-color) font-semibold block mb-1">Assigned to</label>
+                                    {!usersLoaded ? (
+                                        <p className="text-xs opacity-50 italic">Loading users…</p>
+                                    ) : (
+                                        <select
+                                            value={detailClaimedBy?.id ?? ""}
+                                            onChange={(e) => {
+                                                const uid = e.target.value;
+                                                setDetailClaimedBy(uid ? (allUsers.find((u) => u.id === +uid) ?? null) : null);
+                                            }}
+                                            className="bg-(--accent) text-(--accent-text) px-3 py-1.5 rounded w-full cursor-pointer"
+                                        >
+                                            <option value="">Unassigned</option>
+                                            {allUsers.map((u) => (
+                                                <option key={u.id} value={u.id}>@{u.username}</option>
+                                            ))}
+                                        </select>
+                                    )}
                                 </div>
                             </div>
 
