@@ -2,22 +2,33 @@ import { useEffect, useState } from "react";
 import { useRouteLoaderData } from "react-router";
 import { currentAPI } from "../config/api";
 
+const PERIODS = [
+    { label: "All Time", since: null },
+    { label: "This Month", since: () => { const d = new Date(); d.setDate(1); d.setHours(0,0,0,0); return d.toISOString(); } },
+    { label: "This Week",  since: () => { const d = new Date(); d.setDate(d.getDate() - d.getDay()); d.setHours(0,0,0,0); return d.toISOString(); } },
+];
+
 export default function Analytics() {
     const { gameData } = useRouteLoaderData("main");
     const gameId = gameData?.id;
 
     const [data, setData] = useState(null);
     const [tab, setTab] = useState("pages");
+    const [periodIdx, setPeriodIdx] = useState(0);
 
     useEffect(() => {
+        setData(null);
+        const since = PERIODS[periodIdx].since ? PERIODS[periodIdx].since() : null;
+        const sinceParam = since ? `?since=${encodeURIComponent(since)}` : "";
         const url = gameId
-            ? `${currentAPI}/games/${gameId}/pages/analytics`
-            : `${currentAPI}/pages/analytics`;
+            ? `${currentAPI}/games/${gameId}/pages/analytics${sinceParam}`
+            : `${currentAPI}/pages/analytics${sinceParam}`;
+        console.log("[Analytics] fetching:", url);
         fetch(url, { credentials: "include" })
             .then((r) => r.json())
-            .then(setData)
-            .catch(() => {});
-    }, [gameId]);
+            .then((d) => { console.log("[Analytics] data received, pages[0]:", d?.pages?.[0]); setData(d); })
+            .catch((e) => { console.error("[Analytics] fetch error:", e); });
+    }, [gameId, periodIdx]);
 
     if (!data) {
         return <div className="mt-20 text-center text-(--text-color) opacity-60">Loading...</div>;
@@ -29,9 +40,22 @@ export default function Analytics() {
     return (
         <div className="max-w-3xl mx-auto px-4 py-8 text-(--text-color)">
             <h1 className="text-2xl font-bold mb-1">Analytics</h1>
-            <p className="text-sm opacity-60 mb-6">
-                {totalViews.toLocaleString()} total views across {pages.length} pages
-            </p>
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
+                <p className="text-sm opacity-60">
+                    {totalViews.toLocaleString()} views across {pages.length} pages
+                </p>
+                <div className="flex gap-1">
+                    {PERIODS.map((p, i) => (
+                        <button
+                            key={p.label}
+                            onClick={() => setPeriodIdx(i)}
+                            className={`px-2.5 py-1 rounded text-xs cursor-pointer ${periodIdx === i ? "bg-(--primary) text-white font-semibold" : "bg-(--accent) text-(--accent-text) hover:opacity-80"}`}
+                        >
+                            {p.label}
+                        </button>
+                    ))}
+                </div>
+            </div>
 
             <div className="flex gap-2 mb-6">
                 <button
