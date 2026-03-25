@@ -48,6 +48,7 @@ export default function PageBuilder() {
 
     useEffect(() => {
         setBlocks(pageData?.blocks ?? []);
+        setClaimedBy(pageData?.page?.claimedBy ?? null);
     }, [pageData]);
 
     const orders = blocks.map((block) => (block.order ? block.order : 0));
