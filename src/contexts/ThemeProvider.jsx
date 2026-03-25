@@ -112,9 +112,101 @@ export const THEME_FIELDS = [
     { key: "accentText", label: "Accent Text", description: "Text on cards" },
 ];
 
+export const ANIMATION_DEFAULTS = {
+    pageTransition: "fade",       // "fade" | "slide-up" | "slide-left" | "none"
+    transitionDuration: 300,      // ms, 100–800
+    blockEntrance: "fade-up",     // "fade-up" | "fade-in" | "pop" | "none"
+    scrollReveal: true,           // animate blocks as they scroll into view
+    hoverEffect: "lift",          // "lift" | "glow" | "none"
+    navbarBlur: 28,               // px, backdrop-filter blur on navbar/topbar (4–60)
+    cardRadius: 12,               // px, border-radius on cards (0–32)
+    buttonRadius: 6,              // px, border-radius on buttons (0–24)
+};
+
+export const ANIMATION_FIELDS = [
+    {
+        key: "pageTransition",
+        label: "Page Transition",
+        description: "Animation when navigating between pages",
+        type: "select",
+        options: [
+            { value: "fade", label: "Fade" },
+            { value: "slide-up", label: "Slide Up" },
+            { value: "slide-left", label: "Slide Left" },
+            { value: "none", label: "None" },
+        ],
+    },
+    {
+        key: "transitionDuration",
+        label: "Transition Speed",
+        description: "Duration of page transitions (ms)",
+        type: "range",
+        min: 100,
+        max: 800,
+        step: 50,
+    },
+    {
+        key: "blockEntrance",
+        label: "Block Entrance",
+        description: "How content blocks animate in",
+        type: "select",
+        options: [
+            { value: "fade-up", label: "Fade Up" },
+            { value: "fade-in", label: "Fade In" },
+            { value: "pop", label: "Pop" },
+            { value: "none", label: "None" },
+        ],
+    },
+    {
+        key: "scrollReveal",
+        label: "Scroll Reveal",
+        description: "Animate blocks as they enter the viewport",
+        type: "toggle",
+    },
+    {
+        key: "hoverEffect",
+        label: "Hover Effect",
+        description: "Effect on interactive cards and buttons",
+        type: "select",
+        options: [
+            { value: "lift", label: "Lift (shadow)" },
+            { value: "glow", label: "Glow" },
+            { value: "none", label: "None" },
+        ],
+    },
+    {
+        key: "navbarBlur",
+        label: "Navbar Blur",
+        description: "Backdrop blur strength on navbar (px)",
+        type: "range",
+        min: 0,
+        max: 60,
+        step: 2,
+    },
+    {
+        key: "cardRadius",
+        label: "Card Radius",
+        description: "Border radius on cards (px)",
+        type: "range",
+        min: 0,
+        max: 32,
+        step: 1,
+    },
+    {
+        key: "buttonRadius",
+        label: "Button Radius",
+        description: "Border radius on buttons (px)",
+        type: "range",
+        min: 0,
+        max: 24,
+        step: 1,
+    },
+];
+
 /** Convert a theme object into React inline style CSS custom properties */
 export function themeToStyle(theme) {
     if (!theme) return {};
+    const anim = { ...ANIMATION_DEFAULTS, ...(theme.animations ?? {}) };
     return {
         "--red-brown": theme.primary,
         "--primary": theme.primary,
@@ -126,5 +218,13 @@ export function themeToStyle(theme) {
         "--outline": theme.outline,
         "--text-color": theme.textColor,
         "--accent-text": theme.accentText,
+        // Animation/style vars
+        "--transition-duration": anim.transitionDuration + "ms",
+        "--navbar-blur": anim.navbarBlur + "px",
+        "--card-radius": anim.cardRadius + "px",
+        "--button-radius": anim.buttonRadius + "px",
+        "--hover-effect": anim.hoverEffect,
+        "--block-entrance": anim.blockEntrance,
+        "--page-transition": anim.pageTransition,
     };
 }
