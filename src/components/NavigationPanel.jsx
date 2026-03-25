@@ -16,6 +16,8 @@ import {
     useTheme,
     THEME_DEFAULTS,
     THEME_FIELDS,
+    ANIMATION_DEFAULTS,
+    ANIMATION_FIELDS,
 } from "../contexts/ThemeProvider.jsx";
 
 const secret = import.meta.env.VITE_SECRET;
@@ -813,7 +815,14 @@ export default function NavigationPanel() {
     }
 
     function openThemeEditor() {
-        const current = { ...THEME_DEFAULTS, ...(gameData?.theme ?? {}) };
+        let current;
+        if (!gameId) {
+            try { current = JSON.parse(localStorage.getItem("guidecodex_global_theme") ?? "null"); } catch { current = null; }
+            current = { ...THEME_DEFAULTS, animations: ANIMATION_DEFAULTS, ...(current ?? {}) };
+            current.animations = { ...ANIMATION_DEFAULTS, ...(current.animations ?? {}) };
+        } else {
+            current = { ...THEME_DEFAULTS, ...(gameData?.theme ?? {}) };
+        }
         setEditingTheme(current);
         setSavedTheme(current);
         setThemeOpen(true);
@@ -823,6 +832,12 @@ export default function NavigationPanel() {
         const next = { ...editingTheme, [key]: value };
         setEditingTheme(next);
         setTheme(next); // live preview
+    }
+
+    function handleAnimationChange(key, value) {
+        const next = { ...editingTheme, animations: { ...ANIMATION_DEFAULTS, ...(editingTheme.animations ?? {}), [key]: value } };
+        setEditingTheme(next);
+        setTheme(next);
     }
 
     function closeThemeAnimated(then) {
@@ -840,18 +855,25 @@ export default function NavigationPanel() {
     }
 
     function resetThemeToDefaults() {
-        setEditingTheme(THEME_DEFAULTS);
-        setTheme(THEME_DEFAULTS);
+        const defaults = !gameId
+            ? { ...THEME_DEFAULTS, animations: ANIMATION_DEFAULTS }
+            : THEME_DEFAULTS;
+        setEditingTheme(defaults);
+        setTheme(defaults);
     }
 
     async function saveTheme() {
         try {
-            await fetch(currentAPI + "/games/" + gameId + "/theme", {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                credentials: "include",
-                body: JSON.stringify({ theme: editingTheme }),
-            });
+            if (!gameId) {
+                localStorage.setItem("guidecodex_global_theme", JSON.stringify(editingTheme));
+            } else {
+                await fetch(currentAPI + "/games/" + gameId + "/theme", {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "include",
+                    body: JSON.stringify({ theme: editingTheme }),
+                });
+            }
             setSavedTheme(editingTheme);
             closeThemeAnimated();
         } catch (err) {
@@ -1006,7 +1028,7 @@ export default function NavigationPanel() {
                             className="flex items-center gap-2 bg-(--surface-background) text-(--accent-text) border border-(--outline)/40 px-4 py-2 rounded cursor-pointer hover:bg-(--primary) hover:text-white transition-colors text-sm font-semibold"
                         >
                             <Palette size={15} />
-                            Game Theme
+                            {gameId ? "Game Theme" : "Site Theme & Animations"}
                         </button>
                         <button
                             onClick={() => setImagePoolOpen((o) => !o)}
@@ -2227,7 +2249,7 @@ export default function NavigationPanel() {
                     >
                         <div className="flex items-center justify-between gap-2">
                             <h2 className="text-lg font-bold text-(--accent-text)">
-                                Game Theme
+                                {gameId ? "Game Theme" : "Site Theme & Animations"}
                             </h2>
                             <button
                                 onClick={cancelTheme}
@@ -2237,34 +2259,83 @@ export default function NavigationPanel() {
                             </button>
                         </div>
 
+                        <p className="text-xs font-bold uppercase tracking-wider text-(--text-color) opacity-60">Colors</p>
                         <div className="flex flex-col gap-3">
                             {THEME_FIELDS.map(({ key, label, description }) => (
-                                <div
-                                    key={key}
-                                    className="flex items-center gap-3"
-                                >
+                                <div key={key} className="flex items-center gap-3">
                                     <input
                                         type="color"
-                                        value={editingTheme[key]}
-                                        onChange={(e) =>
-                                            handleThemeChange(key, e.target.value)
-                                        }
+                                        value={editingTheme[key] ?? THEME_DEFAULTS[key]}
+                                        onChange={(e) => handleThemeChange(key, e.target.value)}
                                         className="w-10 h-10 rounded cursor-pointer border border-(--outline) shrink-0 p-0.5 bg-transparent"
                                     />
                                     <div className="flex flex-col min-w-0">
-                                        <span className="text-sm font-semibold text-(--accent-text)">
-                                            {label}
-                                        </span>
-                                        <span className="text-xs text-(--text-color)">
-                                            {description}
-                                        </span>
+                                        <span className="text-sm font-semibold text-(--accent-text)">{label}</span>
+                                        <span className="text-xs text-(--text-color)">{description}</span>
                                     </div>
                                     <span className="ml-auto font-mono text-xs text-(--text-color) shrink-0">
-                                        {editingTheme[key]}
+                                        {editingTheme[key] ?? THEME_DEFAULTS[key]}
                                     </span>
                                 </div>
                             ))}
                         </div>
+
+                        {!gameId && (
+                            <>
+                                <p className="text-xs font-bold uppercase tracking-wider text-(--text-color) opacity-60 mt-2">Animations & Style</p>
+                                <div className="flex flex-col gap-4">
+                                    {ANIMATION_FIELDS.map((field) => {
+                                        const currentVal = (editingTheme.animations ?? ANIMATION_DEFAULTS)[field.key] ?? ANIMATION_DEFAULTS[field.key];
+                                        return (
+                                            <div key={field.key} className="flex flex-col gap-1.5">
+                                                <div className="flex items-center justify-between gap-2">
+                                                    <div>
+                                                        <span className="text-sm font-semibold text-(--accent-text)">{field.label}</span>
+                                                        <span className="ml-2 text-xs text-(--text-color)">{field.description}</span>
+                                                    </div>
+                                                    {field.type === "range" && (
+                                                        <span className="font-mono text-xs text-(--text-color) shrink-0">{currentVal}{field.key === "transitionDuration" ? "ms" : "px"}</span>
+                                                    )}
+                                                </div>
+                                                {field.type === "select" && (
+                                                    <select
+                                                        value={currentVal}
+                                                        onChange={(e) => handleAnimationChange(field.key, e.target.value)}
+                                                        className="w-full text-sm rounded border border-(--outline) bg-(--surface-background) text-(--accent-text) px-2 py-1.5 cursor-pointer"
+                                                    >
+                                                        {field.options.map((opt) => (
+                                                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                                        ))}
+                                                    </select>
+                                                )}
+                                                {field.type === "range" && (
+                                                    <input
+                                                        type="range"
+                                                        min={field.min}
+                                                        max={field.max}
+                                                        step={field.step}
+                                                        value={currentVal}
+                                                        onChange={(e) => handleAnimationChange(field.key, Number(e.target.value))}
+                                                        className="w-full accent-(--primary) cursor-pointer"
+                                                    />
+                                                )}
+                                                {field.type === "toggle" && (
+                                                    <label className="flex items-center gap-2 cursor-pointer w-fit">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={!!currentVal}
+                                                            onChange={(e) => handleAnimationChange(field.key, e.target.checked)}
+                                                            className="w-4 h-4 accent-(--primary) cursor-pointer"
+                                                        />
+                                                        <span className="text-sm text-(--text-color)">{currentVal ? "Enabled" : "Disabled"}</span>
+                                                    </label>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </>
+                        )}
 
                         <div className="flex gap-2 pt-2 border-t border-(--outline)">
                             <button
