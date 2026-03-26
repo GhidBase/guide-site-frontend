@@ -24,6 +24,10 @@ const RARITY_BY_RATING = {
 // Index = absolute rating difference (0–4).
 const RATING_PROXIMITY_WEIGHTS = [50, 25, 10, 3, 1];
 
+// Drop weight for primary part selection by rating (index = rating - 1).
+// Heavily skewed toward low ratings so legendaries feel like a real event.
+const PRIMARY_RARITY_WEIGHTS = [100, 60, 30, 10, 2];
+
 // ── Shared Pools ──────────────────────────────────────────────────────────────
 // These are referenced by multiple weapon types.
 
@@ -753,7 +757,9 @@ export function generateWeapon(type) {
     if (!def) throw new Error(`Unknown weapon type: ${type}`);
 
     const [primarySlot, ...secondarySlots] = def.slots;
-    const primaryPart = primarySlot.pool[Math.floor(Math.random() * primarySlot.pool.length)];
+    const primaryPart = weightedRandom(
+        primarySlot.pool.map(part => ({ item: part, weight: PRIMARY_RARITY_WEIGHTS[part.rating - 1] ?? 1 }))
+    );
     const lockedOrigin = primaryPart.origin;
 
     const parts = { [primarySlot.key]: primaryPart };
