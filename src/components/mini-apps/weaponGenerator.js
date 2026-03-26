@@ -804,3 +804,7 @@ export function generateWeapon(type, level = 1) {
 }
 
 export const generateSword = () => generateWeapon("longsword");
+
+export function rescaleWeapon(weapon, level) {
+    return { ...weapon, level, stats: scaleStats(weapon.baseStats, level) };
+}
