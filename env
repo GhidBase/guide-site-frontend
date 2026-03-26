@@ -1,0 +1,10 @@
+#VITE_SECRET=5681014541
+#VITE_IGNORE_VIEWS=True
+#VITE_ENV=DEV
+VITE_LDG=True
+VITE_PUBLIC_URL=https://luckydefenseguides.com
+VITE_SERVER=http://localhost:3000
+#VITE_SERVER=https://guide-site-backend.onrender.com
+#VITE_SERVER=https://api.guidecodex.com
+#serverAPI = "https://guide-site-backend.onrender.com";
+#localAPI = "http://localhost:3000";
