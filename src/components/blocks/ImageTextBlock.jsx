@@ -148,6 +148,9 @@ const ImageTextBlock = forwardRef(function ImageTextBlock(
                 }
                 .itb-inline-input::placeholder { opacity: 0.3; }
                 @media (max-width: 640px) {
+                    .itb-card, .itb-section-label {
+                        margin: 0 0.75rem;
+                    }
                     .itb-card-inner {
                         flex-direction: column !important;
                         min-height: unset !important;
