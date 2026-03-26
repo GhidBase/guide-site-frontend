@@ -55,10 +55,13 @@ export default [
         route("guardian-upgrade-costs", "routes/guardian-costs.jsx", {
             id: "top-guardian-costs",
         }),
-        route("board-builder-admin", "routes/board-builder.jsx", { id: "top-board-builder" }),
+        route("board-builder-admin", "routes/board-builder.jsx", {
+            id: "top-board-builder",
+        }),
         route("tier-list", "routes/tier-list.jsx", { id: "top-tier-list" }),
 
         route("idle", "routes/idle-game.jsx"),
+        route("idle-sword", "routes/sword-browser.jsx"),
         route("login", "routes/login.jsx"),
         route("signup", "routes/signup.jsx"),
         route("dashboard", "routes/dashboard.jsx"),

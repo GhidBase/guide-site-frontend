@@ -4,10 +4,10 @@ import { useAuth } from "../../hooks/useAuth";
 
 const TICK_INTERVAL = 5000; // ms between server syncs
 const RARITY_COLORS = {
-    common: "#aaaaaa",
-    uncommon: "#4caf50",
-    rare: "#2196f3",
-    epic: "#9c27b0",
+    common: "#6b7280",
+    uncommon: "#2e7d32",
+    rare: "#1565c0",
+    epic: "#6a1b9a",
 };
 
 function calcKillsInInterval(character, enemy, seconds) {
@@ -80,7 +80,7 @@ function XpBar({ xp, xpNeeded, level }) {
     const pct = Math.min(100, Math.floor((xp / xpNeeded) * 100));
     return (
         <div className="w-full">
-            <div className="flex justify-between text-xs mb-1 opacity-70">
+            <div className="flex justify-between text-xs mb-1 opacity-90">
                 <span>Level {level}</span>
                 <span>{xp} / {xpNeeded} XP</span>
             </div>
@@ -97,7 +97,7 @@ function XpBar({ xp, xpNeeded, level }) {
 function StatRow({ label, value }) {
     return (
         <div className="flex justify-between text-sm py-0.5">
-            <span className="opacity-60">{label}</span>
+            <span className="opacity-80">{label}</span>
             <span className="font-semibold">{value}</span>
         </div>
     );
@@ -140,7 +140,7 @@ function InventoryItem({ inv, onEquip }) {
                     <div className="font-medium text-sm truncate" style={{ color }}>
                         {inv.name}
                     </div>
-                    <div className="text-xs opacity-50 capitalize">{inv.type} · ×{inv.quantity}</div>
+                    <div className="text-xs opacity-70 capitalize">{inv.type} · ×{inv.quantity}</div>
                     {inv.statBonus && (
                         <div className="text-xs opacity-60">
                             {Object.entries(inv.statBonus)
@@ -186,7 +186,7 @@ function CombatLog({ entries }) {
         if (ref.current) ref.current.scrollTop = ref.current.scrollHeight;
     }, [entries]);
     return (
-        <div ref={ref} className="h-32 overflow-y-auto text-xs opacity-60 space-y-0.5 font-mono pr-1">
+        <div ref={ref} className="h-32 overflow-y-auto text-xs opacity-80 space-y-0.5 font-mono pr-1">
             {entries.map((e, i) => (
                 <div key={i}>{e}</div>
             ))}
@@ -403,19 +403,19 @@ export default function IdleGame() {
 
             {/* Top: character stats */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                <div className="p-4 rounded-lg border border-(--surface-background) bg-(--surface-background)/30 space-y-3">
+                <div className="p-4 rounded-lg border border-(--surface-background) bg-(--surface-background)/60 space-y-3">
                     <XpBar xp={character.xp} xpNeeded={character.xpNeeded} level={character.level} />
                     <div className="grid grid-cols-3 gap-2 pt-1">
                         <StatRow label="ATK" value={character.attack} />
                         <StatRow label="DEF" value={character.defense} />
                         <StatRow label="HP" value={character.maxHp} />
                     </div>
-                    <div className="text-xs opacity-40">{character.totalKills.toLocaleString()} total kills</div>
+                    <div className="text-xs opacity-60">{character.totalKills.toLocaleString()} total kills</div>
                 </div>
 
                 {/* Zone selector */}
-                <div className="p-4 rounded-lg border border-(--surface-background) bg-(--surface-background)/30">
-                    <div className="text-sm font-semibold mb-2 opacity-70">Zone</div>
+                <div className="p-4 rounded-lg border border-(--surface-background) bg-(--surface-background)/60">
+                    <div className="text-sm font-semibold mb-2 opacity-90">Zone</div>
                     <div className="flex flex-wrap gap-2">
                         {zones.map((z) => (
                             <button
@@ -456,7 +456,7 @@ export default function IdleGame() {
             {activeTab === "combat" && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                        <div className="text-sm font-semibold opacity-60 mb-2 capitalize">{character.currentZone} enemies</div>
+                        <div className="text-sm font-semibold opacity-80 mb-2 capitalize">{character.currentZone} enemies</div>
                         {enemies.map((e) => (
                             <EnemyCard
                                 key={e.id}
@@ -468,7 +468,7 @@ export default function IdleGame() {
                         ))}
                     </div>
 
-                    <div className="p-4 rounded-lg border border-(--surface-background) bg-(--surface-background)/30 flex flex-col items-center justify-center gap-4 min-h-48">
+                    <div className="p-4 rounded-lg border border-(--surface-background) bg-(--surface-background)/60 flex flex-col items-center justify-center gap-4 min-h-48">
                         {selectedEnemy ? (
                             <>
                                 <div
@@ -519,7 +519,7 @@ export default function IdleGame() {
 
             {/* Log tab */}
             {activeTab === "log" && (
-                <div className="p-3 rounded-lg border border-(--surface-background) bg-(--surface-background)/20">
+                <div className="p-3 rounded-lg border border-(--surface-background) bg-(--surface-background)/50">
                     <CombatLog entries={log} />
                 </div>
             )}
