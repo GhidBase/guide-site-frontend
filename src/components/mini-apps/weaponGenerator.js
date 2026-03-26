@@ -740,6 +740,19 @@ function mergeStats(...parts) {
     return stats;
 }
 
+const LOG_SCALING_FACTOR = 2;
+
+function scaleStats(stats, level) {
+    const multiplier = 1 + Math.log(level + 1) * LOG_SCALING_FACTOR;
+    const scaled = {};
+    for (const [key, val] of Object.entries(stats)) {
+        // Negative stats (e.g. speed penalty) scale toward zero, not further negative
+        if (val < 0) scaled[key] = Math.ceil(val / multiplier);
+        else scaled[key] = Math.round(val * multiplier);
+    }
+    return scaled;
+}
+
 function resolveOrigin(parts) {
     const counts = {};
     for (const part of parts) {
@@ -752,7 +765,7 @@ function resolveOrigin(parts) {
 
 // ── Public API ────────────────────────────────────────────────────────────────
 
-export function generateWeapon(type) {
+export function generateWeapon(type, level = 1) {
     const def = WEAPON_DEFINITIONS[type];
     if (!def) throw new Error(`Unknown weapon type: ${type}`);
 
@@ -782,7 +795,9 @@ export function generateWeapon(type) {
         origin:      resolveOrigin(allParts),
         rarity:      calcRarity(primaryPart.rating),
         totalRating,
-        stats:       mergeStats(...allParts),
+        level,
+        stats:       scaleStats(mergeStats(...allParts), level),
+        baseStats:   mergeStats(...allParts),
         slots:       def.slots.map(s => ({ key: s.key, label: s.label })),
         parts,
     };

@@ -46,24 +46,50 @@ function PartRow({ slot, part }) {
 
 export default function SwordBrowser() {
     const [selectedType, setSelectedType] = useState("longsword");
-    const [weapon, setWeapon] = useState(() => generateWeapon("longsword"));
+    const [level, setLevel] = useState(1);
+    const [weapon, setWeapon] = useState(() => generateWeapon("longsword", 1));
     const [history, setHistory] = useState([]);
 
-    function roll(type = selectedType) {
+    function roll(type = selectedType, lvl = level) {
         setHistory(h => [weapon, ...h].slice(0, 8));
-        setWeapon(generateWeapon(type));
+        setWeapon(generateWeapon(type, lvl));
     }
 
     function handleTypeChange(type) {
         setSelectedType(type);
         setHistory(h => [weapon, ...h].slice(0, 8));
-        setWeapon(generateWeapon(type));
+        setWeapon(generateWeapon(type, level));
+    }
+
+    function handleLevelChange(lvl) {
+        setLevel(lvl);
+        setWeapon(w => generateWeapon(w.type, lvl));
     }
 
     const rarityColor = RARITY_COLORS[weapon.rarity] ?? "#6b7280";
 
     return (
         <div style={{ maxWidth: 480, margin: "2rem auto", fontFamily: "system-ui, sans-serif", color: "#1a1a1a" }}>
+            {/* Level control */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                <span style={{ fontSize: 12, fontWeight: 600, opacity: 0.5, whiteSpace: "nowrap" }}>Level {level}</span>
+                <input
+                    type="range"
+                    min={1}
+                    max={1000}
+                    value={level}
+                    onChange={e => handleLevelChange(Number(e.target.value))}
+                    style={{ flex: 1 }}
+                />
+                <input
+                    type="number"
+                    min={1}
+                    value={level}
+                    onChange={e => handleLevelChange(Math.max(1, Number(e.target.value)))}
+                    style={{ width: 64, padding: "3px 6px", borderRadius: 6, border: "1px solid #e5e7eb", fontSize: 13, textAlign: "center" }}
+                />
+            </div>
+
             {/* Type picker */}
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
                 {WEAPON_TYPES.map(({ id, label }) => (
@@ -92,7 +118,7 @@ export default function SwordBrowser() {
                             {weapon.typeLabel}
                         </div>
                         <div style={{ fontSize: 20, fontWeight: 700, color: "#fff" }}>{weapon.name}</div>
-                        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.75)", marginTop: 2 }}>{weapon.origin} · Rating {weapon.totalRating}</div>
+                        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.75)", marginTop: 2 }}>{weapon.origin} · Rating {weapon.totalRating} · Lv.{weapon.level}</div>
                     </div>
                     <span style={{
                         fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em",
@@ -105,11 +131,20 @@ export default function SwordBrowser() {
 
                 <div style={{ padding: "16px 18px", background: "#fff" }}>
                     {/* Stats */}
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 16 }}>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 4 }}>
                         {Object.entries(weapon.stats).map(([k, v]) => (
                             <StatPill key={k} label={k} value={v} />
                         ))}
                     </div>
+                    {level > 1 && (
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 16 }}>
+                            {Object.entries(weapon.baseStats).map(([k, v]) => (
+                                <span key={k} style={{ fontSize: 11, opacity: 0.4 }}>
+                                    {k} {v > 0 ? "+" : ""}{v} base
+                                </span>
+                            ))}
+                        </div>
+                    )}
 
                     {/* Parts — dynamic slots */}
                     <div>
