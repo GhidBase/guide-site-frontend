@@ -8,15 +8,21 @@ export const ORIGINS = {
 };
 
 // ── Rarity ────────────────────────────────────────────────────────────────────
-// Each weapon has exactly 4 parts, each rated 1–5. Total range: 4–20.
+// Rarity is determined solely by the primary part's rating (1–5).
+// Secondary parts are weighted toward the same rating tier, but vary freely,
+// giving each rarity tier a wide range of actual power.
 
-const RARITY_THRESHOLDS = [
-    { name: "common",    min: 4,  max: 8  },
-    { name: "uncommon",  min: 9,  max: 12 },
-    { name: "rare",      min: 13, max: 16 },
-    { name: "epic",      min: 17, max: 19 },
-    { name: "legendary", min: 20, max: 20 },
-];
+const RARITY_BY_RATING = {
+    1: "common",
+    2: "uncommon",
+    3: "rare",
+    4: "epic",
+    5: "legendary",
+};
+
+// How strongly secondary parts are pulled toward the primary part's rating.
+// Index = absolute rating difference (0–4).
+const RATING_PROXIMITY_WEIGHTS = [50, 25, 10, 3, 1];
 
 // ── Shared Pools ──────────────────────────────────────────────────────────────
 // These are referenced by multiple weapon types.
@@ -698,16 +704,19 @@ function weightedRandom(weightedItems) {
     return weightedItems[weightedItems.length - 1].item;
 }
 
-function pickPart(pool, lockedOrigin) {
-    const weighted = pool.map(part => ({
-        item: part,
-        weight: part.origin === null ? 30 : part.origin === lockedOrigin ? 60 : 10,
-    }));
+function pickPart(pool, lockedOrigin, primaryRating, allowCrossOrigin) {
+    const weighted = pool.map(part => {
+        const isCross = part.origin !== null && part.origin !== lockedOrigin;
+        if (isCross && !allowCrossOrigin) return { item: part, weight: 0 };
+        const originWeight = part.origin === null ? 30 : isCross ? 10 : 60;
+        const ratingWeight = RATING_PROXIMITY_WEIGHTS[Math.abs(part.rating - primaryRating)] ?? 1;
+        return { item: part, weight: originWeight * ratingWeight };
+    });
     return weightedRandom(weighted);
 }
 
-function calcRarity(totalRating) {
-    return RARITY_THRESHOLDS.find(t => totalRating >= t.min && totalRating <= t.max)?.name ?? "legendary";
+function calcRarity(primaryRating) {
+    return RARITY_BY_RATING[primaryRating] ?? "legendary";
 }
 
 function buildName(primaryPart, otherParts) {
@@ -749,8 +758,10 @@ export function generateWeapon(type) {
 
     const parts = { [primarySlot.key]: primaryPart };
     const secondaryParts = [];
+    let hasCrossOriginPart = false;
     for (const slot of secondarySlots) {
-        const part = pickPart(slot.pool, lockedOrigin);
+        const part = pickPart(slot.pool, lockedOrigin, primaryPart.rating, !hasCrossOriginPart);
+        if (part.origin !== null && part.origin !== lockedOrigin) hasCrossOriginPart = true;
         parts[slot.key] = part;
         secondaryParts.push(part);
     }
@@ -763,7 +774,7 @@ export function generateWeapon(type) {
         typeLabel: def.label,
         name:        buildName(primaryPart, secondaryParts),
         origin:      resolveOrigin(allParts),
-        rarity:      calcRarity(totalRating),
+        rarity:      calcRarity(primaryPart.rating),
         totalRating,
         stats:       mergeStats(...allParts),
         slots:       def.slots.map(s => ({ key: s.key, label: s.label })),
