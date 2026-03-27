@@ -221,6 +221,11 @@ export default function IdleGame() {
     const [fetchError, setFetchError] = useState(null);
     const [screen, setScreen] = useState(null); // null | "map" | "inventory" | "log"
     const [showSettings, setShowSettings] = useState(false);
+    const [invFilterSlot, setInvFilterSlot] = useState("all");
+    const [invFilterRarity, setInvFilterRarity] = useState("all");
+    const [invSort, setInvSort] = useState("newest");
+    const [discardAllPending, setDiscardAllPending] = useState(false);
+    const discardAllTimerRef = useRef(null);
 
     const [attacking, setAttacking] = useState(false);
     const [enemyCurrentHp, setEnemyCurrentHp] = useState(null);
@@ -398,6 +403,28 @@ export default function IdleGame() {
         }
     }
 
+    async function handleDiscardAll(items) {
+        if (!discardAllPending) {
+            setDiscardAllPending(true);
+            clearTimeout(discardAllTimerRef.current);
+            discardAllTimerRef.current = setTimeout(() => setDiscardAllPending(false), 3000);
+            return;
+        }
+        setDiscardAllPending(false);
+        clearTimeout(discardAllTimerRef.current);
+        const res = await fetch(`${currentAPI}/idle/character/items`, {
+            method: "DELETE",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ items: items.map((i) => ({ id: i.id, source: i.source })) }),
+        });
+        if (res.ok) {
+            const data = await res.json();
+            setCharacter(data);
+            addLog(`Discarded ${items.length} item${items.length !== 1 ? "s" : ""}.`);
+        }
+    }
+
     async function handleDiscard(itemId, source) {
         const res = await fetch(`${currentAPI}/idle/character/item/${itemId}`, {
             method: "DELETE",
@@ -447,8 +474,31 @@ export default function IdleGame() {
 
     if (!character) return null;
 
+    const RARITY_ORDER = { common: 1, uncommon: 2, rare: 3, epic: 4, legendary: 5 };
+    const SLOT_TYPES = { weapon: ["sword", "longsword", "greatsword", "dagger"], chest: ["chest"], helm: ["helm"], legs: ["legs"] };
+
     const equippedItems = character.inventory.filter((i) => i.equipped);
     const unequippedItems = character.inventory.filter((i) => !i.equipped);
+
+    const filteredItems = unequippedItems
+        .filter((i) => {
+            if (invFilterSlot !== "all") {
+                const allowed = SLOT_TYPES[invFilterSlot] ?? [];
+                if (!allowed.includes(i.type)) return false;
+            }
+            if (invFilterRarity !== "all" && i.rarity !== invFilterRarity) return false;
+            return true;
+        })
+        .sort((a, b) => {
+            switch (invSort) {
+                case "oldest":    return a.id - b.id;
+                case "level-high": return (b.level ?? 0) - (a.level ?? 0);
+                case "level-low":  return (a.level ?? 0) - (b.level ?? 0);
+                case "rarity-high": return (RARITY_ORDER[b.rarity] ?? 0) - (RARITY_ORDER[a.rarity] ?? 0);
+                case "rarity-low":  return (RARITY_ORDER[a.rarity] ?? 0) - (RARITY_ORDER[b.rarity] ?? 0);
+                default:          return b.id - a.id; // newest
+            }
+        });
 
     return (
         <div className="text-(--text-color)" style={{ height: "100dvh", display: "flex", flexDirection: "column" }}>
@@ -690,16 +740,85 @@ export default function IdleGame() {
                         </div>
                     </div>
 
+                    {/* Filter + sort controls */}
+                    <div className="shrink-0 px-3 py-2 border-b border-(--surface-background)/50 space-y-2">
+                        {/* Slot filter */}
+                        <div className="flex gap-1 overflow-x-auto no-scrollbar">
+                            {["all", "weapon", "chest", "helm", "legs"].map((slot) => (
+                                <button
+                                    key={slot}
+                                    onClick={() => setInvFilterSlot(slot)}
+                                    className={`shrink-0 px-2.5 py-1 rounded-full text-xs font-semibold capitalize cursor-pointer transition-colors ${
+                                        invFilterSlot === slot
+                                            ? "bg-(--primary) text-white"
+                                            : "border border-(--primary)/25 opacity-50 hover:opacity-80"
+                                    }`}
+                                >
+                                    {slot}
+                                </button>
+                            ))}
+                        </div>
+                        {/* Rarity filter + sort */}
+                        <div className="flex gap-1 items-center">
+                            <div className="flex gap-1 overflow-x-auto no-scrollbar flex-1">
+                                {["all", "common", "uncommon", "rare", "epic", "legendary"].map((r) => (
+                                    <button
+                                        key={r}
+                                        onClick={() => setInvFilterRarity(r)}
+                                        className="shrink-0 px-2 py-0.5 rounded-full text-xs font-semibold cursor-pointer transition-opacity capitalize"
+                                        style={{
+                                            background: r === "all" ? undefined : `${RARITY_COLORS[r]}22`,
+                                            color: r === "all" ? undefined : RARITY_COLORS[r],
+                                            border: `1px solid ${r === "all" ? "transparent" : RARITY_COLORS[r] + "66"}`,
+                                            opacity: invFilterRarity === r ? 1 : 0.4,
+                                            fontWeight: invFilterRarity === r ? 700 : 500,
+                                        }}
+                                    >
+                                        {r === "all" ? "All" : r.slice(0, 1).toUpperCase()}
+                                    </button>
+                                ))}
+                            </div>
+                            <select
+                                value={invSort}
+                                onChange={(e) => setInvSort(e.target.value)}
+                                className="shrink-0 text-xs px-1.5 py-1 rounded border border-(--surface-background) bg-(--accent) cursor-pointer opacity-70"
+                            >
+                                <option value="newest">Newest</option>
+                                <option value="oldest">Oldest</option>
+                                <option value="rarity-high">Rarity ↓</option>
+                                <option value="rarity-low">Rarity ↑</option>
+                                <option value="level-high">Level ↓</option>
+                                <option value="level-low">Level ↑</option>
+                            </select>
+                        </div>
+                    </div>
+
                     {/* Inventory grid */}
                     <div className="flex-1 overflow-y-auto px-4 py-3">
-                        <div className="text-xs font-semibold uppercase opacity-40 tracking-wider mb-2">
-                            Inventory ({unequippedItems.length})
+                        <div className="flex justify-between items-center mb-2">
+                            <span className="text-xs font-semibold uppercase opacity-40 tracking-wider">
+                                {filteredItems.length} of {unequippedItems.length} items
+                            </span>
+                            {filteredItems.length > 0 && (
+                                <button
+                                    onClick={() => handleDiscardAll(filteredItems)}
+                                    className={`text-xs px-2 py-0.5 rounded border cursor-pointer transition-colors ${
+                                        discardAllPending
+                                            ? "border-red-400 text-red-400 bg-red-400/10 font-semibold"
+                                            : "border-red-300/40 text-red-400/60 hover:text-red-400 hover:border-red-400/60"
+                                    }`}
+                                >
+                                    {discardAllPending ? `Confirm? (${filteredItems.length})` : "Remove All"}
+                                </button>
+                            )}
                         </div>
-                        {unequippedItems.length === 0 ? (
-                            <div className="opacity-30 text-sm text-center py-8">No items yet. Go kill some stuff!</div>
+                        {filteredItems.length === 0 ? (
+                            <div className="opacity-30 text-sm text-center py-8">
+                                {unequippedItems.length === 0 ? "No items yet. Go kill some stuff!" : "No items match filters."}
+                            </div>
                         ) : (
                             <div className="flex flex-col gap-1.5">
-                                {unequippedItems.map((inv) => {
+                                {filteredItems.map((inv) => {
                                     const color = RARITY_COLORS[inv.rarity] ?? "#aaa";
                                     const isWeapon = inv.source === "weapon";
                                     return (
