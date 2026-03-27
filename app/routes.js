@@ -4,6 +4,9 @@ export default [
     // Legacy .html URL redirects (301 server-side)
     route("/pages/:page", "routes/old-pages.jsx"),
 
+    // Fullscreen routes — no site header/footer
+    route("idle", "routes/idle-game.jsx"),
+
     layout("routes/layout.jsx", { id: "main" }, [
         index("routes/home.jsx"),
         route("index.html", "routes/redirect-index-html.jsx"),
@@ -60,7 +63,6 @@ export default [
         }),
         route("tier-list", "routes/tier-list.jsx", { id: "top-tier-list" }),
 
-        route("idle", "routes/idle-game.jsx"),
         route("idle-sword", "routes/sword-browser.jsx"),
         route("login", "routes/login.jsx"),
         route("signup", "routes/signup.jsx"),
