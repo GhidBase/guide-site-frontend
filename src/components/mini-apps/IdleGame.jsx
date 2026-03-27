@@ -183,6 +183,18 @@ function IconMap() {
     );
 }
 
+function IconScroll() {
+    return (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+            <line x1="16" y1="13" x2="8" y2="13" />
+            <line x1="16" y1="17" x2="8" y2="17" />
+            <polyline points="10 9 9 9 8 9" />
+        </svg>
+    );
+}
+
 function IconBag() {
     return (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -207,15 +219,24 @@ export default function IdleGame() {
     const [log, setLog] = useState([]);
     const [loading, setLoading] = useState(true);
     const [fetchError, setFetchError] = useState(null);
-    const [screen, setScreen] = useState(null); // null | "map" | "inventory"
+    const [screen, setScreen] = useState(null); // null | "map" | "inventory" | "log"
     const [showSettings, setShowSettings] = useState(false);
 
     const [attacking, setAttacking] = useState(false);
+    const [enemyCurrentHp, setEnemyCurrentHp] = useState(null);
+    const [toast, setToast] = useState(null);
     const attackTimerRef = useRef(null);
+    const toastTimerRef = useRef(null);
 
     const localKillsRef = useRef(0);
     const tickStartRef = useRef(Date.now());
     const serverTickRef = useRef(null);
+
+    const showToast = useCallback((content, duration = 4000) => {
+        setToast(content);
+        clearTimeout(toastTimerRef.current);
+        toastTimerRef.current = setTimeout(() => setToast(null), duration);
+    }, []);
 
     const addLog = useCallback((msg) => {
         const time = new Date().toLocaleTimeString("en-US", { hour12: false });
@@ -273,7 +294,7 @@ export default function IdleGame() {
         })();
     }, [character?.currentZone]);
 
-    // ── Visual attack pulse ──
+    // ── Visual attack pulse + HP tracking ──
     useEffect(() => {
         if (!selectedEnemy || !character) {
             clearInterval(attackTimerRef.current);
@@ -282,11 +303,17 @@ export default function IdleGame() {
         const dmg = Math.max(1, character.attack - selectedEnemy.defense);
         const hitsToKill = Math.ceil(selectedEnemy.hp / dmg);
 
+        setEnemyCurrentHp(selectedEnemy.hp);
+
         clearInterval(attackTimerRef.current);
         attackTimerRef.current = setInterval(() => {
             setAttacking(true);
             setTimeout(() => setAttacking(false), 200);
             localKillsRef.current += 1 / hitsToKill;
+            setEnemyCurrentHp((prev) => {
+                const next = prev - dmg;
+                return next <= 0 ? selectedEnemy.hp : next;
+            });
         }, 1000);
 
         return () => clearInterval(attackTimerRef.current);
@@ -320,11 +347,18 @@ export default function IdleGame() {
                 if (data.drops?.length > 0) {
                     setRecentDrops(data.drops);
                     setTimeout(() => setRecentDrops([]), 4000);
-                    for (const d of data.drops) addLog(`Dropped: ${d.count}× ${d.name}`);
+                    for (const d of data.drops) addLog(`Dropped: ${d.name}`);
                 }
-
                 if (data.levelUps > 0) addLog(`⬆ Leveled up! Now level ${data.character.level}`);
                 addLog(`Killed ${data.killsProcessed}× ${selectedEnemy.name} (+${data.xpGained} XP)`);
+
+                showToast({
+                    kills: data.killsProcessed,
+                    enemyName: selectedEnemy.name,
+                    xpGained: data.xpGained,
+                    levelUps: data.levelUps,
+                    drops: data.drops ?? [],
+                });
             } catch {
                 // silently ignore network errors in the tick loop
             }
@@ -332,7 +366,7 @@ export default function IdleGame() {
 
         serverTickRef.current = setInterval(sync, TICK_INTERVAL);
         return () => clearInterval(serverTickRef.current);
-    }, [selectedEnemy, character?.id, addLog]);
+    }, [selectedEnemy, character?.id, addLog, showToast]);
 
     // ── Zone change ──
     async function handleZoneChange(zone) {
@@ -480,6 +514,25 @@ export default function IdleGame() {
                                     <div className="font-semibold text-lg">{selectedEnemy.name}</div>
                                     <div className="text-xs opacity-50">Lv.{selectedEnemy.level} · {selectedEnemy.currentZone ?? character.currentZone}</div>
                                 </div>
+                                {/* Enemy HP bar */}
+                                {enemyCurrentHp !== null && (() => {
+                                    const dmg = Math.max(1, character.attack - selectedEnemy.defense);
+                                    const pct = Math.max(0, (enemyCurrentHp / selectedEnemy.hp) * 100);
+                                    return (
+                                        <div className="w-full px-2">
+                                            <div className="flex justify-between text-xs mb-1 opacity-60">
+                                                <span>{enemyCurrentHp} / {selectedEnemy.hp} HP</span>
+                                                <span className="text-(--primary) font-semibold">-{dmg} per hit</span>
+                                            </div>
+                                            <div className="w-full h-2 rounded-full bg-(--surface-background) overflow-hidden">
+                                                <div
+                                                    className="h-full rounded-full bg-red-400 transition-all duration-700"
+                                                    style={{ width: `${pct}%` }}
+                                                />
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
                                 <div
                                     className={`text-xs px-3 py-1 rounded-full transition-opacity duration-200 font-bold ${
                                         attacking ? "opacity-100" : "opacity-0"
@@ -498,9 +551,41 @@ export default function IdleGame() {
                         )}
                     </div>
 
-                    {/* Combat log */}
-                    <div className="mx-4 mb-3 p-2 rounded-lg border border-(--surface-background)/40 bg-(--surface-background)/30" style={{ height: 72 }}>
-                        <CombatLog entries={log} />
+                    {/* Toast */}
+                    <div className="mx-4 mb-3 min-h-8">
+                        {toast && (
+                            typeof toast === "string" ? (
+                                <div className="text-xs opacity-60 text-center py-1">{toast}</div>
+                            ) : (
+                                <div className="rounded-lg border border-(--surface-background) bg-(--accent)/60 px-3 py-2 text-xs space-y-1.5">
+                                    <div className="flex justify-between items-center">
+                                        <span className="font-semibold">
+                                            {toast.kills}× {toast.enemyName} killed
+                                        </span>
+                                        <span className="text-(--primary) font-bold">+{toast.xpGained} XP</span>
+                                    </div>
+                                    {toast.levelUps > 0 && (
+                                        <div className="font-semibold text-(--primary)">⬆ Level up!</div>
+                                    )}
+                                    {toast.drops.length > 0 && (
+                                        <div className="flex flex-wrap gap-1.5 pt-0.5 border-t border-(--surface-background)/60">
+                                            {toast.drops.map((d, i) => (
+                                                <span
+                                                    key={i}
+                                                    className="px-1.5 py-0.5 rounded-full border text-xs"
+                                                    style={{
+                                                        color: RARITY_COLORS[d.rarity] ?? "#aaa",
+                                                        borderColor: RARITY_COLORS[d.rarity] ?? "#aaa",
+                                                    }}
+                                                >
+                                                    {d.name}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )
+                        )}
                     </div>
                 </div>
 
@@ -669,6 +754,31 @@ export default function IdleGame() {
                     </div>
                 </div>
 
+                {/* ── Log overlay (slides in from right) ── */}
+                <div
+                    className="absolute inset-0 flex flex-col transition-transform duration-300 ease-in-out"
+                    style={{
+                        bottom: 56,
+                        transform: screen === "log" ? "translateX(0)" : "translateX(100%)",
+                        background: "var(--surface-background, #fff)",
+                    }}
+                >
+                    <div className="shrink-0 px-4 pt-4 pb-2 border-b border-(--surface-background)/50">
+                        <div className="text-xs font-semibold uppercase opacity-40 tracking-wider">Event Log</div>
+                    </div>
+                    <div className="flex-1 overflow-y-auto px-4 py-3">
+                        {log.length === 0 ? (
+                            <div className="opacity-30 text-sm text-center py-8">Nothing yet.</div>
+                        ) : (
+                            <div className="flex flex-col-reverse gap-0.5">
+                                {[...log].reverse().map((entry, i) => (
+                                    <div key={i} className="text-xs font-mono opacity-60">{entry}</div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+
                 {/* ── Bottom navbar ── */}
                 <div
                     className="absolute bottom-0 left-0 right-0 flex border-t border-(--surface-background)"
@@ -691,6 +801,15 @@ export default function IdleGame() {
                     >
                         <IconBag />
                         <span className="text-xs font-medium">Inventory</span>
+                    </button>
+                    <button
+                        onClick={() => toggleScreen("log")}
+                        className={`flex-1 flex flex-col items-center justify-center gap-0.5 cursor-pointer transition-colors ${
+                            screen === "log" ? "text-(--primary)" : "opacity-40 hover:opacity-70"
+                        }`}
+                    >
+                        <IconScroll />
+                        <span className="text-xs font-medium">Log</span>
                     </button>
                 </div>
             </div>
