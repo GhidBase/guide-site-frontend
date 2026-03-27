@@ -226,6 +226,7 @@ export default function IdleGame() {
     const [invSort, setInvSort] = useState("newest");
     const [discardAllPending, setDiscardAllPending] = useState(false);
     const discardAllTimerRef = useRef(null);
+    const [selectedItem, setSelectedItem] = useState(null);
 
     const [attacking, setAttacking] = useState(false);
     const [enemyCurrentHp, setEnemyCurrentHp] = useState(null);
@@ -399,6 +400,7 @@ export default function IdleGame() {
         if (res.ok) {
             const data = await res.json();
             setCharacter(data);
+            setSelectedItem(null);
             addLog(equipped ? "Item equipped." : "Item unequipped.");
         }
     }
@@ -435,6 +437,9 @@ export default function IdleGame() {
         if (res.ok) {
             const data = await res.json();
             setCharacter(data);
+            if (selectedItem?.id === itemId && selectedItem?.source === source) {
+                setSelectedItem(null);
+            }
             addLog("Item discarded.");
         }
     }
@@ -442,6 +447,7 @@ export default function IdleGame() {
     function toggleScreen(name) {
         setScreen((s) => (s === name ? null : name));
         setShowSettings(false);
+        setSelectedItem(null);
     }
 
     // ── Render states ──
@@ -476,9 +482,27 @@ export default function IdleGame() {
 
     const RARITY_ORDER = { common: 1, uncommon: 2, rare: 3, epic: 4, legendary: 5 };
     const SLOT_TYPES = { weapon: ["sword", "longsword", "greatsword", "dagger"], chest: ["chest"], helm: ["helm"], legs: ["legs"] };
+    const SLOT_EMOJI = { weapon: "⚔️", chest: "🛡️", helm: "🪖", legs: "👖" };
+
+    function getItemSlot(item) {
+        for (const [slot, types] of Object.entries(SLOT_TYPES)) {
+            if (types.includes(item.type)) return slot;
+        }
+        return null;
+    }
+
+    function getItemStats(item) {
+        if (item.source === "weapon") return item.stats ?? {};
+        return item.statBonus ?? {};
+    }
 
     const equippedItems = character.inventory.filter((i) => i.equipped);
     const unequippedItems = character.inventory.filter((i) => !i.equipped);
+
+    const selectedSlot = selectedItem ? getItemSlot(selectedItem) : null;
+    const equippedInSlot = selectedSlot
+        ? equippedItems.find((i) => SLOT_TYPES[selectedSlot]?.includes(i.type))
+        : null;
 
     const filteredItems = unequippedItems
         .filter((i) => {
@@ -687,36 +711,34 @@ export default function IdleGame() {
 
                 {/* ── Inventory overlay (slides in from right) ── */}
                 <div
-                    className="absolute inset-0 flex flex-col transition-transform duration-300 ease-in-out"
+                    className="absolute inset-0 flex flex-col"
                     style={{
-                        bottom: 56,
+                        bottom: selectedItem ? 0 : 56,
                         transform: screen === "inventory" ? "translateX(0)" : "translateX(100%)",
+                        transition: "transform 0.3s ease-in-out, bottom 0.3s ease-in-out",
                         background: "var(--surface-background, #fff)",
                     }}
                 >
                     {/* Equipped + stats */}
-                    <div className="shrink-0 px-4 pt-4 pb-3 border-b border-(--surface-background)/50">
-                        <div className="text-xs font-semibold uppercase opacity-40 tracking-wider mb-2">Equipped</div>
+                    <div className="shrink-0 px-4 pt-3 pb-2 border-b border-(--surface-background)/50">
+                        <div className="text-xs font-semibold uppercase opacity-40 tracking-wider mb-1.5">Equipped</div>
                         {equippedItems.length === 0 ? (
                             <div className="text-xs opacity-30">Nothing equipped.</div>
                         ) : (
-                            <div className="flex flex-col gap-1.5">
+                            <div className="flex flex-col gap-1">
                                 {equippedItems.map((inv) => {
                                     const color = RARITY_COLORS[inv.rarity] ?? "#aaa";
-                                    const subtitle = inv.source === "weapon"
-                                        ? `${inv.typeLabel} · Lv.${inv.level} · ${inv.origin}`
-                                        : inv.type;
+                                    const slot = getItemSlot(inv);
                                     return (
-                                        <div key={`${inv.source}-${inv.id}`} className="flex justify-between items-center">
-                                            <div className="min-w-0">
-                                                <span className="text-sm font-medium" style={{ color }}>{inv.name}</span>
-                                                <span className="text-xs opacity-40 ml-2 capitalize">{subtitle}</span>
-                                            </div>
+                                        <div key={`${inv.source}-${inv.id}`} className="flex items-center gap-2 min-w-0">
+                                            <span className="shrink-0" style={{ fontSize: 11 }}>{SLOT_EMOJI[slot] ?? "▪"}</span>
+                                            <span className="text-xs font-medium truncate flex-1" style={{ color }}>{inv.name}</span>
                                             <button
                                                 onClick={() => handleEquip(inv.id, false, inv.source)}
-                                                className="text-xs opacity-50 hover:opacity-90 cursor-pointer ml-3 shrink-0"
+                                                className="text-xs opacity-30 hover:opacity-70 cursor-pointer shrink-0"
+                                                title="Unequip"
                                             >
-                                                Unequip
+                                                ×
                                             </button>
                                         </div>
                                     );
@@ -724,24 +746,97 @@ export default function IdleGame() {
                             </div>
                         )}
 
-                        <div className="flex gap-4 mt-3 pt-3 border-t border-(--surface-background)/40">
-                            <div className="text-center">
-                                <div className="text-sm font-bold">{character.attack}</div>
-                                <div className="text-xs opacity-40">ATK</div>
-                            </div>
-                            <div className="text-center">
-                                <div className="text-sm font-bold">{character.defense}</div>
-                                <div className="text-xs opacity-40">DEF</div>
-                            </div>
-                            <div className="text-center">
-                                <div className="text-sm font-bold">{character.maxHp}</div>
-                                <div className="text-xs opacity-40">HP</div>
-                            </div>
+                        <div className="flex gap-3 mt-2 pt-2 border-t border-(--surface-background)/40 text-xs">
+                            <span><span className="font-bold">{character.attack}</span> <span className="opacity-40">ATK</span></span>
+                            <span><span className="font-bold">{character.defense}</span> <span className="opacity-40">DEF</span></span>
+                            <span><span className="font-bold">{character.maxHp}</span> <span className="opacity-40">HP</span></span>
                         </div>
                     </div>
 
+                    {/* Comparison panel */}
+                    {selectedItem && (() => {
+                        const equippedStats = equippedInSlot ? getItemStats(equippedInSlot) : {};
+                        const selStats = getItemStats(selectedItem);
+                        const allKeys = [...new Set([...Object.keys(equippedStats), ...Object.keys(selStats)])].filter(
+                            (k) => (equippedStats[k] ?? 0) !== 0 || (selStats[k] ?? 0) !== 0
+                        );
+                        return (
+                            <div className="shrink-0 px-4 pt-3 pb-3 border-b border-(--surface-background)/50 bg-(--surface-background)/30">
+                                <div className="flex justify-between items-center mb-2">
+                                    <span className="text-xs font-semibold uppercase opacity-40 tracking-wider">Compare</span>
+                                    <button
+                                        onClick={() => setSelectedItem(null)}
+                                        className="text-xs opacity-40 hover:opacity-80 cursor-pointer"
+                                    >
+                                        ✕
+                                    </button>
+                                </div>
+                                <div className="grid grid-cols-2 gap-3 text-xs">
+                                    {/* Equipped side */}
+                                    <div className="space-y-1">
+                                        <div className="opacity-40 font-semibold uppercase tracking-wider" style={{ fontSize: 10 }}>
+                                            {selectedSlot ? `${SLOT_EMOJI[selectedSlot]} Equipped` : "Equipped"}
+                                        </div>
+                                        {equippedInSlot ? (
+                                            <>
+                                                <div className="font-medium leading-tight truncate" style={{ color: RARITY_COLORS[equippedInSlot.rarity] ?? "#aaa" }}>
+                                                    {equippedInSlot.name}
+                                                </div>
+                                                <div className="opacity-40 truncate">
+                                                    {equippedInSlot.source === "weapon"
+                                                        ? `${equippedInSlot.typeLabel} · Lv.${equippedInSlot.level}`
+                                                        : equippedInSlot.type}
+                                                </div>
+                                                {allKeys.map((k) => (
+                                                    <div key={k} className="opacity-60">
+                                                        {equippedStats[k] != null ? `${equippedStats[k] > 0 ? "+" : ""}${equippedStats[k]}` : "—"} {k}
+                                                    </div>
+                                                ))}
+                                            </>
+                                        ) : (
+                                            <div className="opacity-30 italic">Nothing equipped</div>
+                                        )}
+                                    </div>
+                                    {/* Selected side */}
+                                    <div className="space-y-1">
+                                        <div className="opacity-40 font-semibold uppercase tracking-wider" style={{ fontSize: 10 }}>Selected</div>
+                                        <div className="font-medium leading-tight truncate" style={{ color: RARITY_COLORS[selectedItem.rarity] ?? "#aaa" }}>
+                                            {selectedItem.name}
+                                        </div>
+                                        <div className="opacity-40 truncate">
+                                            {selectedItem.source === "weapon"
+                                                ? `${selectedItem.typeLabel} · Lv.${selectedItem.level}`
+                                                : selectedItem.type}
+                                        </div>
+                                        {allKeys.map((k) => {
+                                            const curr = equippedStats[k] ?? 0;
+                                            const next = selStats[k] ?? 0;
+                                            const delta = next - curr;
+                                            return (
+                                                <div key={k} className="flex items-center gap-1">
+                                                    <span className="opacity-60">{next > 0 ? "+" : ""}{next} {k}</span>
+                                                    {equippedInSlot && delta !== 0 && (
+                                                        <span className="font-bold" style={{ fontSize: 10, color: delta > 0 ? "#22c55e" : "#ef4444" }}>
+                                                            {delta > 0 ? "▲" : "▼"}{Math.abs(delta)}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => handleEquip(selectedItem.id, true, selectedItem.source)}
+                                    className="mt-3 w-full text-xs px-3 py-1.5 rounded border border-(--primary)/40 text-(--primary) hover:bg-(--primary)/10 cursor-pointer transition-colors font-semibold"
+                                >
+                                    Equip
+                                </button>
+                            </div>
+                        );
+                    })()}
+
                     {/* Filter + sort controls */}
-                    <div className="shrink-0 px-3 py-2 border-b border-(--surface-background)/50 space-y-2">
+                    <div className="shrink-0 px-3 py-1.5 border-b border-(--surface-background)/50 space-y-1">
                         {/* Slot filter */}
                         <div className="flex gap-1 overflow-x-auto no-scrollbar">
                             {["all", "weapon", "chest", "helm", "legs"].map((slot) => (
@@ -795,8 +890,8 @@ export default function IdleGame() {
 
                     {/* Inventory grid */}
                     <div className="flex-1 overflow-y-auto px-4 py-3">
-                        <div className="flex justify-between items-center mb-2">
-                            <span className="text-xs font-semibold uppercase opacity-40 tracking-wider">
+                        <div className="flex justify-between items-center mb-1.5">
+                            <span className="text-xs opacity-40">
                                 {filteredItems.length} of {unequippedItems.length} items
                             </span>
                             {filteredItems.length > 0 && (
@@ -821,11 +916,18 @@ export default function IdleGame() {
                                 {filteredItems.map((inv) => {
                                     const color = RARITY_COLORS[inv.rarity] ?? "#aaa";
                                     const isWeapon = inv.source === "weapon";
+                                    const isSelected = selectedItem?.id === inv.id && selectedItem?.source === inv.source;
                                     return (
                                         <div
                                             key={`${inv.source}-${inv.id}`}
-                                            className="flex justify-between items-center px-3 py-2 rounded-lg border border-(--surface-background)"
-                                            style={{ borderLeftColor: color, borderLeftWidth: 3 }}
+                                            onClick={() => setSelectedItem(isSelected ? null : inv)}
+                                            className="flex justify-between items-center px-3 py-2 rounded-lg border cursor-pointer transition-colors"
+                                            style={{
+                                                borderLeftColor: color,
+                                                borderLeftWidth: 3,
+                                                borderColor: isSelected ? `${color}60` : undefined,
+                                                background: isSelected ? `${color}12` : undefined,
+                                            }}
                                         >
                                             <div className="min-w-0 flex-1">
                                                 <div className="text-sm font-medium truncate" style={{ color }}>{inv.name}</div>
@@ -852,13 +954,13 @@ export default function IdleGame() {
                                             </div>
                                             <div className="flex gap-1.5 shrink-0 ml-2">
                                                 <button
-                                                    onClick={() => handleEquip(inv.id, true, inv.source)}
+                                                    onClick={(e) => { e.stopPropagation(); handleEquip(inv.id, true, inv.source); }}
                                                     className="text-xs px-2 py-1 rounded border border-(--primary)/40 text-(--primary) hover:bg-(--primary)/10 cursor-pointer transition-colors"
                                                 >
                                                     Equip
                                                 </button>
                                                 <button
-                                                    onClick={() => handleDiscard(inv.id, inv.source)}
+                                                    onClick={(e) => { e.stopPropagation(); handleDiscard(inv.id, inv.source); }}
                                                     className="text-xs px-2 py-1 rounded border border-red-300/40 text-red-400 hover:bg-red-400/10 cursor-pointer transition-colors"
                                                     title="Discard"
                                                 >
@@ -901,7 +1003,12 @@ export default function IdleGame() {
                 {/* ── Bottom navbar ── */}
                 <div
                     className="absolute bottom-0 left-0 right-0 flex border-t border-(--surface-background)"
-                    style={{ height: 56, background: "var(--surface-background, #fff)" }}
+                    style={{
+                        height: 56,
+                        background: "var(--surface-background, #fff)",
+                        transition: "transform 0.3s ease-in-out",
+                        transform: selectedItem ? "translateY(100%)" : "translateY(0)",
+                    }}
                 >
                     <button
                         onClick={() => toggleScreen("map")}
