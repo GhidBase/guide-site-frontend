@@ -350,17 +350,31 @@ export default function IdleGame() {
     }
 
     // ── Equip/unequip ──
-    async function handleEquip(inventoryItemId, equipped) {
+    async function handleEquip(inventoryItemId, equipped, source) {
         const res = await fetch(`${currentAPI}/idle/character/equip/${inventoryItemId}`, {
             method: "POST",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ equipped }),
+            body: JSON.stringify({ equipped, source }),
         });
         if (res.ok) {
             const data = await res.json();
             setCharacter(data);
             addLog(equipped ? "Item equipped." : "Item unequipped.");
+        }
+    }
+
+    async function handleDiscard(itemId, source) {
+        const res = await fetch(`${currentAPI}/idle/character/item/${itemId}`, {
+            method: "DELETE",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ source }),
+        });
+        if (res.ok) {
+            const data = await res.json();
+            setCharacter(data);
+            addLog("Item discarded.");
         }
     }
 
@@ -554,14 +568,17 @@ export default function IdleGame() {
                             <div className="flex flex-col gap-1.5">
                                 {equippedItems.map((inv) => {
                                     const color = RARITY_COLORS[inv.rarity] ?? "#aaa";
+                                    const subtitle = inv.source === "weapon"
+                                        ? `${inv.typeLabel} · Lv.${inv.level} · ${inv.origin}`
+                                        : inv.type;
                                     return (
-                                        <div key={inv.id} className="flex justify-between items-center">
+                                        <div key={`${inv.source}-${inv.id}`} className="flex justify-between items-center">
                                             <div className="min-w-0">
                                                 <span className="text-sm font-medium" style={{ color }}>{inv.name}</span>
-                                                <span className="text-xs opacity-40 ml-2 capitalize">{inv.type}</span>
+                                                <span className="text-xs opacity-40 ml-2 capitalize">{subtitle}</span>
                                             </div>
                                             <button
-                                                onClick={() => handleEquip(inv.id, false)}
+                                                onClick={() => handleEquip(inv.id, false, inv.source)}
                                                 className="text-xs opacity-50 hover:opacity-90 cursor-pointer ml-3 shrink-0"
                                             >
                                                 Unequip
@@ -599,29 +616,51 @@ export default function IdleGame() {
                             <div className="flex flex-col gap-1.5">
                                 {unequippedItems.map((inv) => {
                                     const color = RARITY_COLORS[inv.rarity] ?? "#aaa";
+                                    const isWeapon = inv.source === "weapon";
                                     return (
                                         <div
-                                            key={inv.id}
+                                            key={`${inv.source}-${inv.id}`}
                                             className="flex justify-between items-center px-3 py-2 rounded-lg border border-(--surface-background)"
                                             style={{ borderLeftColor: color, borderLeftWidth: 3 }}
                                         >
-                                            <div className="min-w-0">
+                                            <div className="min-w-0 flex-1">
                                                 <div className="text-sm font-medium truncate" style={{ color }}>{inv.name}</div>
-                                                <div className="text-xs opacity-50 capitalize">{inv.type} · ×{inv.quantity}</div>
-                                                {inv.statBonus && (
-                                                    <div className="text-xs opacity-40">
-                                                        {Object.entries(inv.statBonus).map(([k, v]) => `+${v} ${k}`).join(", ")}
-                                                    </div>
+                                                {isWeapon ? (
+                                                    <>
+                                                        <div className="text-xs opacity-50">{inv.typeLabel} · Lv.{inv.level} · {inv.origin}</div>
+                                                        <div className="text-xs opacity-40">
+                                                            {Object.entries(inv.stats)
+                                                                .filter(([, v]) => v !== 0)
+                                                                .map(([k, v]) => `${v > 0 ? "+" : ""}${v} ${k}`)
+                                                                .join(", ")}
+                                                        </div>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <div className="text-xs opacity-50 capitalize">{inv.type} · ×{inv.quantity}</div>
+                                                        {inv.statBonus && (
+                                                            <div className="text-xs opacity-40">
+                                                                {Object.entries(inv.statBonus).map(([k, v]) => `+${v} ${k}`).join(", ")}
+                                                            </div>
+                                                        )}
+                                                    </>
                                                 )}
                                             </div>
-                                            {(inv.type === "weapon" || inv.type === "armor") && (
+                                            <div className="flex gap-1.5 shrink-0 ml-2">
                                                 <button
-                                                    onClick={() => handleEquip(inv.id, true)}
-                                                    className="shrink-0 text-xs px-2 py-1 rounded border border-(--primary)/40 text-(--primary) hover:bg-(--primary)/10 cursor-pointer transition-colors ml-2"
+                                                    onClick={() => handleEquip(inv.id, true, inv.source)}
+                                                    className="text-xs px-2 py-1 rounded border border-(--primary)/40 text-(--primary) hover:bg-(--primary)/10 cursor-pointer transition-colors"
                                                 >
                                                     Equip
                                                 </button>
-                                            )}
+                                                <button
+                                                    onClick={() => handleDiscard(inv.id, inv.source)}
+                                                    className="text-xs px-2 py-1 rounded border border-red-300/40 text-red-400 hover:bg-red-400/10 cursor-pointer transition-colors"
+                                                    title="Discard"
+                                                >
+                                                    ✕
+                                                </button>
+                                            </div>
                                         </div>
                                     );
                                 })}
