@@ -11,11 +11,21 @@ const RARITY_COLORS = {
     legendary: "#b45309",
 };
 
+function calcAttacksPerSec(character) {
+    return 0.5 + (character.speed ?? 0) / 50;
+}
+
+function calcPlayerDmg(character, enemy) {
+    const attack = (character.attack ?? character.baseAttack) + (character.magic ?? 0);
+    return Math.max(1, attack - enemy.defense);
+}
+
 function calcKillsInInterval(character, enemy, seconds) {
-    const attack = character.attack ?? character.baseAttack;
-    const dmg = Math.max(1, attack - enemy.defense);
-    const hitsToKill = Math.ceil(enemy.hp / dmg);
-    return Math.floor(seconds / hitsToKill);
+    const dmg = calcPlayerDmg(character, enemy);
+    const attacksPerSec = calcAttacksPerSec(character);
+    const hitsToKill = Math.max(1, Math.ceil(enemy.hp / dmg));
+    const timeToKill = hitsToKill / attacksPerSec;
+    return Math.floor(seconds / timeToKill);
 }
 
 function formatDuration(seconds) {
@@ -259,11 +269,17 @@ export default function IdleGame() {
 
     const [attacking, setAttacking] = useState(false);
     const [enemyCurrentHp, setEnemyCurrentHp] = useState(null);
+    const [playerCurrentHp, setPlayerCurrentHp] = useState(null);
+    const [playerChargeProgress, setPlayerChargeProgress] = useState(0);
+    const [enemyChargeProgress, setEnemyChargeProgress] = useState(0);
     const [toast, setToast] = useState(null);
-    const attackTimerRef = useRef(null);
+    const rAFRef = useRef(null);
     const toastTimerRef = useRef(null);
 
     const localKillsRef = useRef(0);
+    const [localKillCount, setLocalKillCount] = useState(0);
+    const localKillCountRef = useRef(0);
+    const visualEnemyHpRef = useRef(null);
     const tickStartRef = useRef(Date.now());
     const serverTickRef = useRef(null);
 
@@ -291,6 +307,7 @@ export default function IdleGame() {
                 const { character: charData, offlineGains: gains } = await charRes.json();
                 const zonesData = await zonesRes.json();
                 setCharacter(charData);
+                setPlayerCurrentHp(charData.currentHp);
                 setZones(zonesData);
                 if (gains) {
                     setOfflineGains(gains);
@@ -329,30 +346,66 @@ export default function IdleGame() {
         })();
     }, [character?.currentZone]);
 
-    // ── Visual attack pulse + HP tracking ──
+    // ── Combat loop (rAF) ──
     useEffect(() => {
-        if (!selectedEnemy || !character) {
-            clearInterval(attackTimerRef.current);
-            return;
-        }
-        const dmg = Math.max(1, character.attack - selectedEnemy.defense);
-        const hitsToKill = Math.ceil(selectedEnemy.hp / dmg);
+        cancelAnimationFrame(rAFRef.current);
+        if (!selectedEnemy || !character) return;
 
+        localKillCountRef.current = 0;
+        setLocalKillCount(0);
+
+        if (character.currentHp <= 0) return;
+
+        const dmg = calcPlayerDmg(character, selectedEnemy);
+        const attacksPerSec = calcAttacksPerSec(character);
+        const hitsToKillEnemy = Math.max(1, Math.ceil(selectedEnemy.hp / dmg));
+        const enemyAttackSpeed = selectedEnemy.attackSpeed ?? 1.0;
+        const playerHitInterval = (1 / attacksPerSec) * 1000;
+        const enemyHitInterval = (1 / enemyAttackSpeed) * 1000;
+        const enemyDmgPerHit = Math.max(1, selectedEnemy.attack - character.defense);
+
+        visualEnemyHpRef.current = selectedEnemy.hp;
         setEnemyCurrentHp(selectedEnemy.hp);
+        setPlayerCurrentHp(character.currentHp);
+        setPlayerChargeProgress(0);
+        setEnemyChargeProgress(0);
 
-        clearInterval(attackTimerRef.current);
-        attackTimerRef.current = setInterval(() => {
-            setAttacking(true);
-            setTimeout(() => setAttacking(false), 200);
-            localKillsRef.current += 1 / hitsToKill;
-            setEnemyCurrentHp((prev) => {
-                const next = prev - dmg;
-                return next <= 0 ? selectedEnemy.hp : next;
-            });
-        }, 1000);
+        let lastPlayerHit = performance.now();
+        let lastEnemyHit = performance.now();
 
-        return () => clearInterval(attackTimerRef.current);
-    }, [selectedEnemy, character?.attack, character?.baseAttack]);
+        const loop = (now) => {
+            const playerElapsed = now - lastPlayerHit;
+            const enemyElapsed = now - lastEnemyHit;
+
+            setPlayerChargeProgress(Math.min(1, playerElapsed / playerHitInterval));
+            setEnemyChargeProgress(Math.min(1, enemyElapsed / enemyHitInterval));
+
+            if (playerElapsed >= playerHitInterval) {
+                lastPlayerHit = now;
+                setAttacking(true);
+                setTimeout(() => setAttacking(false), 150);
+
+                localKillsRef.current += 1 / hitsToKillEnemy;
+                visualEnemyHpRef.current -= dmg;
+                if (visualEnemyHpRef.current <= 0) {
+                    visualEnemyHpRef.current = selectedEnemy.hp;
+                    localKillCountRef.current += 1;
+                    setLocalKillCount(localKillCountRef.current);
+                }
+                setEnemyCurrentHp(visualEnemyHpRef.current);
+            }
+
+            if (enemyElapsed >= enemyHitInterval) {
+                lastEnemyHit = now;
+                setPlayerCurrentHp((prev) => Math.max(0, prev - enemyDmgPerHit));
+            }
+
+            rAFRef.current = requestAnimationFrame(loop);
+        };
+
+        rAFRef.current = requestAnimationFrame(loop);
+        return () => cancelAnimationFrame(rAFRef.current);
+    }, [selectedEnemy, character?.attack, character?.baseAttack, character?.speed, character?.magic, character?.defense, character?.currentHp]);
 
     // ── Server sync tick ──
     useEffect(() => {
@@ -365,7 +418,7 @@ export default function IdleGame() {
             localKillsRef.current = 0;
             tickStartRef.current = now;
 
-            if (kills === 0) return;
+            // Always tick even if kills=0 so server can process HP regen while dead
 
             try {
                 const res = await fetch(`${currentAPI}/idle/character/tick`, {
@@ -378,14 +431,21 @@ export default function IdleGame() {
                 if (!res.ok) return;
 
                 setCharacter(data.character);
+                setPlayerCurrentHp(data.character.currentHp);
+                localKillCountRef.current = 0;
+                setLocalKillCount(0);
 
-                if (data.drops?.length > 0) {
-                    setRecentDrops(data.drops);
-                    setTimeout(() => setRecentDrops([]), 4000);
-                    for (const d of data.drops) addLog(`Dropped: ${d.name}`);
+                if (data.died) addLog(`💀 Defeated by ${selectedEnemy.name}. Recovering...`);
+
+                if (data.killsProcessed > 0) {
+                    if (data.drops?.length > 0) {
+                        setRecentDrops(data.drops);
+                        setTimeout(() => setRecentDrops([]), 4000);
+                        for (const d of data.drops) addLog(`Dropped: ${d.name}`);
+                    }
+                    if (data.levelUps > 0) addLog(`⬆ Leveled up! Now level ${data.character.level}`);
+                    addLog(`Killed ${data.killsProcessed}× ${selectedEnemy.name} (+${data.xpGained} XP)`);
                 }
-                if (data.levelUps > 0) addLog(`⬆ Leveled up! Now level ${data.character.level}`);
-                addLog(`Killed ${data.killsProcessed}× ${selectedEnemy.name} (+${data.xpGained} XP)`);
 
                 showToast({
                     kills: data.killsProcessed,
@@ -432,6 +492,16 @@ export default function IdleGame() {
             setSelectedItem(null);
             addLog(equipped ? "Item equipped." : "Item unequipped.");
         }
+    }
+
+    async function handleReset() {
+        const res = await fetch(`${currentAPI}/idle/character/reset`, { method: "POST", credentials: "include" });
+        if (res.ok) { setCharacter(await res.json()); addLog("Character reset."); }
+    }
+
+    async function handleRevive() {
+        const res = await fetch(`${currentAPI}/idle/character/revive`, { method: "POST", credentials: "include" });
+        if (res.ok) { const c = await res.json(); setCharacter(c); setPlayerCurrentHp(c.currentHp); addLog("Revived."); }
     }
 
     async function handleDiscardAll(items) {
@@ -579,16 +649,30 @@ export default function IdleGame() {
 
                     {/* Settings panel (inline, below header) */}
                     {showSettings && (
-                        <div className="mx-4 mb-2 p-3 rounded-lg border border-(--surface-background) bg-(--surface-background)/60 text-sm space-y-1 shrink-0">
-                            <div className="font-semibold text-xs uppercase opacity-50 tracking-wider mb-2">Settings</div>
-                            <div className="opacity-70 text-xs">No settings yet.</div>
+                        <div className="mx-4 mb-2 p-3 rounded-lg border border-(--surface-background) bg-(--surface-background)/60 text-sm space-y-2 shrink-0">
+                            <div className="font-semibold text-xs uppercase opacity-50 tracking-wider">Settings</div>
+                            <button
+                                onClick={handleReset}
+                                className="w-full text-xs px-3 py-1.5 rounded border border-red-500/40 text-red-400 hover:bg-red-500/10 cursor-pointer transition-colors text-left"
+                            >
+                                Reset Character (keeps weapons)
+                            </button>
+                            <div className="border-t border-(--surface-background) pt-2">
+                                <div className="font-semibold text-xs uppercase opacity-30 tracking-wider mb-1.5">Dev</div>
+                                <button
+                                    onClick={handleRevive}
+                                    className="w-full text-xs px-3 py-1.5 rounded border border-green-500/40 text-green-400 hover:bg-green-500/10 cursor-pointer transition-colors text-left"
+                                >
+                                    Instant Revive
+                                </button>
+                            </div>
                         </div>
                     )}
 
                     {/* Stats row */}
                     <div className="flex justify-around text-sm px-4 py-2 border-b border-(--surface-background)/50 shrink-0">
                         <div className="text-center">
-                            <div className="font-bold">{character.attack}</div>
+                            <div className="font-bold">{character.attack + (character.magic ?? 0)}</div>
                             <div className="text-xs opacity-50">ATK</div>
                         </div>
                         <div className="text-center">
@@ -596,11 +680,15 @@ export default function IdleGame() {
                             <div className="text-xs opacity-50">DEF</div>
                         </div>
                         <div className="text-center">
+                            <div className="font-bold">{(character.speed ?? 0) > 0 ? `${calcAttacksPerSec(character).toFixed(2)}/s` : "1/s"}</div>
+                            <div className="text-xs opacity-50">SPD</div>
+                        </div>
+                        <div className="text-center">
                             <div className="font-bold">{character.maxHp}</div>
                             <div className="text-xs opacity-50">HP</div>
                         </div>
                         <div className="text-center">
-                            <div className="font-bold">{character.totalKills.toLocaleString()}</div>
+                            <div className="font-bold">{(character.totalKills + localKillCount).toLocaleString()}</div>
                             <div className="text-xs opacity-50">Kills</div>
                         </div>
                     </div>
@@ -609,43 +697,103 @@ export default function IdleGame() {
                     <div className="flex-1 flex flex-col items-center justify-center gap-3 px-4">
                         {selectedEnemy ? (
                             <>
-                                <div
-                                    className={`text-6xl transition-transform duration-100 select-none ${
-                                        attacking ? "scale-110" : "scale-100"
-                                    }`}
-                                >
-                                    👾
-                                </div>
+                                {character.currentHp <= 0 ? (
+                                    <div className="text-center space-y-2">
+                                        <div className="text-4xl select-none">💀</div>
+                                        <div className="font-semibold opacity-60">Defeated</div>
+                                        <div className="text-xs opacity-40">Recovering… {Math.ceil((character.maxHp - Math.max(0, character.currentHp)) / 10)}s remaining</div>
+                                    </div>
+                                ) : (
+                                    <div
+                                        className={`text-6xl transition-transform duration-100 select-none ${
+                                            attacking ? "scale-110" : "scale-100"
+                                        }`}
+                                    >
+                                        👾
+                                    </div>
+                                )}
                                 <div className="text-center">
                                     <div className="font-semibold text-lg">{selectedEnemy.name}</div>
                                     <div className="text-xs opacity-50">Lv.{selectedEnemy.level} · {selectedEnemy.currentZone ?? character.currentZone}</div>
                                 </div>
                                 {/* Enemy HP bar */}
-                                {enemyCurrentHp !== null && (() => {
-                                    const dmg = Math.max(1, character.attack - selectedEnemy.defense);
+                                {character.currentHp > 0 && enemyCurrentHp !== null && (() => {
+                                    const dmg = calcPlayerDmg(character, selectedEnemy);
+                                    const oneShot = dmg >= selectedEnemy.hp;
                                     const pct = Math.max(0, (enemyCurrentHp / selectedEnemy.hp) * 100);
                                     return (
                                         <div className="w-full px-2">
                                             <div className="flex justify-between text-xs mb-1 opacity-60">
-                                                <span>{enemyCurrentHp} / {selectedEnemy.hp} HP</span>
-                                                <span className="text-(--primary) font-semibold">-{dmg} per hit</span>
+                                                <span>{Math.ceil(enemyCurrentHp)} / {selectedEnemy.hp} HP</span>
+                                                {oneShot
+                                                    ? <span className="text-(--primary) font-semibold">One shot</span>
+                                                    : <span className="text-(--primary) font-semibold">{dmg} dmg/hit</span>
+                                                }
                                             </div>
                                             <div className="w-full h-2 rounded-full bg-(--surface-background) overflow-hidden">
                                                 <div
-                                                    className="h-full rounded-full bg-red-400 transition-all duration-700"
-                                                    style={{ width: `${pct}%` }}
+                                                    className="h-full rounded-full bg-red-400 transition-all"
+                                                    style={{ width: `${pct}%`, transitionDuration: `${Math.round(1000 / calcAttacksPerSec(character))}ms` }}
                                                 />
                                             </div>
                                         </div>
                                     );
                                 })()}
-                                <div
-                                    className={`text-xs px-3 py-1 rounded-full transition-opacity duration-200 font-bold ${
-                                        attacking ? "opacity-100" : "opacity-0"
-                                    } text-(--primary) border border-(--primary)/30`}
-                                >
-                                    ⚔ Attack!
-                                </div>
+                                {/* Player HP bar */}
+                                {(() => {
+                                    const hp = playerCurrentHp ?? character.currentHp;
+                                    const pct = Math.max(0, (hp / character.maxHp) * 100);
+                                    const enemyDmg = Math.max(1, selectedEnemy.attack - character.defense);
+                                    return (
+                                        <div className="w-full px-2">
+                                            <div className="flex justify-between text-xs mb-1 opacity-60">
+                                                <span>{Math.ceil(Math.max(0, hp))} / {character.maxHp} HP</span>
+                                                {character.currentHp > 0
+                                                    ? <span className="text-red-400">{enemyDmg} dmg/hit</span>
+                                                    : <span className="text-green-400">+{10}/s regen</span>
+                                                }
+                                            </div>
+                                            <div className="w-full h-2 rounded-full bg-(--surface-background) overflow-hidden">
+                                                <div
+                                                    className="h-full rounded-full transition-all"
+                                                    style={{
+                                                        width: `${pct}%`,
+                                                        background: pct > 50 ? "#4ade80" : pct > 25 ? "#facc15" : "#f87171",
+                                                        transitionDuration: character.currentHp <= 0 ? "1000ms" : `${Math.round(1000 / calcAttacksPerSec(character))}ms`,
+                                                    }}
+                                                />
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
+                                {character.currentHp > 0 && (
+                                    <div className="w-full px-2 space-y-1.5">
+                                        <div>
+                                            <div className="flex justify-between text-xs mb-1 opacity-50">
+                                                <span>⚔ Your attack</span>
+                                                <span>{calcAttacksPerSec(character).toFixed(2)}/s</span>
+                                            </div>
+                                            <div className="w-full h-1.5 rounded-full bg-(--surface-background) overflow-hidden">
+                                                <div
+                                                    className="h-full rounded-full bg-(--primary)"
+                                                    style={{ width: `${playerChargeProgress * 100}%` }}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div className="flex justify-between text-xs mb-1 opacity-50">
+                                                <span>💢 {selectedEnemy.name}</span>
+                                                <span>{(selectedEnemy.attackSpeed ?? 1).toFixed(2)}/s</span>
+                                            </div>
+                                            <div className="w-full h-1.5 rounded-full bg-(--surface-background) overflow-hidden">
+                                                <div
+                                                    className="h-full rounded-full bg-red-400"
+                                                    style={{ width: `${enemyChargeProgress * 100}%` }}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                                 {recentDrops.length > 0 && (
                                     <div className="w-full text-center">
                                         <DropFeed drops={recentDrops} />
@@ -782,9 +930,10 @@ export default function IdleGame() {
                         </div>
 
                         <div className="flex gap-3 mt-2 pt-2 border-t border-(--surface-background)/40 text-xs">
-                            <span><span className="font-bold">{character.attack}</span> <span className="opacity-40">ATK</span></span>
+                            <span><span className="font-bold">{character.attack + (character.magic ?? 0)}</span> <span className="opacity-40">ATK</span></span>
                             <span><span className="font-bold">{character.defense}</span> <span className="opacity-40">DEF</span></span>
                             <span><span className="font-bold">{character.maxHp}</span> <span className="opacity-40">HP</span></span>
+                            {(character.speed ?? 0) > 0 && <span><span className="font-bold">{calcAttacksPerSec(character).toFixed(2)}/s</span> <span className="opacity-40">SPD</span></span>}
                         </div>
                     </div>
 
