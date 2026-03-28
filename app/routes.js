@@ -63,7 +63,6 @@ export default [
         }),
         route("tier-list", "routes/tier-list.jsx", { id: "top-tier-list" }),
 
-        route("idle-sword", "routes/sword-browser.jsx"),
         route("login", "routes/login.jsx"),
         route("signup", "routes/signup.jsx"),
         route("dashboard", "routes/dashboard.jsx"),

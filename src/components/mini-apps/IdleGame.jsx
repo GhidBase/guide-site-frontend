@@ -282,6 +282,7 @@ export default function IdleGame() {
     const [enemyChargeProgress, setEnemyChargeProgress] = useState(0);
     const [enemyDeathPause, setEnemyDeathPause] = useState(false);
     const [reviveKey, setReviveKey] = useState(0);
+    const [playerIsAlive, setPlayerIsAlive] = useState(true);
     const enemyDeadRef = useRef(false);
     const lastPlayerHitRef = useRef(0);
     const lastEnemyHitRef = useRef(0);
@@ -295,6 +296,9 @@ export default function IdleGame() {
     const visualEnemyHpRef = useRef(null);
     const tickStartRef = useRef(Date.now());
     const serverTickRef = useRef(null);
+    const lastReviveTimeRef = useRef(0);
+    // Mirrors playerCurrentHp state so tick/revive async functions always see the current value
+    const playerCurrentHpRef = useRef(null);
 
     const showToast = useCallback((content, duration = 4000) => {
         setToast(content);
@@ -320,7 +324,9 @@ export default function IdleGame() {
                 const { character: charData, offlineGains: gains } = await charRes.json();
                 const zonesData = await zonesRes.json();
                 setCharacter(charData);
+                playerCurrentHpRef.current = charData.currentHp;
                 setPlayerCurrentHp(charData.currentHp);
+                setPlayerIsAlive(charData.currentHp > 0);
                 setZones(zonesData);
                 if (gains) {
                     setOfflineGains(gains);
@@ -367,7 +373,7 @@ export default function IdleGame() {
         localKillCountRef.current = 0;
         setLocalKillCount(0);
 
-        if (character.currentHp <= 0) return;
+        if (!playerIsAlive) return;
 
         const dmg = calcPlayerDmg(character, selectedEnemy);
         const attacksPerSec = calcAttacksPerSec(character);
@@ -382,7 +388,8 @@ export default function IdleGame() {
         lastPlayerHitRef.current = performance.now();
         lastEnemyHitRef.current = performance.now();
         setEnemyCurrentHp(selectedEnemy.hp);
-        setPlayerCurrentHp(character.currentHp);
+        // Don't overwrite playerCurrentHpRef here — it's already correct from revive/load/regen.
+        // Seeding it from character.currentHp would clobber it with a stale server snapshot.
         setPlayerChargeProgress(0);
         setEnemyChargeProgress(0);
         setEnemyDeathPause(false);
@@ -429,7 +436,9 @@ export default function IdleGame() {
 
             if (enemyElapsed >= enemyHitInterval) {
                 lastEnemyHitRef.current = now;
-                setPlayerCurrentHp((prev) => Math.max(0, prev - enemyDmgPerHit));
+                playerCurrentHpRef.current = Math.max(0, playerCurrentHpRef.current - enemyDmgPerHit);
+                setPlayerCurrentHp(playerCurrentHpRef.current);
+                if (playerCurrentHpRef.current === 0) setPlayerIsAlive(false);
             }
 
             rAFRef.current = requestAnimationFrame(loop);
@@ -437,14 +446,15 @@ export default function IdleGame() {
 
         rAFRef.current = requestAnimationFrame(loop);
         return () => cancelAnimationFrame(rAFRef.current);
-    }, [selectedEnemy, character?.attack, character?.baseAttack, character?.speed, character?.magic, character?.defense, reviveKey]);
+    }, [selectedEnemy, character?.attack, character?.baseAttack, character?.speed, character?.magic, character?.defense, reviveKey, playerIsAlive]);
 
     // ── Server sync tick ──
     useEffect(() => {
         if (!selectedEnemy || !character) return;
 
         const sync = async () => {
-            const now = Date.now();
+            const syncStartTime = Date.now();
+            const now = syncStartTime;
             const durationSeconds = (now - tickStartRef.current) / 1000;
             const kills = Math.floor(localKillsRef.current);
             localKillsRef.current -= kills;
@@ -461,9 +471,19 @@ export default function IdleGame() {
                 });
                 const data = await res.json();
                 if (!res.ok) return;
+                // Discard tick responses that were in-flight before the last revive —
+                // their character snapshot has currentHp ≤ 0 and would re-trigger death UI
+                if (syncStartTime < lastReviveTimeRef.current) return;
 
                 setCharacter(data.character);
-                setPlayerCurrentHp(data.character.currentHp);
+                // Only sync displayed HP from server when the frontend also considers us dead (regen progress).
+                // While alive, the rAF loop exclusively owns playerCurrentHp — never let a stale tick overwrite it.
+                if (playerCurrentHpRef.current !== null && playerCurrentHpRef.current <= 0) {
+                    playerCurrentHpRef.current = data.character.currentHp;
+                    setPlayerCurrentHp(data.character.currentHp);
+                    // Only restart combat once fully regenned — partial regen keeps the death screen up
+                    if (data.character.currentHp >= data.character.maxHp) setPlayerIsAlive(true);
+                }
                 localKillCountRef.current = 0;
                 setLocalKillCount(0);
 
@@ -532,8 +552,9 @@ export default function IdleGame() {
     }
 
     async function handleRevive() {
+        lastReviveTimeRef.current = Date.now();
         const res = await fetch(`${currentAPI}/idle/character/revive`, { method: "POST", credentials: "include" });
-        if (res.ok) { const c = await res.json(); setCharacter(c); setPlayerCurrentHp(c.currentHp); setReviveKey((k) => k + 1); addLog("Revived."); }
+        if (res.ok) { const c = await res.json(); setCharacter(c); playerCurrentHpRef.current = c.currentHp; setPlayerCurrentHp(c.currentHp); setPlayerIsAlive(true); setReviveKey((k) => k + 1); addLog("Revived."); }
     }
 
     async function handleDiscardAll(items) {
@@ -729,7 +750,7 @@ export default function IdleGame() {
                     <div className="flex-1 flex flex-col items-center justify-center gap-3 px-4">
                         {selectedEnemy ? (
                             <>
-                                {character.currentHp <= 0 ? (
+                                {!playerIsAlive ? (
                                     <div className="text-center space-y-2">
                                         <div className="text-4xl select-none">💀</div>
                                         <div className="font-semibold opacity-60">Defeated</div>
@@ -751,7 +772,7 @@ export default function IdleGame() {
                                     <div className="text-xs opacity-50">Lv.{selectedEnemy.level} · {selectedEnemy.currentZone ?? character.currentZone}</div>
                                 </div>
                                 {/* Enemy HP bar */}
-                                {character.currentHp > 0 && enemyCurrentHp !== null && (() => {
+                                {playerIsAlive && enemyCurrentHp !== null && (() => {
                                     const dmg = calcPlayerDmg(character, selectedEnemy);
                                     const oneShot = dmg >= selectedEnemy.hp;
                                     const pct = Math.max(0, (enemyCurrentHp / selectedEnemy.hp) * 100);
@@ -782,7 +803,7 @@ export default function IdleGame() {
                                         <div className="w-full px-2">
                                             <div className="flex justify-between text-xs mb-1 opacity-60">
                                                 <span>{Math.ceil(Math.max(0, hp))} / {character.maxHp} HP</span>
-                                                {character.currentHp > 0
+                                                {playerIsAlive
                                                     ? <span className="text-red-400">{enemyDmg} dmg/hit</span>
                                                     : <span className="text-green-400">+{10}/s regen</span>
                                                 }
@@ -793,14 +814,14 @@ export default function IdleGame() {
                                                     style={{
                                                         width: `${pct}%`,
                                                         background: pct > 50 ? "#4ade80" : pct > 25 ? "#facc15" : "#f87171",
-                                                        transitionDuration: character.currentHp <= 0 ? "1000ms" : `${Math.round(1000 / calcAttacksPerSec(character))}ms`,
+                                                        transitionDuration: !playerIsAlive ? "1000ms" : `${Math.round(1000 / calcAttacksPerSec(character))}ms`,
                                                     }}
                                                 />
                                             </div>
                                         </div>
                                     );
                                 })()}
-                                {character.currentHp > 0 && (
+                                {playerIsAlive && (
                                     <div className="w-full px-2 space-y-1.5">
                                         <div>
                                             <div className="flex justify-between text-xs mb-1 opacity-50">
