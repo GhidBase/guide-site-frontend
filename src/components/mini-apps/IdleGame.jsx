@@ -17,7 +17,15 @@ function calcAttacksPerSec(character) {
 
 function calcPlayerDmg(character, enemy) {
     const attack = (character.attack ?? character.baseAttack) + (character.magic ?? 0);
-    return Math.max(1, attack - enemy.defense);
+    const k = 50 * enemy.level;
+    const reduction = enemy.defense / (enemy.defense + k);
+    return Math.max(1, Math.round(attack * (1 - reduction)));
+}
+
+function calcEnemyDmg(enemy, character) {
+    const k = 50 * enemy.level;
+    const reduction = (character.defense ?? 0) / ((character.defense ?? 0) + k);
+    return Math.max(1, Math.round(enemy.attack * (1 - reduction)));
 }
 
 function calcKillsInInterval(character, enemy, seconds) {
@@ -367,7 +375,7 @@ export default function IdleGame() {
         const enemyAttackSpeed = selectedEnemy.attackSpeed ?? 1.0;
         const playerHitInterval = (1 / attacksPerSec) * 1000;
         const enemyHitInterval = (1 / enemyAttackSpeed) * 1000;
-        const enemyDmgPerHit = Math.max(1, selectedEnemy.attack - character.defense);
+        const enemyDmgPerHit = calcEnemyDmg(selectedEnemy, character);
 
         visualEnemyHpRef.current = selectedEnemy.hp;
         enemyDeadRef.current = false;
