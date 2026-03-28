@@ -248,6 +248,8 @@ export default function IdleGame() {
     const [discardAllPending, setDiscardAllPending] = useState(false);
     const discardAllTimerRef = useRef(null);
     const [selectedItem, setSelectedItem] = useState(null);
+    const [panelItem, setPanelItem] = useState(null);
+    useEffect(() => { if (selectedItem) setPanelItem(selectedItem); }, [selectedItem]);
     const [pendingDiscardKey, setPendingDiscardKey] = useState(null);
     const pendingDiscardTimerRef = useRef(null);
     const [swipedOpenKey, setSwipedOpenKey] = useState(null);
@@ -529,7 +531,7 @@ export default function IdleGame() {
     const equippedItems = character.inventory.filter((i) => i.equipped);
     const unequippedItems = character.inventory.filter((i) => !i.equipped);
 
-    const selectedSlot = selectedItem ? getItemSlot(selectedItem) : null;
+    const selectedSlot = panelItem ? getItemSlot(panelItem) : null;
     const equippedInSlot = selectedSlot
         ? equippedItems.find((i) => SLOT_TYPES[selectedSlot]?.includes(i.type))
         : null;
@@ -693,7 +695,7 @@ export default function IdleGame() {
                     </div>
                 </div>
 
-                {/* ── Map overlay (slides in from left) ── */}
+                {/* ── Map overlay (slides from left) ── */}
                 <div
                     className="absolute inset-0 flex flex-col transition-transform duration-300 ease-in-out"
                     style={{
@@ -739,7 +741,7 @@ export default function IdleGame() {
                     </div>
                 </div>
 
-                {/* ── Inventory overlay (slides in from right) ── */}
+                {/* ── Inventory overlay (slides from right) ── */}
                 <div
                     className="absolute inset-0 flex flex-col"
                     style={{
@@ -749,6 +751,7 @@ export default function IdleGame() {
                         background: "var(--surface-background, #fff)",
                     }}
                 >
+                    <div className="flex flex-col flex-1 min-h-0">
                     {/* Equipped + stats */}
                     <div className="shrink-0 px-4 pt-3 pb-2 border-b border-(--surface-background)/50">
                         <div className="text-xs font-semibold uppercase opacity-40 tracking-wider mb-1.5">Equipped</div>
@@ -793,10 +796,11 @@ export default function IdleGame() {
                             opacity: selectedItem ? 1 : 0,
                             transition: "max-height 0.3s ease-in-out, opacity 0.3s ease-in-out",
                         }}
+                        onTransitionEnd={() => { if (!selectedItem) setPanelItem(null); }}
                     >
-                        {selectedItem && (() => {
+                        {panelItem && (() => {
                             const equippedStats = equippedInSlot ? getItemStats(equippedInSlot) : {};
-                            const selStats = getItemStats(selectedItem);
+                            const selStats = getItemStats(panelItem);
                             const allKeys = [...new Set([...Object.keys(equippedStats), ...Object.keys(selStats)])].filter(
                                 (k) => (equippedStats[k] ?? 0) !== 0 || (selStats[k] ?? 0) !== 0
                             );
@@ -835,14 +839,14 @@ export default function IdleGame() {
                                         {/* Selected side */}
                                         <div className="space-y-1">
                                             <div className="opacity-40 font-semibold uppercase tracking-wider" style={{ fontSize: 10 }}>Selected</div>
-                                            <div className="font-medium leading-tight truncate" style={{ color: RARITY_COLORS[selectedItem.rarity] ?? "#aaa" }}>
-                                                {selectedItem.name}
+                                            <div className="font-medium leading-tight truncate" style={{ color: RARITY_COLORS[panelItem.rarity] ?? "#aaa" }}>
+                                                {panelItem.name}
                                             </div>
                                             <div className="opacity-40 truncate">
-                                                {selectedItem.source === "weapon"
-                                                    ? `${selectedItem.typeLabel} · Lv.${selectedItem.level}`
-                                                    : selectedItem.type}
-                                                {selectedItem.totalRating != null && ` · ⚡${Math.round(selectedItem.totalRating * (1 + Math.log(selectedItem.level + 1) * 2))}`}
+                                                {panelItem.source === "weapon"
+                                                    ? `${panelItem.typeLabel} · Lv.${panelItem.level}`
+                                                    : panelItem.type}
+                                                {panelItem.totalRating != null && ` · ⚡${Math.round(panelItem.totalRating * (1 + Math.log(panelItem.level + 1) * 2))}`}
                                             </div>
                                             {allKeys.map((k) => {
                                                 const curr = equippedStats[k] ?? 0;
@@ -869,7 +873,13 @@ export default function IdleGame() {
                                             Back
                                         </button>
                                         <button
-                                            onClick={() => handleEquip(selectedItem.id, true, selectedItem.source)}
+                                            onClick={() => { handleDiscard(panelItem.id, panelItem.source); setSelectedItem(null); }}
+                                            className="flex-1 text-xs px-3 py-1.5 rounded border border-red-500/40 text-red-400 hover:bg-red-500/10 cursor-pointer transition-colors"
+                                        >
+                                            Throw Away
+                                        </button>
+                                        <button
+                                            onClick={() => handleEquip(panelItem.id, true, panelItem.source)}
                                             className="flex-1 text-xs px-3 py-1.5 rounded border border-(--primary)/40 text-(--primary) hover:bg-(--primary)/10 cursor-pointer transition-colors font-semibold"
                                         >
                                             Equip
@@ -1023,21 +1033,25 @@ export default function IdleGame() {
                                     return (
                                         <div key={itemKey} className="relative overflow-hidden rounded-lg">
                                             {/* Delete button revealed by swipe */}
-                                            <div
-                                                className="absolute right-0 top-0 bottom-0 flex items-center justify-center"
-                                                style={{ width: 72, background: "#ef4444" }}
-                                            >
-                                                <button
-                                                    onClick={() => { handleDiscard(inv.id, inv.source); setSwipedOpenKey(null); }}
-                                                    className="text-white text-xs font-semibold w-full h-full cursor-pointer"
+                                            {isSwipedOpen && (
+                                                <div
+                                                    className="absolute right-0 top-0 bottom-0 flex items-center justify-center"
+                                                    style={{ width: 72, background: "#ef4444" }}
                                                 >
-                                                    Delete
-                                                </button>
-                                            </div>
+                                                    <button
+                                                        onClick={() => { handleDiscard(inv.id, inv.source); setSwipedOpenKey(null); }}
+                                                        className="text-white text-xs font-semibold w-full h-full cursor-pointer"
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                </div>
+                                            )}
                                             {/* Item row — slides left on swipe */}
                                             <div
                                                 className="flex justify-between items-center px-3 py-2 border cursor-pointer transition-colors"
                                                 style={{
+                                                    position: "relative",
+                                                    zIndex: 1,
                                                     borderLeftColor: color,
                                                     borderLeftWidth: 3,
                                                     borderColor: isSelected ? `${color}60` : undefined,
@@ -1058,7 +1072,6 @@ export default function IdleGame() {
                                                 onClick={() => {
                                                     if (swipeWasMove.current) { swipeWasMove.current = false; return; }
                                                     if (isSwipedOpen) { setSwipedOpenKey(null); return; }
-                                                    if (pendingDiscardKey) { setPendingDiscardKey(null); clearTimeout(pendingDiscardTimerRef.current); }
                                                     setSelectedItem(isSelected ? null : inv);
                                                 }}
                                             >
@@ -1121,9 +1134,10 @@ export default function IdleGame() {
                             </div>
                         )}
                     </div>
+                    </div>
                 </div>
 
-                {/* ── Log overlay (slides in from right) ── */}
+                {/* ── Log overlay (slides from right) ── */}
                 <div
                     className="absolute inset-0 flex flex-col transition-transform duration-300 ease-in-out"
                     style={{
