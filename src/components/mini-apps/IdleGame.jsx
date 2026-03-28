@@ -272,6 +272,11 @@ export default function IdleGame() {
     const [playerCurrentHp, setPlayerCurrentHp] = useState(null);
     const [playerChargeProgress, setPlayerChargeProgress] = useState(0);
     const [enemyChargeProgress, setEnemyChargeProgress] = useState(0);
+    const [enemyDeathPause, setEnemyDeathPause] = useState(false);
+    const [reviveKey, setReviveKey] = useState(0);
+    const enemyDeadRef = useRef(false);
+    const lastPlayerHitRef = useRef(0);
+    const lastEnemyHitRef = useRef(0);
     const [toast, setToast] = useState(null);
     const rAFRef = useRef(null);
     const toastTimerRef = useRef(null);
@@ -365,38 +370,57 @@ export default function IdleGame() {
         const enemyDmgPerHit = Math.max(1, selectedEnemy.attack - character.defense);
 
         visualEnemyHpRef.current = selectedEnemy.hp;
+        enemyDeadRef.current = false;
+        lastPlayerHitRef.current = performance.now();
+        lastEnemyHitRef.current = performance.now();
         setEnemyCurrentHp(selectedEnemy.hp);
         setPlayerCurrentHp(character.currentHp);
         setPlayerChargeProgress(0);
         setEnemyChargeProgress(0);
-
-        let lastPlayerHit = performance.now();
-        let lastEnemyHit = performance.now();
+        setEnemyDeathPause(false);
 
         const loop = (now) => {
-            const playerElapsed = now - lastPlayerHit;
-            const enemyElapsed = now - lastEnemyHit;
+            if (enemyDeadRef.current) {
+                setPlayerChargeProgress(0);
+                setEnemyChargeProgress(0);
+                rAFRef.current = requestAnimationFrame(loop);
+                return;
+            }
+
+            const playerElapsed = now - lastPlayerHitRef.current;
+            const enemyElapsed = now - lastEnemyHitRef.current;
 
             setPlayerChargeProgress(Math.min(1, playerElapsed / playerHitInterval));
             setEnemyChargeProgress(Math.min(1, enemyElapsed / enemyHitInterval));
 
             if (playerElapsed >= playerHitInterval) {
-                lastPlayerHit = now;
+                lastPlayerHitRef.current = now;
                 setAttacking(true);
                 setTimeout(() => setAttacking(false), 150);
 
                 localKillsRef.current += 1 / hitsToKillEnemy;
                 visualEnemyHpRef.current -= dmg;
                 if (visualEnemyHpRef.current <= 0) {
-                    visualEnemyHpRef.current = selectedEnemy.hp;
                     localKillCountRef.current += 1;
                     setLocalKillCount(localKillCountRef.current);
+                    setEnemyCurrentHp(0);
+                    enemyDeadRef.current = true;
+                    setEnemyDeathPause(true);
+                    setTimeout(() => {
+                        visualEnemyHpRef.current = selectedEnemy.hp;
+                        setEnemyCurrentHp(selectedEnemy.hp);
+                        enemyDeadRef.current = false;
+                        setEnemyDeathPause(false);
+                        lastPlayerHitRef.current = performance.now();
+                        lastEnemyHitRef.current = performance.now();
+                    }, 500);
+                } else {
+                    setEnemyCurrentHp(visualEnemyHpRef.current);
                 }
-                setEnemyCurrentHp(visualEnemyHpRef.current);
             }
 
             if (enemyElapsed >= enemyHitInterval) {
-                lastEnemyHit = now;
+                lastEnemyHitRef.current = now;
                 setPlayerCurrentHp((prev) => Math.max(0, prev - enemyDmgPerHit));
             }
 
@@ -405,7 +429,7 @@ export default function IdleGame() {
 
         rAFRef.current = requestAnimationFrame(loop);
         return () => cancelAnimationFrame(rAFRef.current);
-    }, [selectedEnemy, character?.attack, character?.baseAttack, character?.speed, character?.magic, character?.defense, character?.currentHp]);
+    }, [selectedEnemy, character?.attack, character?.baseAttack, character?.speed, character?.magic, character?.defense, reviveKey]);
 
     // ── Server sync tick ──
     useEffect(() => {
@@ -415,7 +439,7 @@ export default function IdleGame() {
             const now = Date.now();
             const durationSeconds = (now - tickStartRef.current) / 1000;
             const kills = Math.floor(localKillsRef.current);
-            localKillsRef.current = 0;
+            localKillsRef.current -= kills;
             tickStartRef.current = now;
 
             // Always tick even if kills=0 so server can process HP regen while dead
@@ -447,13 +471,13 @@ export default function IdleGame() {
                     addLog(`Killed ${data.killsProcessed}× ${selectedEnemy.name} (+${data.xpGained} XP)`);
                 }
 
-                showToast({
-                    kills: data.killsProcessed,
-                    enemyName: selectedEnemy.name,
-                    xpGained: data.xpGained,
-                    levelUps: data.levelUps,
-                    drops: data.drops ?? [],
-                });
+                if (data.levelUps > 0 || data.drops?.length > 0) {
+                    showToast({
+                        levelUps: data.levelUps,
+                        newLevel: data.character.level,
+                        drops: data.drops ?? [],
+                    });
+                }
             } catch {
                 // silently ignore network errors in the tick loop
             }
@@ -501,7 +525,7 @@ export default function IdleGame() {
 
     async function handleRevive() {
         const res = await fetch(`${currentAPI}/idle/character/revive`, { method: "POST", credentials: "include" });
-        if (res.ok) { const c = await res.json(); setCharacter(c); setPlayerCurrentHp(c.currentHp); addLog("Revived."); }
+        if (res.ok) { const c = await res.json(); setCharacter(c); setPlayerCurrentHp(c.currentHp); setReviveKey((k) => k + 1); addLog("Revived."); }
     }
 
     async function handleDiscardAll(items) {
@@ -703,6 +727,8 @@ export default function IdleGame() {
                                         <div className="font-semibold opacity-60">Defeated</div>
                                         <div className="text-xs opacity-40">Recovering… {Math.ceil((character.maxHp - Math.max(0, character.currentHp)) / 10)}s remaining</div>
                                     </div>
+                                ) : enemyDeathPause ? (
+                                    <div className="text-6xl select-none animate-bounce">💥</div>
                                 ) : (
                                     <div
                                         className={`text-6xl transition-transform duration-100 select-none ${
@@ -812,17 +838,11 @@ export default function IdleGame() {
                                 <div className="text-xs opacity-60 text-center py-1">{toast}</div>
                             ) : (
                                 <div className="rounded-lg border border-(--surface-background) bg-(--accent)/60 px-3 py-2 text-xs space-y-1.5">
-                                    <div className="flex justify-between items-center">
-                                        <span className="font-semibold">
-                                            {toast.kills}× {toast.enemyName} killed
-                                        </span>
-                                        <span className="text-(--primary) font-bold">+{toast.xpGained} XP</span>
-                                    </div>
                                     {toast.levelUps > 0 && (
-                                        <div className="font-semibold text-(--primary)">⬆ Level up!</div>
+                                        <div className="font-semibold text-(--primary)">⬆ Level up! Now level {toast.newLevel}</div>
                                     )}
                                     {toast.drops.length > 0 && (
-                                        <div className="flex flex-wrap gap-1.5 pt-0.5 border-t border-(--surface-background)/60">
+                                        <div className="flex flex-wrap gap-1.5">
                                             {toast.drops.map((d, i) => (
                                                 <span
                                                     key={i}
