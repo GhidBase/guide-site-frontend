@@ -205,6 +205,27 @@ function IconBag() {
     );
 }
 
+function IconGrid() {
+    return (
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
+            <rect x="1" y="1" width="6" height="6" rx="1" />
+            <rect x="9" y="1" width="6" height="6" rx="1" />
+            <rect x="1" y="9" width="6" height="6" rx="1" />
+            <rect x="9" y="9" width="6" height="6" rx="1" />
+        </svg>
+    );
+}
+
+function IconList() {
+    return (
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
+            <rect x="1" y="2" width="14" height="2.5" rx="1" />
+            <rect x="1" y="6.75" width="14" height="2.5" rx="1" />
+            <rect x="1" y="11.5" width="14" height="2.5" rx="1" />
+        </svg>
+    );
+}
+
 // ── main component ───────────────────────────────────────────────────────────
 
 export default function IdleGame() {
@@ -227,6 +248,12 @@ export default function IdleGame() {
     const [discardAllPending, setDiscardAllPending] = useState(false);
     const discardAllTimerRef = useRef(null);
     const [selectedItem, setSelectedItem] = useState(null);
+    const [pendingDiscardKey, setPendingDiscardKey] = useState(null);
+    const pendingDiscardTimerRef = useRef(null);
+    const [swipedOpenKey, setSwipedOpenKey] = useState(null);
+    const swipeTouchStartX = useRef(null);
+    const swipeWasMove = useRef(false);
+    const [invView, setInvView] = useState("list");
 
     const [attacking, setAttacking] = useState(false);
     const [enemyCurrentHp, setEnemyCurrentHp] = useState(null);
@@ -437,9 +464,9 @@ export default function IdleGame() {
         if (res.ok) {
             const data = await res.json();
             setCharacter(data);
-            if (selectedItem?.id === itemId && selectedItem?.source === source) {
-                setSelectedItem(null);
-            }
+            if (selectedItem?.id === itemId && selectedItem?.source === source) setSelectedItem(null);
+            setPendingDiscardKey(null);
+            setSwipedOpenKey(null);
             addLog("Item discarded.");
         }
     }
@@ -448,6 +475,8 @@ export default function IdleGame() {
         setScreen((s) => (s === name ? null : name));
         setShowSettings(false);
         setSelectedItem(null);
+        setPendingDiscardKey(null);
+        setSwipedOpenKey(null);
     }
 
     // ── Render states ──
@@ -483,6 +512,7 @@ export default function IdleGame() {
     const RARITY_ORDER = { common: 1, uncommon: 2, rare: 3, epic: 4, legendary: 5 };
     const SLOT_TYPES = { weapon: ["sword", "longsword", "greatsword", "dagger"], chest: ["chest"], helm: ["helm"], legs: ["legs"] };
     const SLOT_EMOJI = { weapon: "⚔️", chest: "🛡️", helm: "🪖", legs: "👖" };
+    const SLOT_ORDER = ["weapon", "helm", "chest", "legs"];
 
     function getItemSlot(item) {
         for (const [slot, types] of Object.entries(SLOT_TYPES)) {
@@ -722,29 +752,31 @@ export default function IdleGame() {
                     {/* Equipped + stats */}
                     <div className="shrink-0 px-4 pt-3 pb-2 border-b border-(--surface-background)/50">
                         <div className="text-xs font-semibold uppercase opacity-40 tracking-wider mb-1.5">Equipped</div>
-                        {equippedItems.length === 0 ? (
-                            <div className="text-xs opacity-30">Nothing equipped.</div>
-                        ) : (
-                            <div className="flex flex-col gap-1">
-                                {equippedItems.map((inv) => {
-                                    const color = RARITY_COLORS[inv.rarity] ?? "#aaa";
-                                    const slot = getItemSlot(inv);
-                                    return (
-                                        <div key={`${inv.source}-${inv.id}`} className="flex items-center gap-2 min-w-0">
-                                            <span className="shrink-0" style={{ fontSize: 11 }}>{SLOT_EMOJI[slot] ?? "▪"}</span>
-                                            <span className="text-xs font-medium truncate flex-1" style={{ color }}>{inv.name}</span>
-                                            <button
-                                                onClick={() => handleEquip(inv.id, false, inv.source)}
-                                                className="text-xs opacity-30 hover:opacity-70 cursor-pointer shrink-0"
-                                                title="Unequip"
-                                            >
-                                                ×
-                                            </button>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        )}
+                        <div className="flex flex-col gap-1">
+                            {SLOT_ORDER.map((slot) => {
+                                const inv = equippedItems.find((i) => SLOT_TYPES[slot]?.includes(i.type));
+                                if (!inv) return (
+                                    <div key={slot} className="flex items-center gap-2 min-w-0 opacity-20">
+                                        <span className="shrink-0" style={{ fontSize: 11 }}>{SLOT_EMOJI[slot]}</span>
+                                        <span className="text-xs italic capitalize">No {slot} equipped</span>
+                                    </div>
+                                );
+                                const color = RARITY_COLORS[inv.rarity] ?? "#aaa";
+                                return (
+                                    <div key={`${inv.source}-${inv.id}`} className="flex items-center gap-2 min-w-0">
+                                        <span className="shrink-0" style={{ fontSize: 11 }}>{SLOT_EMOJI[slot] ?? "▪"}</span>
+                                        <span className="text-xs font-medium truncate flex-1" style={{ color }}>{inv.name}</span>
+                                        <button
+                                            onClick={() => handleEquip(inv.id, false, inv.source)}
+                                            className="text-xs opacity-30 hover:opacity-70 cursor-pointer shrink-0"
+                                            title="Unequip"
+                                        >
+                                            ×
+                                        </button>
+                                    </div>
+                                );
+                            })}
+                        </div>
 
                         <div className="flex gap-3 mt-2 pt-2 border-t border-(--surface-background)/40 text-xs">
                             <span><span className="font-bold">{character.attack}</span> <span className="opacity-40">ATK</span></span>
@@ -754,86 +786,99 @@ export default function IdleGame() {
                     </div>
 
                     {/* Comparison panel */}
-                    {selectedItem && (() => {
-                        const equippedStats = equippedInSlot ? getItemStats(equippedInSlot) : {};
-                        const selStats = getItemStats(selectedItem);
-                        const allKeys = [...new Set([...Object.keys(equippedStats), ...Object.keys(selStats)])].filter(
-                            (k) => (equippedStats[k] ?? 0) !== 0 || (selStats[k] ?? 0) !== 0
-                        );
-                        return (
-                            <div className="shrink-0 px-4 pt-3 pb-3 border-b border-(--surface-background)/50 bg-(--surface-background)/30">
-                                <div className="flex justify-between items-center mb-2">
-                                    <span className="text-xs font-semibold uppercase opacity-40 tracking-wider">Compare</span>
-                                    <button
-                                        onClick={() => setSelectedItem(null)}
-                                        className="text-xs opacity-40 hover:opacity-80 cursor-pointer"
-                                    >
-                                        ✕
-                                    </button>
-                                </div>
-                                <div className="grid grid-cols-2 gap-3 text-xs">
-                                    {/* Equipped side */}
-                                    <div className="space-y-1">
-                                        <div className="opacity-40 font-semibold uppercase tracking-wider" style={{ fontSize: 10 }}>
-                                            {selectedSlot ? `${SLOT_EMOJI[selectedSlot]} Equipped` : "Equipped"}
-                                        </div>
-                                        {equippedInSlot ? (
-                                            <>
-                                                <div className="font-medium leading-tight truncate" style={{ color: RARITY_COLORS[equippedInSlot.rarity] ?? "#aaa" }}>
-                                                    {equippedInSlot.name}
-                                                </div>
-                                                <div className="opacity-40 truncate">
-                                                    {equippedInSlot.source === "weapon"
-                                                        ? `${equippedInSlot.typeLabel} · Lv.${equippedInSlot.level}`
-                                                        : equippedInSlot.type}
-                                                </div>
-                                                {allKeys.map((k) => (
-                                                    <div key={k} className="opacity-60">
-                                                        {equippedStats[k] != null ? `${equippedStats[k] > 0 ? "+" : ""}${equippedStats[k]}` : "—"} {k}
+                    <div
+                        className="shrink-0 overflow-hidden border-b border-(--surface-background)/50"
+                        style={{
+                            maxHeight: selectedItem ? 500 : 0,
+                            opacity: selectedItem ? 1 : 0,
+                            transition: "max-height 0.3s ease-in-out, opacity 0.3s ease-in-out",
+                        }}
+                    >
+                        {selectedItem && (() => {
+                            const equippedStats = equippedInSlot ? getItemStats(equippedInSlot) : {};
+                            const selStats = getItemStats(selectedItem);
+                            const allKeys = [...new Set([...Object.keys(equippedStats), ...Object.keys(selStats)])].filter(
+                                (k) => (equippedStats[k] ?? 0) !== 0 || (selStats[k] ?? 0) !== 0
+                            );
+                            return (
+                                <div className="px-4 pt-3 pb-3 bg-(--surface-background)/30">
+                                    <div className="mb-2">
+                                        <span className="text-xs font-semibold uppercase opacity-40 tracking-wider">Compare</span>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3 text-xs">
+                                        {/* Equipped side */}
+                                        <div className="space-y-1">
+                                            <div className="opacity-40 font-semibold uppercase tracking-wider" style={{ fontSize: 10 }}>
+                                                {selectedSlot ? `${SLOT_EMOJI[selectedSlot]} Equipped` : "Equipped"}
+                                            </div>
+                                            {equippedInSlot ? (
+                                                <>
+                                                    <div className="font-medium leading-tight truncate" style={{ color: RARITY_COLORS[equippedInSlot.rarity] ?? "#aaa" }}>
+                                                        {equippedInSlot.name}
                                                     </div>
-                                                ))}
-                                            </>
-                                        ) : (
-                                            <div className="opacity-30 italic">Nothing equipped</div>
-                                        )}
+                                                    <div className="opacity-40 truncate">
+                                                        {equippedInSlot.source === "weapon"
+                                                            ? `${equippedInSlot.typeLabel} · Lv.${equippedInSlot.level}`
+                                                            : equippedInSlot.type}
+                                                        {equippedInSlot.totalRating != null && ` · ⚡${Math.round(equippedInSlot.totalRating * (1 + Math.log(equippedInSlot.level + 1) * 2))}`}
+                                                    </div>
+                                                    {allKeys.map((k) => (
+                                                        <div key={k} className="opacity-60">
+                                                            {equippedStats[k] != null ? `${equippedStats[k] > 0 ? "+" : ""}${equippedStats[k]}` : "—"} {k}
+                                                        </div>
+                                                    ))}
+                                                </>
+                                            ) : (
+                                                <div className="opacity-30 italic">Nothing equipped</div>
+                                            )}
+                                        </div>
+                                        {/* Selected side */}
+                                        <div className="space-y-1">
+                                            <div className="opacity-40 font-semibold uppercase tracking-wider" style={{ fontSize: 10 }}>Selected</div>
+                                            <div className="font-medium leading-tight truncate" style={{ color: RARITY_COLORS[selectedItem.rarity] ?? "#aaa" }}>
+                                                {selectedItem.name}
+                                            </div>
+                                            <div className="opacity-40 truncate">
+                                                {selectedItem.source === "weapon"
+                                                    ? `${selectedItem.typeLabel} · Lv.${selectedItem.level}`
+                                                    : selectedItem.type}
+                                                {selectedItem.totalRating != null && ` · ⚡${Math.round(selectedItem.totalRating * (1 + Math.log(selectedItem.level + 1) * 2))}`}
+                                            </div>
+                                            {allKeys.map((k) => {
+                                                const curr = equippedStats[k] ?? 0;
+                                                const next = selStats[k] ?? 0;
+                                                const delta = next - curr;
+                                                return (
+                                                    <div key={k} className="flex items-center gap-1">
+                                                        <span className="opacity-60">{next > 0 ? "+" : ""}{next} {k}</span>
+                                                        {equippedInSlot && delta !== 0 && (
+                                                            <span className="font-bold" style={{ fontSize: 10, color: delta > 0 ? "#22c55e" : "#ef4444" }}>
+                                                                {delta > 0 ? "▲" : "▼"}{Math.abs(delta)}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
                                     </div>
-                                    {/* Selected side */}
-                                    <div className="space-y-1">
-                                        <div className="opacity-40 font-semibold uppercase tracking-wider" style={{ fontSize: 10 }}>Selected</div>
-                                        <div className="font-medium leading-tight truncate" style={{ color: RARITY_COLORS[selectedItem.rarity] ?? "#aaa" }}>
-                                            {selectedItem.name}
-                                        </div>
-                                        <div className="opacity-40 truncate">
-                                            {selectedItem.source === "weapon"
-                                                ? `${selectedItem.typeLabel} · Lv.${selectedItem.level}`
-                                                : selectedItem.type}
-                                        </div>
-                                        {allKeys.map((k) => {
-                                            const curr = equippedStats[k] ?? 0;
-                                            const next = selStats[k] ?? 0;
-                                            const delta = next - curr;
-                                            return (
-                                                <div key={k} className="flex items-center gap-1">
-                                                    <span className="opacity-60">{next > 0 ? "+" : ""}{next} {k}</span>
-                                                    {equippedInSlot && delta !== 0 && (
-                                                        <span className="font-bold" style={{ fontSize: 10, color: delta > 0 ? "#22c55e" : "#ef4444" }}>
-                                                            {delta > 0 ? "▲" : "▼"}{Math.abs(delta)}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            );
-                                        })}
+                                    <div className="flex gap-2 mt-3">
+                                        <button
+                                            onClick={() => setSelectedItem(null)}
+                                            className="flex-1 text-xs px-3 py-1.5 rounded border border-(--surface-background) opacity-50 hover:opacity-80 cursor-pointer transition-opacity"
+                                        >
+                                            Back
+                                        </button>
+                                        <button
+                                            onClick={() => handleEquip(selectedItem.id, true, selectedItem.source)}
+                                            className="flex-1 text-xs px-3 py-1.5 rounded border border-(--primary)/40 text-(--primary) hover:bg-(--primary)/10 cursor-pointer transition-colors font-semibold"
+                                        >
+                                            Equip
+                                        </button>
                                     </div>
                                 </div>
-                                <button
-                                    onClick={() => handleEquip(selectedItem.id, true, selectedItem.source)}
-                                    className="mt-3 w-full text-xs px-3 py-1.5 rounded border border-(--primary)/40 text-(--primary) hover:bg-(--primary)/10 cursor-pointer transition-colors font-semibold"
-                                >
-                                    Equip
-                                </button>
-                            </div>
-                        );
-                    })()}
+                            );
+                        })()}
+                    </div>
 
                     {/* Filter + sort controls */}
                     <div className="shrink-0 px-3 py-1.5 border-b border-(--surface-background)/50 space-y-1">
@@ -885,6 +930,13 @@ export default function IdleGame() {
                                 <option value="level-high">Level ↓</option>
                                 <option value="level-low">Level ↑</option>
                             </select>
+                            <button
+                                onClick={() => setInvView((v) => v === "list" ? "grid" : "list")}
+                                className="shrink-0 ml-1 opacity-50 hover:opacity-90 cursor-pointer transition-opacity"
+                                title={invView === "list" ? "Grid view" : "List view"}
+                            >
+                                {invView === "list" ? <IconGrid /> : <IconList />}
+                            </button>
                         </div>
                     </div>
 
@@ -911,61 +963,157 @@ export default function IdleGame() {
                             <div className="opacity-30 text-sm text-center py-8">
                                 {unequippedItems.length === 0 ? "No items yet. Go kill some stuff!" : "No items match filters."}
                             </div>
+                        ) : invView === "grid" ? (
+                            <div className="grid grid-cols-4 gap-1.5">
+                                {filteredItems.map((inv) => {
+                                    const color = RARITY_COLORS[inv.rarity] ?? "#aaa";
+                                    const slot = getItemSlot(inv);
+                                    const isSelected = selectedItem?.id === inv.id && selectedItem?.source === inv.source;
+                                    const itemKey = `${inv.source}-${inv.id}`;
+                                    const isPendingDiscard = pendingDiscardKey === itemKey;
+                                    return (
+                                        <div
+                                            key={itemKey}
+                                            onClick={() => {
+                                                if (pendingDiscardKey) { setPendingDiscardKey(null); clearTimeout(pendingDiscardTimerRef.current); return; }
+                                                setSelectedItem(isSelected ? null : inv);
+                                            }}
+                                            className="relative flex flex-col items-center justify-center p-1.5 rounded-lg border cursor-pointer"
+                                            style={{
+                                                aspectRatio: "1",
+                                                borderColor: isSelected ? color : `${color}40`,
+                                                background: isSelected ? `${color}20` : `${color}0d`,
+                                            }}
+                                        >
+                                            <span style={{ fontSize: 22 }}>{SLOT_EMOJI[slot] ?? "▪"}</span>
+                                            <span className="text-center leading-tight mt-0.5 w-full truncate" style={{ color, fontSize: 9 }}>
+                                                {inv.name}
+                                            </span>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    if (isPendingDiscard) {
+                                                        handleDiscard(inv.id, inv.source);
+                                                        clearTimeout(pendingDiscardTimerRef.current);
+                                                    } else {
+                                                        setPendingDiscardKey(itemKey);
+                                                        clearTimeout(pendingDiscardTimerRef.current);
+                                                        pendingDiscardTimerRef.current = setTimeout(() => setPendingDiscardKey(null), 3000);
+                                                    }
+                                                }}
+                                                className="absolute top-0.5 right-0.5 cursor-pointer leading-none"
+                                                style={{ fontSize: 11, color: isPendingDiscard ? "#ef4444" : undefined, opacity: isPendingDiscard ? 1 : 0.25 }}
+                                                title="Discard"
+                                            >
+                                                {isPendingDiscard ? "?" : "×"}
+                                            </button>
+                                        </div>
+                                    );
+                                })}
+                            </div>
                         ) : (
                             <div className="flex flex-col gap-1.5">
                                 {filteredItems.map((inv) => {
                                     const color = RARITY_COLORS[inv.rarity] ?? "#aaa";
                                     const isWeapon = inv.source === "weapon";
                                     const isSelected = selectedItem?.id === inv.id && selectedItem?.source === inv.source;
+                                    const itemKey = `${inv.source}-${inv.id}`;
+                                    const isSwipedOpen = swipedOpenKey === itemKey;
+                                    const isPendingDiscard = pendingDiscardKey === itemKey;
                                     return (
-                                        <div
-                                            key={`${inv.source}-${inv.id}`}
-                                            onClick={() => setSelectedItem(isSelected ? null : inv)}
-                                            className="flex justify-between items-center px-3 py-2 rounded-lg border cursor-pointer transition-colors"
-                                            style={{
-                                                borderLeftColor: color,
-                                                borderLeftWidth: 3,
-                                                borderColor: isSelected ? `${color}60` : undefined,
-                                                background: isSelected ? `${color}12` : undefined,
-                                            }}
-                                        >
-                                            <div className="min-w-0 flex-1">
-                                                <div className="text-sm font-medium truncate" style={{ color }}>{inv.name}</div>
-                                                {isWeapon ? (
-                                                    <>
-                                                        <div className="text-xs opacity-50">{inv.typeLabel} · Lv.{inv.level} · {inv.origin}</div>
-                                                        <div className="text-xs opacity-40">
-                                                            {Object.entries(inv.stats)
-                                                                .filter(([, v]) => v !== 0)
-                                                                .map(([k, v]) => `${v > 0 ? "+" : ""}${v} ${k}`)
-                                                                .join(", ")}
-                                                        </div>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <div className="text-xs opacity-50 capitalize">{inv.type} · ×{inv.quantity}</div>
-                                                        {inv.statBonus && (
-                                                            <div className="text-xs opacity-40">
-                                                                {Object.entries(inv.statBonus).map(([k, v]) => `+${v} ${k}`).join(", ")}
-                                                            </div>
-                                                        )}
-                                                    </>
-                                                )}
+                                        <div key={itemKey} className="relative overflow-hidden rounded-lg">
+                                            {/* Delete button revealed by swipe */}
+                                            <div
+                                                className="absolute right-0 top-0 bottom-0 flex items-center justify-center"
+                                                style={{ width: 72, background: "#ef4444" }}
+                                            >
+                                                <button
+                                                    onClick={() => { handleDiscard(inv.id, inv.source); setSwipedOpenKey(null); }}
+                                                    className="text-white text-xs font-semibold w-full h-full cursor-pointer"
+                                                >
+                                                    Delete
+                                                </button>
                                             </div>
-                                            <div className="flex gap-1.5 shrink-0 ml-2">
-                                                <button
-                                                    onClick={(e) => { e.stopPropagation(); handleEquip(inv.id, true, inv.source); }}
-                                                    className="text-xs px-2 py-1 rounded border border-(--primary)/40 text-(--primary) hover:bg-(--primary)/10 cursor-pointer transition-colors"
-                                                >
-                                                    Equip
-                                                </button>
-                                                <button
-                                                    onClick={(e) => { e.stopPropagation(); handleDiscard(inv.id, inv.source); }}
-                                                    className="text-xs px-2 py-1 rounded border border-red-300/40 text-red-400 hover:bg-red-400/10 cursor-pointer transition-colors"
-                                                    title="Discard"
-                                                >
-                                                    ✕
-                                                </button>
+                                            {/* Item row — slides left on swipe */}
+                                            <div
+                                                className="flex justify-between items-center px-3 py-2 border cursor-pointer transition-colors"
+                                                style={{
+                                                    borderLeftColor: color,
+                                                    borderLeftWidth: 3,
+                                                    borderColor: isSelected ? `${color}60` : undefined,
+                                                    background: isSelected ? `${color}12` : "var(--surface-background, #fff)",
+                                                    transform: `translateX(${isSwipedOpen ? -72 : 0}px)`,
+                                                    transition: "transform 0.2s ease",
+                                                }}
+                                                onTouchStart={(e) => {
+                                                    swipeTouchStartX.current = e.touches[0].clientX;
+                                                    swipeWasMove.current = false;
+                                                }}
+                                                onTouchEnd={(e) => {
+                                                    const dx = e.changedTouches[0].clientX - (swipeTouchStartX.current ?? e.changedTouches[0].clientX);
+                                                    if (Math.abs(dx) > 8) swipeWasMove.current = true;
+                                                    if (dx < -60) setSwipedOpenKey(itemKey);
+                                                    else if (dx > 20) setSwipedOpenKey(null);
+                                                }}
+                                                onClick={() => {
+                                                    if (swipeWasMove.current) { swipeWasMove.current = false; return; }
+                                                    if (isSwipedOpen) { setSwipedOpenKey(null); return; }
+                                                    if (pendingDiscardKey) { setPendingDiscardKey(null); clearTimeout(pendingDiscardTimerRef.current); }
+                                                    setSelectedItem(isSelected ? null : inv);
+                                                }}
+                                            >
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="text-sm font-medium truncate" style={{ color }}>{inv.name}</div>
+                                                    {isWeapon ? (
+                                                        <>
+                                                            <div className="text-xs opacity-50">
+                                                                {inv.typeLabel} · Lv.{inv.level} · {inv.origin}
+                                                                {inv.totalRating != null && <span className="ml-1.5 opacity-70">⚡{Math.round(inv.totalRating * (1 + Math.log(inv.level + 1) * 2))}</span>}
+                                                            </div>
+                                                            <div className="text-xs opacity-40">
+                                                                {Object.entries(inv.stats).filter(([, v]) => v !== 0).map(([k, v]) => `${v > 0 ? "+" : ""}${v} ${k}`).join(", ")}
+                                                            </div>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <div className="text-xs opacity-50 capitalize">{inv.type} · ×{inv.quantity}</div>
+                                                            {inv.statBonus && (
+                                                                <div className="text-xs opacity-40">
+                                                                    {Object.entries(inv.statBonus).map(([k, v]) => `+${v} ${k}`).join(", ")}
+                                                                </div>
+                                                            )}
+                                                        </>
+                                                    )}
+                                                </div>
+                                                <div className="flex gap-1.5 shrink-0 ml-2">
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); handleEquip(inv.id, true, inv.source); }}
+                                                        className="text-xs px-2 py-1 rounded border border-(--primary)/40 text-(--primary) hover:bg-(--primary)/10 cursor-pointer transition-colors"
+                                                    >
+                                                        Equip
+                                                    </button>
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            if (isPendingDiscard) {
+                                                                handleDiscard(inv.id, inv.source);
+                                                                clearTimeout(pendingDiscardTimerRef.current);
+                                                            } else {
+                                                                setPendingDiscardKey(itemKey);
+                                                                clearTimeout(pendingDiscardTimerRef.current);
+                                                                pendingDiscardTimerRef.current = setTimeout(() => setPendingDiscardKey(null), 3000);
+                                                            }
+                                                        }}
+                                                        className={`text-xs px-2 py-1 rounded border cursor-pointer transition-colors ${
+                                                            isPendingDiscard
+                                                                ? "border-red-400 text-red-400 bg-red-400/10 font-semibold"
+                                                                : "border-red-300/40 text-red-400 hover:bg-red-400/10"
+                                                        }`}
+                                                        title="Discard"
+                                                    >
+                                                        {isPendingDiscard ? "?" : "✕"}
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                     );
