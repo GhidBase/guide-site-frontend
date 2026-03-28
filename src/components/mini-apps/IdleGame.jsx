@@ -940,11 +940,10 @@ export default function IdleGame() {
 
                 {/* ── Inventory overlay (slides from right) ── */}
                 <div
-                    className="absolute inset-0 flex flex-col"
+                    className="absolute inset-0 flex flex-col transition-transform duration-300 ease-in-out"
                     style={{
                         bottom: selectedItem ? 0 : 56,
                         transform: screen === "inventory" ? "translateX(0)" : "translateX(100%)",
-                        transition: "transform 0.3s ease-in-out, bottom 0.3s ease-in-out",
                         background: "var(--surface-background, #fff)",
                     }}
                 >
