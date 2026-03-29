@@ -252,10 +252,15 @@ function LoginScreen() {
     const [mode, setMode] = useState("login");
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
     const [submitting, setSubmitting] = useState(false);
 
     async function handleSubmit(e) {
         e.preventDefault();
+        if (mode === "signup" && password !== confirmPassword) {
+            setError("Passwords do not match");
+            return;
+        }
         setSubmitting(true);
         setError(null);
         const ok = mode === "login"
@@ -269,6 +274,7 @@ function LoginScreen() {
         setError(null);
         setUsername("");
         setPassword("");
+        setConfirmPassword("");
     }
 
     return (
@@ -320,6 +326,17 @@ function LoginScreen() {
                         autoComplete={mode === "login" ? "current-password" : "new-password"}
                         className="w-full px-3 py-2 rounded-lg border border-(--surface-background) bg-(--surface-background)/60 text-sm outline-none focus:border-(--primary) transition-colors"
                     />
+                    {mode === "signup" && (
+                        <input
+                            type="password"
+                            placeholder="Confirm Password"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            required
+                            autoComplete="new-password"
+                            className="w-full px-3 py-2 rounded-lg border border-(--surface-background) bg-(--surface-background)/60 text-sm outline-none focus:border-(--primary) transition-colors"
+                        />
+                    )}
                     {error && (
                         <div className="text-xs text-red-400 px-1">{error}</div>
                     )}
@@ -730,7 +747,7 @@ export default function IdleGame() {
     }
 
     // ── Render states ──
-    if (authLoading || loading) {
+    if (authLoading) {
         return (
             <div className="flex items-center justify-center h-64 text-(--text-color) opacity-50">
                 Loading...
@@ -740,6 +757,14 @@ export default function IdleGame() {
 
     if (!isAuthenticated) {
         return <LoginScreen />;
+    }
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center h-64 text-(--text-color) opacity-50">
+                Loading...
+            </div>
+        );
     }
 
     if (fetchError) {
@@ -795,6 +820,16 @@ export default function IdleGame() {
                 case "level-low":  return (a.level ?? 0) - (b.level ?? 0);
                 case "rarity-high": return (RARITY_ORDER[b.rarity] ?? 0) - (RARITY_ORDER[a.rarity] ?? 0);
                 case "rarity-low":  return (RARITY_ORDER[a.rarity] ?? 0) - (RARITY_ORDER[b.rarity] ?? 0);
+                case "power-high": {
+                    const pa = Math.round((a.totalRating ?? 0) * (1 + Math.log((a.level ?? 1) + 1) * 2));
+                    const pb = Math.round((b.totalRating ?? 0) * (1 + Math.log((b.level ?? 1) + 1) * 2));
+                    return pb - pa;
+                }
+                case "power-low": {
+                    const pa = Math.round((a.totalRating ?? 0) * (1 + Math.log((a.level ?? 1) + 1) * 2));
+                    const pb = Math.round((b.totalRating ?? 0) * (1 + Math.log((b.level ?? 1) + 1) * 2));
+                    return pa - pb;
+                }
                 default:          return b.id - a.id; // newest
             }
         });
@@ -1294,6 +1329,8 @@ export default function IdleGame() {
                                 <option value="rarity-low">Rarity ↑</option>
                                 <option value="level-high">Level ↓</option>
                                 <option value="level-low">Level ↑</option>
+                                <option value="power-high">Power ↓</option>
+                                <option value="power-low">Power ↑</option>
                             </select>
                             <button
                                 onClick={() => setInvView((v) => v === "list" ? "grid" : "list")}
