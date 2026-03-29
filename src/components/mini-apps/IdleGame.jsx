@@ -245,10 +245,105 @@ function IconList() {
     );
 }
 
+// ── LoginScreen ──────────────────────────────────────────────────────────────
+
+function LoginScreen() {
+    const { login, signup, error, setError } = useAuth();
+    const [mode, setMode] = useState("login");
+    const [username, setUsername] = useState("");
+    const [password, setPassword] = useState("");
+    const [submitting, setSubmitting] = useState(false);
+
+    async function handleSubmit(e) {
+        e.preventDefault();
+        setSubmitting(true);
+        setError(null);
+        const ok = mode === "login"
+            ? await login(username, password)
+            : await signup(username, password);
+        if (!ok) setSubmitting(false);
+    }
+
+    function switchMode(m) {
+        setMode(m);
+        setError(null);
+        setUsername("");
+        setPassword("");
+    }
+
+    return (
+        <div
+            className="text-(--text-color) flex items-center justify-center px-6"
+            style={{ height: "100dvh" }}
+        >
+            <div className="w-full max-w-xs space-y-5">
+                <div className="text-center space-y-1">
+                    <div className="text-2xl font-bold">⚔️ Idle Quest</div>
+                    <div className="text-sm opacity-50">Log in to start your adventure</div>
+                </div>
+
+                {/* Mode toggle */}
+                <div
+                    className="flex rounded-lg overflow-hidden border border-(--surface-background) text-sm"
+                >
+                    {["login", "signup"].map((m) => (
+                        <button
+                            key={m}
+                            onClick={() => switchMode(m)}
+                            className={`flex-1 py-2 cursor-pointer transition-colors capitalize ${
+                                mode === m
+                                    ? "bg-(--primary) text-white font-semibold"
+                                    : "opacity-40 hover:opacity-70"
+                            }`}
+                        >
+                            {m === "login" ? "Log In" : "Sign Up"}
+                        </button>
+                    ))}
+                </div>
+
+                <form onSubmit={handleSubmit} className="space-y-3">
+                    <input
+                        type="text"
+                        placeholder="Username"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        required
+                        autoComplete="username"
+                        className="w-full px-3 py-2 rounded-lg border border-(--surface-background) bg-(--surface-background)/60 text-sm outline-none focus:border-(--primary) transition-colors"
+                    />
+                    <input
+                        type="password"
+                        placeholder="Password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        autoComplete={mode === "login" ? "current-password" : "new-password"}
+                        className="w-full px-3 py-2 rounded-lg border border-(--surface-background) bg-(--surface-background)/60 text-sm outline-none focus:border-(--primary) transition-colors"
+                    />
+                    {error && (
+                        <div className="text-xs text-red-400 px-1">{error}</div>
+                    )}
+                    <button
+                        type="submit"
+                        disabled={submitting}
+                        className="w-full py-2 rounded-lg bg-(--primary) text-white font-semibold text-sm cursor-pointer hover:opacity-90 transition-opacity disabled:opacity-50"
+                    >
+                        {submitting ? "..." : mode === "login" ? "Log In" : "Sign Up"}
+                    </button>
+                </form>
+
+                <p className="text-center text-xs opacity-30">
+                    Accounts are shared with GuideCodex
+                </p>
+            </div>
+        </div>
+    );
+}
+
 // ── main component ───────────────────────────────────────────────────────────
 
 export default function IdleGame() {
-    const { isAuthenticated, isLoading: authLoading } = useAuth();
+    const { isAuthenticated, isLoading: authLoading, logout } = useAuth();
 
     const [character, setCharacter] = useState(null);
     const [zones, setZones] = useState([]);
@@ -644,12 +739,7 @@ export default function IdleGame() {
     }
 
     if (!isAuthenticated) {
-        return (
-            <div className="flex flex-col items-center justify-center h-64 gap-3 text-(--text-color)">
-                <p className="text-lg font-semibold">You need to be logged in to play.</p>
-                <a href="/login" className="text-(--primary) underline">Log in</a>
-            </div>
-        );
+        return <LoginScreen />;
     }
 
     if (fetchError) {
@@ -747,6 +837,14 @@ export default function IdleGame() {
                                     className="w-full text-xs px-3 py-1.5 rounded border border-green-500/40 text-green-400 hover:bg-green-500/10 cursor-pointer transition-colors text-left"
                                 >
                                     Instant Revive
+                                </button>
+                            </div>
+                            <div className="border-t border-(--surface-background) pt-2">
+                                <button
+                                    onClick={() => { logout(); setShowSettings(false); }}
+                                    className="w-full text-xs px-3 py-1.5 rounded border border-orange-500/40 text-orange-400 hover:bg-orange-500/10 cursor-pointer transition-colors text-left"
+                                >
+                                    Log Out
                                 </button>
                             </div>
                         </div>
