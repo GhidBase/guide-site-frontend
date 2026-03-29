@@ -10,6 +10,7 @@ const RARITY_COLORS = {
     epic: "#6a1b9a",
     legendary: "#b45309",
 };
+const ORIGIN_COLORS = { Elven: "#34d399", Human: "#fbbf24" };
 
 function calcAttacksPerSec(character) {
     return 0.5 + (character.speed ?? 0) / 50;
@@ -267,6 +268,9 @@ export default function IdleGame() {
     const discardAllTimerRef = useRef(null);
     const [selectedItem, setSelectedItem] = useState(null);
     const [panelItem, setPanelItem] = useState(null);
+    const [detailItem, setDetailItem] = useState(null);
+    const [panelDetailItem, setPanelDetailItem] = useState(null);
+    useEffect(() => { if (detailItem) setPanelDetailItem(detailItem); }, [detailItem]);
     useEffect(() => { if (selectedItem) setPanelItem(selectedItem); }, [selectedItem]);
     const [pendingDiscardKey, setPendingDiscardKey] = useState(null);
     const pendingDiscardTimerRef = useRef(null);
@@ -283,6 +287,8 @@ export default function IdleGame() {
     const [enemyDeathPause, setEnemyDeathPause] = useState(false);
     const [reviveKey, setReviveKey] = useState(0);
     const [playerIsAlive, setPlayerIsAlive] = useState(true);
+    const playerIsAliveRef = useRef(true);
+    useEffect(() => { playerIsAliveRef.current = playerIsAlive; }, [playerIsAlive]);
     const enemyDeadRef = useRef(false);
     const lastPlayerHitRef = useRef(0);
     const lastEnemyHitRef = useRef(0);
@@ -448,6 +454,28 @@ export default function IdleGame() {
         return () => cancelAnimationFrame(rAFRef.current);
     }, [selectedEnemy, character?.attack, character?.baseAttack, character?.speed, character?.magic, character?.defense, reviveKey, playerIsAlive]);
 
+    // ── Visual regen animation while dead ──
+    // Speed: fills maxHp over exactly TICK_INTERVAL ms so animation completes with the server tick.
+    // Does NOT update playerCurrentHpRef — tick handler owns the authoritative value.
+    // Combat only restarts when BOTH this animation reaches maxHp AND the server has confirmed.
+    const [serverConfirmedRevive, setServerConfirmedRevive] = useState(false);
+
+    useEffect(() => {
+        if (playerIsAlive) return;
+        const hpPerSecond = 10;
+        const interval = setInterval(() => {
+            setPlayerCurrentHp((prev) => Math.min(character?.maxHp ?? 100, (prev ?? 0) + hpPerSecond));
+        }, 1000);
+        return () => clearInterval(interval);
+    }, [playerIsAlive]);
+
+    useEffect(() => {
+        if (!playerIsAlive && serverConfirmedRevive && (playerCurrentHp ?? 0) >= (character?.maxHp ?? 100)) {
+            setServerConfirmedRevive(false);
+            setPlayerIsAlive(true);
+        }
+    }, [serverConfirmedRevive, playerCurrentHp, playerIsAlive, character?.maxHp]);
+
     // ── Server sync tick ──
     useEffect(() => {
         if (!selectedEnemy || !character) return;
@@ -478,11 +506,12 @@ export default function IdleGame() {
                 setCharacter(data.character);
                 // Only sync displayed HP from server when the frontend also considers us dead (regen progress).
                 // While alive, the rAF loop exclusively owns playerCurrentHp — never let a stale tick overwrite it.
-                if (playerCurrentHpRef.current !== null && playerCurrentHpRef.current <= 0) {
+                // Use playerIsAliveRef (not the HP ref) so partial-HP ticks don't break the condition.
+                if (!playerIsAliveRef.current) {
                     playerCurrentHpRef.current = data.character.currentHp;
-                    setPlayerCurrentHp(data.character.currentHp);
-                    // Only restart combat once fully regenned — partial regen keeps the death screen up
-                    if (data.character.currentHp >= data.character.maxHp) setPlayerIsAlive(true);
+                    // Don't overwrite playerCurrentHp display — regen animation owns it.
+                    // Revive fires via the effect once animation reaches maxHp + server confirms.
+                    if (data.character.currentHp >= data.character.maxHp) setServerConfirmedRevive(true);
                 }
                 localKillCountRef.current = 0;
                 setLocalKillCount(0);
@@ -553,6 +582,7 @@ export default function IdleGame() {
 
     async function handleRevive() {
         lastReviveTimeRef.current = Date.now();
+        setServerConfirmedRevive(false);
         const res = await fetch(`${currentAPI}/idle/character/revive`, { method: "POST", credentials: "include" });
         if (res.ok) { const c = await res.json(); setCharacter(c); playerCurrentHpRef.current = c.currentHp; setPlayerCurrentHp(c.currentHp); setPlayerIsAlive(true); setReviveKey((k) => k + 1); addLog("Revived."); }
     }
@@ -942,7 +972,7 @@ export default function IdleGame() {
                 <div
                     className="absolute inset-0 flex flex-col transition-transform duration-300 ease-in-out"
                     style={{
-                        bottom: selectedItem ? 0 : 56,
+                        bottom: 56,
                         transform: screen === "inventory" ? "translateX(0)" : "translateX(100%)",
                         background: "var(--surface-background, #fff)",
                     }}
@@ -964,14 +994,11 @@ export default function IdleGame() {
                                 return (
                                     <div key={`${inv.source}-${inv.id}`} className="flex items-center gap-2 min-w-0">
                                         <span className="shrink-0" style={{ fontSize: 11 }}>{SLOT_EMOJI[slot] ?? "▪"}</span>
-                                        <span className="text-xs font-medium truncate flex-1" style={{ color }}>{inv.name}</span>
                                         <button
-                                            onClick={() => handleEquip(inv.id, false, inv.source)}
-                                            className="text-xs opacity-30 hover:opacity-70 cursor-pointer shrink-0"
-                                            title="Unequip"
-                                        >
-                                            ×
-                                        </button>
+                                            onClick={() => setSelectedItem(inv)}
+                                            className="text-xs font-medium truncate flex-1 text-left cursor-pointer hover:underline decoration-dotted"
+                                            style={{ color }}
+                                        >{inv.name}</button>
                                     </div>
                                 );
                             })}
@@ -996,23 +1023,36 @@ export default function IdleGame() {
                         onTransitionEnd={() => { if (!selectedItem) setPanelItem(null); }}
                     >
                         {panelItem && (() => {
-                            const equippedStats = equippedInSlot ? getItemStats(equippedInSlot) : {};
+                            const isViewingEquipped = panelItem.equipped;
+                            const equippedStats = (!isViewingEquipped && equippedInSlot) ? getItemStats(equippedInSlot) : {};
                             const selStats = getItemStats(panelItem);
                             const allKeys = [...new Set([...Object.keys(equippedStats), ...Object.keys(selStats)])].filter(
                                 (k) => (equippedStats[k] ?? 0) !== 0 || (selStats[k] ?? 0) !== 0
                             );
                             return (
                                 <div className="px-4 pt-3 pb-3 bg-(--surface-background)/30">
-                                    <div className="mb-2">
-                                        <span className="text-xs font-semibold uppercase opacity-40 tracking-wider">Compare</span>
+                                    <div className="mb-2 flex items-center justify-between">
+                                        <span className="text-xs font-semibold uppercase opacity-40 tracking-wider">
+                                            {isViewingEquipped ? "Equipped Item" : "Compare"}
+                                        </span>
+                                        {panelItem.source === "weapon" && panelItem.parts && (
+                                            <button
+                                                onClick={() => setDetailItem(panelItem)}
+                                                className="text-xs opacity-40 hover:opacity-80 cursor-pointer"
+                                            >
+                                                Parts ▸
+                                            </button>
+                                        )}
                                     </div>
                                     <div className="grid grid-cols-2 gap-3 text-xs">
                                         {/* Equipped side */}
                                         <div className="space-y-1">
                                             <div className="opacity-40 font-semibold uppercase tracking-wider" style={{ fontSize: 10 }}>
-                                                {selectedSlot ? `${SLOT_EMOJI[selectedSlot]} Equipped` : "Equipped"}
+                                                {isViewingEquipped
+                                                    ? (selectedSlot ? `${SLOT_EMOJI[selectedSlot]} If Unequipped` : "If Unequipped")
+                                                    : (selectedSlot ? `${SLOT_EMOJI[selectedSlot]} Equipped` : "Equipped")}
                                             </div>
-                                            {equippedInSlot ? (
+                                            {!isViewingEquipped && equippedInSlot ? (
                                                 <>
                                                     <div className="font-medium leading-tight truncate" style={{ color: RARITY_COLORS[equippedInSlot.rarity] ?? "#aaa" }}>
                                                         {equippedInSlot.name}
@@ -1030,12 +1070,16 @@ export default function IdleGame() {
                                                     ))}
                                                 </>
                                             ) : (
-                                                <div className="opacity-30 italic">Nothing equipped</div>
+                                                <div className="opacity-30 italic">
+                                                    {isViewingEquipped ? `No ${selectedSlot ?? "item"}` : "Nothing equipped"}
+                                                </div>
                                             )}
                                         </div>
                                         {/* Selected side */}
                                         <div className="space-y-1">
-                                            <div className="opacity-40 font-semibold uppercase tracking-wider" style={{ fontSize: 10 }}>Selected</div>
+                                            <div className="opacity-40 font-semibold uppercase tracking-wider" style={{ fontSize: 10 }}>
+                                                {isViewingEquipped ? "Equipped" : "Selected"}
+                                            </div>
                                             <div className="font-medium leading-tight truncate" style={{ color: RARITY_COLORS[panelItem.rarity] ?? "#aaa" }}>
                                                 {panelItem.name}
                                             </div>
@@ -1052,9 +1096,14 @@ export default function IdleGame() {
                                                 return (
                                                     <div key={k} className="flex items-center gap-1">
                                                         <span className="opacity-60">{next > 0 ? "+" : ""}{next} {k}</span>
-                                                        {equippedInSlot && delta !== 0 && (
+                                                        {!isViewingEquipped && equippedInSlot && delta !== 0 && (
                                                             <span className="font-bold" style={{ fontSize: 10, color: delta > 0 ? "#22c55e" : "#ef4444" }}>
                                                                 {delta > 0 ? "▲" : "▼"}{Math.abs(delta)}
+                                                            </span>
+                                                        )}
+                                                        {isViewingEquipped && delta !== 0 && (
+                                                            <span className="font-bold" style={{ fontSize: 10, color: delta < 0 ? "#ef4444" : "#22c55e" }}>
+                                                                {delta < 0 ? "▼" : "▲"}{Math.abs(delta)}
                                                             </span>
                                                         )}
                                                     </div>
@@ -1069,18 +1118,29 @@ export default function IdleGame() {
                                         >
                                             Back
                                         </button>
-                                        <button
-                                            onClick={() => { handleDiscard(panelItem.id, panelItem.source); setSelectedItem(null); }}
-                                            className="flex-1 text-xs px-3 py-1.5 rounded border border-red-500/40 text-red-400 hover:bg-red-500/10 cursor-pointer transition-colors"
-                                        >
-                                            Throw Away
-                                        </button>
-                                        <button
-                                            onClick={() => handleEquip(panelItem.id, true, panelItem.source)}
-                                            className="flex-1 text-xs px-3 py-1.5 rounded border border-(--primary)/40 text-(--primary) hover:bg-(--primary)/10 cursor-pointer transition-colors font-semibold"
-                                        >
-                                            Equip
-                                        </button>
+                                        {isViewingEquipped ? (
+                                            <button
+                                                onClick={() => handleEquip(panelItem.id, false, panelItem.source)}
+                                                className="flex-1 text-xs px-3 py-1.5 rounded border border-(--primary)/40 text-(--primary) hover:bg-(--primary)/10 cursor-pointer transition-colors font-semibold"
+                                            >
+                                                Unequip
+                                            </button>
+                                        ) : (
+                                            <>
+                                                <button
+                                                    onClick={() => { handleDiscard(panelItem.id, panelItem.source); setSelectedItem(null); }}
+                                                    className="flex-1 text-xs px-3 py-1.5 rounded border border-red-500/40 text-red-400 hover:bg-red-500/10 cursor-pointer transition-colors"
+                                                >
+                                                    Throw Away
+                                                </button>
+                                                <button
+                                                    onClick={() => handleEquip(panelItem.id, true, panelItem.source)}
+                                                    className="flex-1 text-xs px-3 py-1.5 rounded border border-(--primary)/40 text-(--primary) hover:bg-(--primary)/10 cursor-pointer transition-colors font-semibold"
+                                                >
+                                                    Equip
+                                                </button>
+                                            </>
+                                        )}
                                     </div>
                                 </div>
                             );
@@ -1226,7 +1286,6 @@ export default function IdleGame() {
                                     const isSelected = selectedItem?.id === inv.id && selectedItem?.source === inv.source;
                                     const itemKey = `${inv.source}-${inv.id}`;
                                     const isSwipedOpen = swipedOpenKey === itemKey;
-                                    const isPendingDiscard = pendingDiscardKey === itemKey;
                                     return (
                                         <div key={itemKey} className="relative overflow-hidden rounded-lg">
                                             {/* Delete button revealed by swipe */}
@@ -1295,35 +1354,6 @@ export default function IdleGame() {
                                                         </>
                                                     )}
                                                 </div>
-                                                <div className="flex gap-1.5 shrink-0 ml-2">
-                                                    <button
-                                                        onClick={(e) => { e.stopPropagation(); handleEquip(inv.id, true, inv.source); }}
-                                                        className="text-xs px-2 py-1 rounded border border-(--primary)/40 text-(--primary) hover:bg-(--primary)/10 cursor-pointer transition-colors"
-                                                    >
-                                                        Equip
-                                                    </button>
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            if (isPendingDiscard) {
-                                                                handleDiscard(inv.id, inv.source);
-                                                                clearTimeout(pendingDiscardTimerRef.current);
-                                                            } else {
-                                                                setPendingDiscardKey(itemKey);
-                                                                clearTimeout(pendingDiscardTimerRef.current);
-                                                                pendingDiscardTimerRef.current = setTimeout(() => setPendingDiscardKey(null), 3000);
-                                                            }
-                                                        }}
-                                                        className={`text-xs px-2 py-1 rounded border cursor-pointer transition-colors ${
-                                                            isPendingDiscard
-                                                                ? "border-red-400 text-red-400 bg-red-400/10 font-semibold"
-                                                                : "border-red-300/40 text-red-400 hover:bg-red-400/10"
-                                                        }`}
-                                                        title="Discard"
-                                                    >
-                                                        {isPendingDiscard ? "?" : "✕"}
-                                                    </button>
-                                                </div>
                                             </div>
                                         </div>
                                     );
@@ -1359,6 +1389,72 @@ export default function IdleGame() {
                     </div>
                 </div>
 
+                {/* ── Parts detail modal ── */}
+                <div
+                    className="absolute inset-0 z-50 flex flex-col justify-end transition-opacity duration-300"
+                    style={{ opacity: detailItem ? 1 : 0, pointerEvents: detailItem ? "auto" : "none" }}
+                    onClick={() => setDetailItem(null)}
+                >
+                    <div className="absolute inset-0 bg-black/50" />
+                    <div
+                        className="relative rounded-t-2xl flex flex-col transition-transform duration-300 ease-in-out"
+                        style={{
+                            maxHeight: "75%",
+                            background: "var(--accent, #fff)",
+                            transform: detailItem ? "translateY(0)" : "translateY(100%)",
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        onTransitionEnd={() => { if (!detailItem) setPanelDetailItem(null); }}
+                    >
+                            {panelDetailItem && (<>
+                            <div className="flex items-start justify-between px-4 pt-4 pb-3 border-b border-(--surface-background)/50 shrink-0">
+                                <div className="min-w-0 pr-3">
+                                    <div className="font-semibold truncate" style={{ color: RARITY_COLORS[panelDetailItem.rarity] ?? "#aaa" }}>
+                                        {panelDetailItem.name}
+                                    </div>
+                                    <div className="text-xs opacity-50 mt-0.5">
+                                        {panelDetailItem.typeLabel} · Lv.{panelDetailItem.level} · {panelDetailItem.origin}
+                                        {panelDetailItem.totalRating != null && ` · ⚡${Math.round(panelDetailItem.totalRating * (1 + Math.log(panelDetailItem.level + 1) * 2))}`}
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => setDetailItem(null)}
+                                    className="text-xl opacity-40 hover:opacity-70 cursor-pointer leading-none shrink-0"
+                                >
+                                    ×
+                                </button>
+                            </div>
+                            <div className="overflow-y-auto flex-1 px-4 py-3 space-y-4">
+                                {Object.entries(panelDetailItem.parts ?? {}).map(([key, part]) => {
+                                    const label = key.split("_").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+                                    const statEntries = Object.entries(part.stats).filter(([, v]) => v !== 0);
+                                    return (
+                                        <div key={key}>
+                                            <div className="text-xs font-semibold uppercase tracking-wider opacity-30 mb-1">{label}</div>
+                                            <div className="flex items-start justify-between gap-2">
+                                                <div className="min-w-0">
+                                                    <div className="text-sm font-medium truncate">{part.name}</div>
+                                                    <div className="text-xs mt-0.5" style={{ color: ORIGIN_COLORS[part.origin] ?? "#aaa", opacity: 0.8 }}>
+                                                        {part.origin}
+                                                    </div>
+                                                </div>
+                                                <div className="text-right shrink-0">
+                                                    <div className="text-xs opacity-40">Rating {part.rating}</div>
+                                                    {statEntries.length > 0 && (
+                                                        <div className="text-xs opacity-60 mt-0.5">
+                                                            {statEntries.map(([k, v]) => `${v > 0 ? "+" : ""}${v} ${k}`).join(" · ")}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                            </>)}
+                        </div>
+                    </div>
+
                 {/* ── Bottom navbar ── */}
                 <div
                     className="absolute bottom-0 left-0 right-0 flex border-t border-(--surface-background)"
@@ -1366,7 +1462,7 @@ export default function IdleGame() {
                         height: 56,
                         background: "var(--surface-background, #fff)",
                         transition: "transform 0.3s ease-in-out",
-                        transform: selectedItem ? "translateY(100%)" : "translateY(0)",
+                        transform: "translateY(0)",
                     }}
                 >
                     <button
