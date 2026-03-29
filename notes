@@ -1,0 +1,14 @@
+Classes:
+Juggernaut: Slow weapons gain x damage
+Rogue: Crits apply stacking bleed
+Necromancer: Deal damage on death
+Berserker: Damage increases as HP gets lower
+Paladin: Healing effects deal damage
+
+Weaknesses: Revive time increased, non-crits deal reduced damage, healing reduced, attack speed reduced
+
+Archetypes
+Each archetype has different affinities for weapons. Some weapons are going to be majorly reduced on certain archetypes
+
+Modifier part
+One part simply amplifies and reduces the affects of other parts
