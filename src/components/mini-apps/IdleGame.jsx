@@ -466,16 +466,20 @@ export default function IdleGame() {
         } catch { /* ignore */ }
     }, [addLog]);
 
-    // ── Load character + zones on mount ──
+    // ── Load character + zones on mount (also re-runs when Retry button resets loading to true) ──
     useEffect(() => {
-        if (!isAuthenticated) return;
+        if (!isAuthenticated || !loading) return;
         (async () => {
             try {
                 const [charRes, zonesRes] = await Promise.all([
                     fetch(`${currentAPI}/idle/character`, { credentials: "include" }),
                     fetch(`${currentAPI}/idle/zones`, { credentials: "include" }),
                 ]);
-                if (!charRes.ok) throw new Error(`Server error: ${charRes.status}`);
+                if (!charRes.ok) {
+                    let msg = `Server error: ${charRes.status}`;
+                    try { const body = await charRes.json(); if (body?.error) msg = body.error; } catch { /* ignore */ }
+                    throw new Error(msg);
+                }
                 const { character: charData, offlineGains: gains } = await charRes.json();
                 const zonesData = await zonesRes.json();
                 setCharacter(charData);
@@ -495,7 +499,7 @@ export default function IdleGame() {
                 setLoading(false);
             }
         })();
-    }, [isAuthenticated, addLog]);
+    }, [isAuthenticated, loading, addLog]);
 
     // ── Re-fetch character when tab regains visibility ──
     useEffect(() => {
@@ -837,6 +841,12 @@ export default function IdleGame() {
                 <p className="font-semibold">Failed to load game</p>
                 <p className="text-sm opacity-50">{fetchError}</p>
                 <p className="text-xs opacity-40">Make sure the backend is running.</p>
+                <button
+                    onClick={() => { setFetchError(null); setLoading(true); }}
+                    className="mt-2 px-4 py-1.5 text-sm rounded border border-(--text-color)/30 hover:border-(--text-color)/60 cursor-pointer"
+                >
+                    Retry
+                </button>
             </div>
         );
     }
