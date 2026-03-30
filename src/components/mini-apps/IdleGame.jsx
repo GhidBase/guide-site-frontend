@@ -457,6 +457,7 @@ export default function IdleGame() {
             playerCurrentHpRef.current = charData.currentHp;
             setPlayerCurrentHp(charData.currentHp);
             setPlayerIsAlive(charData.currentHp > 0);
+            if (charData.currentHp > 0) lastReviveTimeRef.current = Date.now();
             if (gains) {
                 setOfflineGains(gains);
                 addLog(`Offline: killed ${gains.kills}× ${gains.enemyName} (+${gains.xpGained} XP)`);
@@ -669,7 +670,10 @@ export default function IdleGame() {
                     playerCurrentHpRef.current = data.character.currentHp;
                     // Don't overwrite playerCurrentHp display — regen animation owns it.
                     // Revive fires via the effect once animation reaches maxHp + server confirms.
-                    if (data.character.currentHp >= data.character.maxHp) setServerConfirmedRevive(true);
+                    if (data.character.currentHp >= data.character.maxHp) {
+                        lastReviveTimeRef.current = Date.now();
+                        setServerConfirmedRevive(true);
+                    }
                 }
                 localKillCountRef.current = 0;
                 setLocalKillCount(0);
@@ -699,6 +703,13 @@ export default function IdleGame() {
                         newLevel: data.character.level,
                         drops: data.drops ?? [],
                     });
+                }
+
+                if (data.offlineGains) {
+                    const g = data.offlineGains;
+                    setOfflineGains(g);
+                    addLog(`Offline: killed ${g.kills}× ${g.enemyName} (+${g.xpGained} XP)`);
+                    if (g.levelUps > 0) addLog(`⬆ Leveled up ${g.levelUps}× while away!`);
                 }
             } catch {
                 // silently ignore network errors in the tick loop
@@ -1215,6 +1226,12 @@ export default function IdleGame() {
                                             className="text-xs font-medium truncate flex-1 text-left cursor-pointer hover:underline decoration-dotted"
                                             style={{ color }}
                                         >{inv.name}</button>
+                                        {inv.source === "weapon" && inv.level != null && (
+                                            <span className="shrink-0 text-xs opacity-40 ml-1">
+                                                Lv.{inv.level}
+                                                {inv.totalRating != null && <span className="ml-1">⚡{Math.round(inv.totalRating * (1 + Math.log(inv.level + 1) * 2))}</span>}
+                                            </span>
+                                        )}
                                     </div>
                                 );
                             })}
@@ -1492,6 +1509,14 @@ export default function IdleGame() {
                                             >
                                                 {isPendingDiscard ? "?" : "×"}
                                             </button>
+                                            {inv.source === "weapon" && inv.parts && (
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); setDetailItem(inv); }}
+                                                    className="absolute bottom-0.5 right-0.5 cursor-pointer leading-none opacity-25 hover:opacity-80"
+                                                    title="View parts"
+                                                    style={{ fontSize: 10 }}
+                                                >👁</button>
+                                            )}
                                         </div>
                                     );
                                 })}
@@ -1550,7 +1575,17 @@ export default function IdleGame() {
                                                 }}
                                             >
                                                 <div className="min-w-0 flex-1">
-                                                    <div className="text-sm font-medium truncate" style={{ color }}>{inv.name}</div>
+                                                    <div className="flex items-center gap-1.5 min-w-0">
+                                                        <div className="text-sm font-medium truncate flex-1" style={{ color }}>{inv.name}</div>
+                                                        {isWeapon && inv.parts && (
+                                                            <button
+                                                                onClick={(e) => { e.stopPropagation(); setDetailItem(inv); }}
+                                                                className="shrink-0 opacity-30 hover:opacity-80 cursor-pointer leading-none"
+                                                                title="View parts"
+                                                                style={{ fontSize: 14 }}
+                                                            >👁</button>
+                                                        )}
+                                                    </div>
                                                     {isWeapon ? (
                                                         <>
                                                             <div className="text-xs opacity-50">
