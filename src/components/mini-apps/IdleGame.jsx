@@ -390,7 +390,7 @@ export default function IdleGame() {
     const [showSettings, setShowSettings] = useState(false);
     const [invFilterSlot, setInvFilterSlot] = useState("all");
     const [invFilterRarity, setInvFilterRarity] = useState("all");
-    const [invSort, setInvSort] = useState("newest");
+    const [invSort, setInvSort] = useState("power-high");
     const [discardAllPending, setDiscardAllPending] = useState(false);
     const discardAllTimerRef = useRef(null);
     const [selectedItem, setSelectedItem] = useState(null);
