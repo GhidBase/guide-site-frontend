@@ -429,6 +429,27 @@ export default function IdleGame() {
         setLog((prev) => [...prev.slice(-99), `[${time}] ${msg}`]);
     }, []);
 
+    // ── Character reload (used on mount and on visibility return) ──
+    const reloadCharacter = useCallback(async () => {
+        try {
+            const res = await fetch(`${currentAPI}/idle/character`, { credentials: "include" });
+            if (!res.ok) return;
+            const { character: charData, offlineGains: gains } = await res.json();
+            // Reset tick timing so the next tick doesn't cover the full offline gap
+            tickStartRef.current = Date.now();
+            localKillsRef.current = 0;
+            setCharacter(charData);
+            playerCurrentHpRef.current = charData.currentHp;
+            setPlayerCurrentHp(charData.currentHp);
+            setPlayerIsAlive(charData.currentHp > 0);
+            if (gains) {
+                setOfflineGains(gains);
+                addLog(`Offline: killed ${gains.kills}× ${gains.enemyName} (+${gains.xpGained} XP)`);
+                if (gains.levelUps > 0) addLog(`⬆ Leveled up ${gains.levelUps}× while away!`);
+            }
+        } catch { /* ignore */ }
+    }, [addLog]);
+
     // ── Load character + zones on mount ──
     useEffect(() => {
         if (!isAuthenticated) return;
@@ -459,6 +480,15 @@ export default function IdleGame() {
             }
         })();
     }, [isAuthenticated, addLog]);
+
+    // ── Re-fetch character when tab regains visibility ──
+    useEffect(() => {
+        const handleVisibility = () => {
+            if (!document.hidden && isAuthenticated) reloadCharacter();
+        };
+        document.addEventListener("visibilitychange", handleVisibility);
+        return () => document.removeEventListener("visibilitychange", handleVisibility);
+    }, [isAuthenticated, reloadCharacter]);
 
     // ── Load enemies when zone changes ──
     useEffect(() => {
