@@ -12,6 +12,21 @@ const RARITY_COLORS = {
 };
 const ORIGIN_COLORS = { Elven: "#34d399", Human: "#fbbf24" };
 
+const SWORD_TYPES = new Set(["sword", "longsword", "greatsword", "dagger"]);
+
+// Maps blade part names to art folder variants. Unlisted blades fall back to "Rusty".
+const BLADE_ART_MAP = {
+    "Knight's Blade": "Knights",
+    "Celestial Blade": "Celestial",
+};
+
+function getSwordArtVariant(inventory) {
+    const sword = inventory?.find(w => w.equipped && SWORD_TYPES.has(w.type));
+    if (!sword) return null;
+    const bladeName = sword.parts?.blade?.name;
+    return BLADE_ART_MAP[bladeName] ?? "Rusty";
+}
+
 function calcAttacksPerSec(character) {
     return 0.5 + (character.speed ?? 0) / 50;
 }
@@ -951,108 +966,135 @@ export default function IdleGame() {
                     </div>
 
                     {/* Combat area */}
-                    <div className="flex-1 flex flex-col items-center justify-center gap-3 px-4">
+                    <div className="flex-1 flex flex-col justify-center gap-2 px-3">
                         {selectedEnemy ? (
                             <>
-                                {!playerIsAlive ? (
-                                    <div className="text-center space-y-2">
-                                        <div className="text-4xl select-none">💀</div>
-                                        <div className="font-semibold opacity-60">Defeated</div>
-                                        <div className="text-xs opacity-40">Recovering… {Math.ceil((character.maxHp - Math.max(0, character.currentHp)) / 10)}s remaining</div>
+                                {/* Arena — player left, enemy right */}
+                                <div className="flex items-end justify-between gap-2">
+
+                                    {/* ── Player side ── */}
+                                    <div className="flex flex-col items-center gap-1 flex-1">
+                                        {/* Player HP bar */}
+                                        {(() => {
+                                            const hp = playerCurrentHp ?? character.currentHp;
+                                            const pct = Math.max(0, (hp / character.maxHp) * 100);
+                                            return (
+                                                <div className="w-full">
+                                                    <div className="flex justify-between text-xs mb-0.5 opacity-60">
+                                                        <span className="truncate">{Math.ceil(Math.max(0, hp))}/{character.maxHp}</span>
+                                                        {playerIsAlive
+                                                            ? <span className="text-red-400 shrink-0 ml-1">{calcEnemyDmg(selectedEnemy, character)}↓</span>
+                                                            : <span className="text-green-400 shrink-0 ml-1">+10/s</span>
+                                                        }
+                                                    </div>
+                                                    <div className="w-full h-2 rounded-full bg-(--surface-background) overflow-hidden">
+                                                        <div
+                                                            className="h-full rounded-full transition-all"
+                                                            style={{
+                                                                width: `${pct}%`,
+                                                                background: pct > 50 ? "#4ade80" : pct > 25 ? "#facc15" : "#f87171",
+                                                                transitionDuration: !playerIsAlive ? "1000ms" : `${Math.round(1000 / (selectedEnemy.attackSpeed ?? 1))}ms`,
+                                                            }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            );
+                                        })()}
+                                        {/* Character sprite */}
+                                        <div className="relative" style={{ width: 146, height: 152 }}>
+                                            {!playerIsAlive ? (
+                                                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                                    <div className="text-3xl select-none">💀</div>
+                                                    <div className="text-xs opacity-40 mt-1">
+                                                        {Math.ceil((character.maxHp - Math.max(0, character.currentHp)) / 10)}s
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    {["Legs_1","Side Arm_1","Head_1","Hair_1","Chest_1"].map(name => (
+                                                        <img key={name} src={`/idle/Character/Male/${name}.png`} width={146} height={152} className="absolute top-0 left-0" alt="" />
+                                                    ))}
+                                                    {(() => {
+                                                        const variant = getSwordArtVariant(character.inventory);
+                                                        if (!variant) return null;
+                                                        return <>
+                                                            <img src={`/idle/Weapons/Swords/Hilts/Human/${variant} Hilt.png`} width={146} height={152} className="absolute top-0 left-0" alt="" />
+                                                            <img src={`/idle/Weapons/Swords/Blades/Human/${variant} Blade.png`} width={146} height={152} className="absolute top-0 left-0" alt="" />
+                                                        </>;
+                                                    })()}
+                                                    <img src="/idle/Character/Male/Main Arm_1.png" width={146} height={152} className="absolute top-0 left-0" alt="" />
+                                                </>
+                                            )}
+                                        </div>
+                                        {/* Player attack charge bar */}
+                                        {playerIsAlive && (
+                                            <div className="w-full">
+                                                <div className="flex justify-between text-xs mb-0.5 opacity-40">
+                                                    <span>ATK</span>
+                                                    <span>{calcAttacksPerSec(character).toFixed(2)}/s</span>
+                                                </div>
+                                                <div className="w-full h-1.5 rounded-full bg-(--surface-background) overflow-hidden">
+                                                    <div className="h-full rounded-full bg-(--primary)" style={{ width: `${playerChargeProgress * 100}%` }} />
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
-                                ) : enemyDeathPause ? (
-                                    <div className="text-6xl select-none animate-bounce">💥</div>
-                                ) : (
-                                    <div
-                                        className={`text-6xl transition-transform duration-100 select-none ${
-                                            attacking ? "scale-110" : "scale-100"
-                                        }`}
-                                    >
-                                        👾
+
+                                    {/* VS divider */}
+                                    <div className="text-xs opacity-30 pb-8 shrink-0">vs</div>
+
+                                    {/* ── Enemy side ── */}
+                                    <div className="flex flex-col items-center gap-1 flex-1">
+                                        {/* Enemy HP bar */}
+                                        {playerIsAlive && enemyCurrentHp !== null && (() => {
+                                            const dmg = calcPlayerDmg(character, selectedEnemy);
+                                            const pct = Math.max(0, (enemyCurrentHp / selectedEnemy.hp) * 100);
+                                            return (
+                                                <div className="w-full">
+                                                    <div className="flex justify-between text-xs mb-0.5 opacity-60">
+                                                        <span className="truncate">{Math.ceil(enemyCurrentHp)}/{selectedEnemy.hp}</span>
+                                                        <span className="text-(--primary) shrink-0 ml-1">{dmg}↓</span>
+                                                    </div>
+                                                    <div className="w-full h-2 rounded-full bg-(--surface-background) overflow-hidden">
+                                                        <div
+                                                            className="h-full rounded-full bg-red-400 transition-all"
+                                                            style={{ width: `${pct}%`, transitionDuration: `${Math.round(1000 / calcAttacksPerSec(character))}ms` }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            );
+                                        })()}
+                                        {/* Enemy art */}
+                                        <div className="flex items-center justify-center" style={{ width: 120, height: 125 }}>
+                                            {enemyDeathPause ? (
+                                                <div className="text-5xl select-none animate-bounce">💥</div>
+                                            ) : (
+                                                <div className={`text-5xl transition-transform duration-100 select-none ${attacking ? "scale-110" : "scale-100"}`}>
+                                                    👾
+                                                </div>
+                                            )}
+                                        </div>
+                                        {/* Enemy attack charge bar */}
+                                        {playerIsAlive && (
+                                            <div className="w-full">
+                                                <div className="flex justify-between text-xs mb-0.5 opacity-40">
+                                                    <span>ATK</span>
+                                                    <span>{(selectedEnemy.attackSpeed ?? 1).toFixed(2)}/s</span>
+                                                </div>
+                                                <div className="w-full h-1.5 rounded-full bg-(--surface-background) overflow-hidden">
+                                                    <div className="h-full rounded-full bg-red-400" style={{ width: `${enemyChargeProgress * 100}%` }} />
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
-                                )}
+                                </div>
+
+                                {/* Enemy name */}
                                 <div className="text-center">
-                                    <div className="font-semibold text-lg">{selectedEnemy.name}</div>
+                                    <div className="font-semibold">{selectedEnemy.name}</div>
                                     <div className="text-xs opacity-50">Lv.{selectedEnemy.level} · {selectedEnemy.currentZone ?? character.currentZone}</div>
                                 </div>
-                                {/* Enemy HP bar */}
-                                {playerIsAlive && enemyCurrentHp !== null && (() => {
-                                    const dmg = calcPlayerDmg(character, selectedEnemy);
-                                    const oneShot = dmg >= selectedEnemy.hp;
-                                    const pct = Math.max(0, (enemyCurrentHp / selectedEnemy.hp) * 100);
-                                    return (
-                                        <div className="w-full px-2">
-                                            <div className="flex justify-between text-xs mb-1 opacity-60">
-                                                <span>{Math.ceil(enemyCurrentHp)} / {selectedEnemy.hp} HP</span>
-                                                {oneShot
-                                                    ? <span className="text-(--primary) font-semibold">One shot</span>
-                                                    : <span className="text-(--primary) font-semibold">{dmg} dmg/hit</span>
-                                                }
-                                            </div>
-                                            <div className="w-full h-2 rounded-full bg-(--surface-background) overflow-hidden">
-                                                <div
-                                                    className="h-full rounded-full bg-red-400 transition-all"
-                                                    style={{ width: `${pct}%`, transitionDuration: `${Math.round(1000 / calcAttacksPerSec(character))}ms` }}
-                                                />
-                                            </div>
-                                        </div>
-                                    );
-                                })()}
-                                {/* Player HP bar */}
-                                {(() => {
-                                    const hp = playerCurrentHp ?? character.currentHp;
-                                    const pct = Math.max(0, (hp / character.maxHp) * 100);
-                                    const enemyDmg = Math.max(1, selectedEnemy.attack - character.defense);
-                                    return (
-                                        <div className="w-full px-2">
-                                            <div className="flex justify-between text-xs mb-1 opacity-60">
-                                                <span>{Math.ceil(Math.max(0, hp))} / {character.maxHp} HP</span>
-                                                {playerIsAlive
-                                                    ? <span className="text-red-400">{enemyDmg} dmg/hit</span>
-                                                    : <span className="text-green-400">+{10}/s regen</span>
-                                                }
-                                            </div>
-                                            <div className="w-full h-2 rounded-full bg-(--surface-background) overflow-hidden">
-                                                <div
-                                                    className="h-full rounded-full transition-all"
-                                                    style={{
-                                                        width: `${pct}%`,
-                                                        background: pct > 50 ? "#4ade80" : pct > 25 ? "#facc15" : "#f87171",
-                                                        transitionDuration: !playerIsAlive ? "1000ms" : `${Math.round(1000 / calcAttacksPerSec(character))}ms`,
-                                                    }}
-                                                />
-                                            </div>
-                                        </div>
-                                    );
-                                })()}
-                                {playerIsAlive && (
-                                    <div className="w-full px-2 space-y-1.5">
-                                        <div>
-                                            <div className="flex justify-between text-xs mb-1 opacity-50">
-                                                <span>⚔ Your attack</span>
-                                                <span>{calcAttacksPerSec(character).toFixed(2)}/s</span>
-                                            </div>
-                                            <div className="w-full h-1.5 rounded-full bg-(--surface-background) overflow-hidden">
-                                                <div
-                                                    className="h-full rounded-full bg-(--primary)"
-                                                    style={{ width: `${playerChargeProgress * 100}%` }}
-                                                />
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <div className="flex justify-between text-xs mb-1 opacity-50">
-                                                <span>💢 {selectedEnemy.name}</span>
-                                                <span>{(selectedEnemy.attackSpeed ?? 1).toFixed(2)}/s</span>
-                                            </div>
-                                            <div className="w-full h-1.5 rounded-full bg-(--surface-background) overflow-hidden">
-                                                <div
-                                                    className="h-full rounded-full bg-red-400"
-                                                    style={{ width: `${enemyChargeProgress * 100}%` }}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
+
                                 {recentDrops.length > 0 && (
                                     <div className="w-full text-center">
                                         <DropFeed drops={recentDrops} />

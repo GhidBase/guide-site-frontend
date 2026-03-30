@@ -6,6 +6,7 @@ export default [
 
     // Fullscreen routes — no site header/footer
     route("idle", "routes/idle-game.jsx"),
+    route("idle-art-test", "routes/idle-art-test.jsx"),
 
     layout("routes/layout.jsx", { id: "main" }, [
         index("routes/home.jsx"),
