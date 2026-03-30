@@ -391,6 +391,18 @@ export default function IdleGame() {
     const [invFilterSlot, setInvFilterSlot] = useState("all");
     const [invFilterRarity, setInvFilterRarity] = useState("all");
     const [invSort, setInvSort] = useState("power-high");
+    const [lockedItems, setLockedItems] = useState(() => {
+        try { return new Set(JSON.parse(localStorage.getItem("idle-locked-items") ?? "[]")); }
+        catch { return new Set(); }
+    });
+    const toggleLock = (itemKey) => {
+        setLockedItems((prev) => {
+            const next = new Set(prev);
+            if (next.has(itemKey)) next.delete(itemKey); else next.add(itemKey);
+            localStorage.setItem("idle-locked-items", JSON.stringify([...next]));
+            return next;
+        });
+    };
     const [discardAllPending, setDiscardAllPending] = useState(false);
     const discardAllTimerRef = useRef(null);
     const [selectedItem, setSelectedItem] = useState(null);
@@ -768,6 +780,7 @@ export default function IdleGame() {
     }
 
     async function handleDiscardAll(items) {
+        const unlocked = items.filter((i) => !lockedItems.has(`${i.source}-${i.id}`));
         if (!discardAllPending) {
             setDiscardAllPending(true);
             clearTimeout(discardAllTimerRef.current);
@@ -776,16 +789,17 @@ export default function IdleGame() {
         }
         setDiscardAllPending(false);
         clearTimeout(discardAllTimerRef.current);
+        if (unlocked.length === 0) return;
         const res = await fetch(`${currentAPI}/idle/character/items`, {
             method: "DELETE",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ items: items.map((i) => ({ id: i.id, source: i.source })) }),
+            body: JSON.stringify({ items: unlocked.map((i) => ({ id: i.id, source: i.source })) }),
         });
         if (res.ok) {
             const data = await res.json();
             setCharacter(data);
-            addLog(`Discarded ${items.length} item${items.length !== 1 ? "s" : ""}.`);
+            addLog(`Discarded ${unlocked.length} item${unlocked.length !== 1 ? "s" : ""}.`);
         }
     }
 
@@ -1467,7 +1481,10 @@ export default function IdleGame() {
                                             : "border-red-300/40 text-red-400/60 hover:text-red-400 hover:border-red-400/60"
                                     }`}
                                 >
-                                    {discardAllPending ? `Confirm? (${filteredItems.length})` : "Remove All"}
+                                    {(() => {
+                                        const unlocked = filteredItems.filter((i) => !lockedItems.has(`${i.source}-${i.id}`));
+                                        return discardAllPending ? `Confirm? (${unlocked.length})` : "Remove All";
+                                    })()}
                                 </button>
                             )}
                         </div>
@@ -1483,6 +1500,7 @@ export default function IdleGame() {
                                     const isSelected = selectedItem?.id === inv.id && selectedItem?.source === inv.source;
                                     const itemKey = `${inv.source}-${inv.id}`;
                                     const isPendingDiscard = pendingDiscardKey === itemKey;
+                                    const isLocked = lockedItems.has(itemKey);
                                     return (
                                         <div
                                             key={itemKey}
@@ -1502,23 +1520,31 @@ export default function IdleGame() {
                                                 {inv.name}
                                             </span>
                                             <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    if (isPendingDiscard) {
-                                                        handleDiscard(inv.id, inv.source);
-                                                        clearTimeout(pendingDiscardTimerRef.current);
-                                                    } else {
-                                                        setPendingDiscardKey(itemKey);
-                                                        clearTimeout(pendingDiscardTimerRef.current);
-                                                        pendingDiscardTimerRef.current = setTimeout(() => setPendingDiscardKey(null), 3000);
-                                                    }
-                                                }}
-                                                className="absolute top-0.5 right-0.5 cursor-pointer leading-none"
-                                                style={{ fontSize: 11, color: isPendingDiscard ? "#ef4444" : undefined, opacity: isPendingDiscard ? 1 : 0.25 }}
-                                                title="Discard"
-                                            >
-                                                {isPendingDiscard ? "?" : "×"}
-                                            </button>
+                                                onClick={(e) => { e.stopPropagation(); toggleLock(itemKey); }}
+                                                className="absolute top-0.5 left-0.5 cursor-pointer leading-none"
+                                                style={{ fontSize: 10, opacity: isLocked ? 0.9 : 0.2 }}
+                                                title={isLocked ? "Unlock" : "Lock"}
+                                            >🔒</button>
+                                            {!isLocked && (
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        if (isPendingDiscard) {
+                                                            handleDiscard(inv.id, inv.source);
+                                                            clearTimeout(pendingDiscardTimerRef.current);
+                                                        } else {
+                                                            setPendingDiscardKey(itemKey);
+                                                            clearTimeout(pendingDiscardTimerRef.current);
+                                                            pendingDiscardTimerRef.current = setTimeout(() => setPendingDiscardKey(null), 3000);
+                                                        }
+                                                    }}
+                                                    className="absolute top-0.5 right-0.5 cursor-pointer leading-none"
+                                                    style={{ fontSize: 11, color: isPendingDiscard ? "#ef4444" : undefined, opacity: isPendingDiscard ? 1 : 0.25 }}
+                                                    title="Discard"
+                                                >
+                                                    {isPendingDiscard ? "?" : "×"}
+                                                </button>
+                                            )}
                                             {inv.source === "weapon" && inv.parts && (
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); setDetailItem(inv); }}
@@ -1539,10 +1565,11 @@ export default function IdleGame() {
                                     const isSelected = selectedItem?.id === inv.id && selectedItem?.source === inv.source;
                                     const itemKey = `${inv.source}-${inv.id}`;
                                     const isSwipedOpen = swipedOpenKey === itemKey;
+                                    const isLocked = lockedItems.has(itemKey);
                                     return (
                                         <div key={itemKey} className="relative overflow-hidden rounded-lg">
-                                            {/* Delete button revealed by swipe */}
-                                            {isSwipedOpen && (
+                                            {/* Delete button revealed by swipe — hidden for locked items */}
+                                            {isSwipedOpen && !isLocked && (
                                                 <div
                                                     className="absolute right-0 top-0 bottom-0 flex items-center justify-center"
                                                     style={{ width: 72, background: "#ef4444" }}
@@ -1575,7 +1602,7 @@ export default function IdleGame() {
                                                 onTouchEnd={(e) => {
                                                     const dx = e.changedTouches[0].clientX - (swipeTouchStartX.current ?? e.changedTouches[0].clientX);
                                                     if (Math.abs(dx) > 8) swipeWasMove.current = true;
-                                                    if (dx < -60) setSwipedOpenKey(itemKey);
+                                                    if (!isLocked && dx < -60) setSwipedOpenKey(itemKey);
                                                     else if (dx > 20) setSwipedOpenKey(null);
                                                 }}
                                                 onClick={() => {
@@ -1587,6 +1614,12 @@ export default function IdleGame() {
                                                 <div className="min-w-0 flex-1">
                                                     <div className="flex items-center gap-1.5 min-w-0">
                                                         <div className="text-sm font-medium truncate flex-1" style={{ color }}>{inv.name}</div>
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); toggleLock(itemKey); }}
+                                                            className="shrink-0 cursor-pointer leading-none"
+                                                            style={{ fontSize: 12, opacity: isLocked ? 0.9 : 0.2 }}
+                                                            title={isLocked ? "Unlock" : "Lock"}
+                                                        >🔒</button>
                                                         {isWeapon && inv.parts && (
                                                             <button
                                                                 onClick={(e) => { e.stopPropagation(); setDetailItem(inv); }}
