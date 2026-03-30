@@ -489,6 +489,7 @@ export default function IdleGame() {
         if (!selectedEnemy || !character) return;
 
         localKillCountRef.current = 0;
+        localKillsRef.current = 0;
         setLocalKillCount(0);
 
         if (!playerIsAlive) return;
@@ -628,7 +629,14 @@ export default function IdleGame() {
                 localKillCountRef.current = 0;
                 setLocalKillCount(0);
 
-                if (data.died) addLog(`💀 Defeated by ${selectedEnemy.name}. Recovering...`);
+                if (data.died) {
+                    addLog(`💀 Defeated by ${selectedEnemy.name}. Recovering...`);
+                    if (playerIsAliveRef.current) {
+                        playerCurrentHpRef.current = 0;
+                        setPlayerCurrentHp(0);
+                        setPlayerIsAlive(false);
+                    }
+                }
 
                 if (data.killsProcessed > 0) {
                     if (data.drops?.length > 0) {
