@@ -360,7 +360,7 @@ function LoginScreen() {
 // ── main component ───────────────────────────────────────────────────────────
 
 export default function IdleGame() {
-    const { isAuthenticated, isLoading: authLoading, logout } = useAuth();
+    const { isAuthenticated, isLoading: authLoading, logout, user } = useAuth();
 
     const [character, setCharacter] = useState(null);
     const [zones, setZones] = useState([]);
@@ -867,6 +867,9 @@ export default function IdleGame() {
                     {showSettings && (
                         <div className="mx-4 mb-2 p-3 rounded-lg border border-(--surface-background) bg-(--surface-background)/60 text-sm space-y-2 shrink-0">
                             <div className="font-semibold text-xs uppercase opacity-50 tracking-wider">Settings</div>
+                            {user?.username && (
+                                <div className="text-xs opacity-50">Logged in as <span className="opacity-100 font-medium">{user.username}</span></div>
+                            )}
                             <button
                                 onClick={handleReset}
                                 className="w-full text-xs px-3 py-1.5 rounded border border-red-500/40 text-red-400 hover:bg-red-500/10 cursor-pointer transition-colors text-left"
