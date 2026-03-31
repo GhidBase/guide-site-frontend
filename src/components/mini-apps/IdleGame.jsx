@@ -14,17 +14,37 @@ const ORIGIN_COLORS = { Elven: "#34d399", Human: "#fbbf24" };
 
 const SWORD_TYPES = new Set(["sword", "longsword", "greatsword", "dagger"]);
 
-// Maps blade part names to art folder variants. Unlisted blades fall back to "Rusty".
+// Maps blade part name → { folder, variant } for sword art.
+// folder = "Human" | "Elven" (matches the subfolder under Blades/ and Hilts/)
+// variant = file name prefix before " Blade.png" / " Hilt.png"
+// Unlisted Human blades fall back to { folder: "Human", variant: "Rusty" }
+// Unlisted Elven blades fall back to { folder: "Elven", variant: "Woven Fate" }
 const BLADE_ART_MAP = {
-    "Knight's Blade": "Knights",
-    "Celestial Blade": "Celestial",
+    // ── Human ──
+    "Soldier's Blade":  { folder: "Human", variant: "Rusty" },
+    "Tempered Blade":   { folder: "Human", variant: "Iron" },
+    "Knight's Blade":   { folder: "Human", variant: "Knights" },
+    "Fine Steel Sword": { folder: "Human", variant: "Bronze" },
+    "Champion's Edge":  { folder: "Human", variant: "Kings Gold" },
+    // ── Elven ──
+    "Jeweled Saber":    { folder: "Elven", variant: "Jeweled Saber" },
+    "Evils Bane":       { folder: "Elven", variant: "Evils Bane" },
+    "Elven Glass Blade":{ folder: "Elven", variant: "Elven Glass" },
+    "Rose Blade":       { folder: "Elven", variant: "Rose" },
+    "Woven Fate":       { folder: "Elven", variant: "Woven Fate" },
 };
 
 function getSwordArtVariant(inventory) {
     const sword = inventory?.find(w => w.equipped && SWORD_TYPES.has(w.type));
     if (!sword) return null;
     const bladeName = sword.parts?.blade?.name;
-    return BLADE_ART_MAP[bladeName] ?? "Rusty";
+    const mapped = BLADE_ART_MAP[bladeName];
+    if (mapped) return mapped;
+    // Fallback by origin
+    const origin = sword.origin ?? "Human";
+    return origin === "Elven"
+        ? { folder: "Elven", variant: "Woven Fate" }
+        : { folder: "Human", variant: "Rusty" };
 }
 
 function calcAttacksPerSec(character) {
@@ -1046,15 +1066,17 @@ export default function IdleGame() {
                                                 </div>
                                             ) : (
                                                 <>
-                                                    {["Legs_1","Side Arm_1","Head_1","Hair_1","Chest_1"].map(name => (
+                                                    {["Legs_1","Side Arm_1","Head_1"].map(name => (
                                                         <img key={name} src={`/idle/Character/Male/${name}.png`} width={146} height={152} className="absolute top-0 left-0" alt="" />
                                                     ))}
+                                                    <img src="/idle/Character/Male/Hair/Hair_sprite_1.png" width={146} height={152} className="absolute top-0 left-0" alt="" />
+                                                    <img src="/idle/Character/Male/Chest_1.png" width={146} height={152} className="absolute top-0 left-0" alt="" />
                                                     {(() => {
-                                                        const variant = getSwordArtVariant(character.inventory);
-                                                        if (!variant) return null;
+                                                        const art = getSwordArtVariant(character.inventory);
+                                                        if (!art) return null;
                                                         return <>
-                                                            <img src={`/idle/Weapons/Swords/Hilts/Human/${variant} Hilt.png`} width={146} height={152} className="absolute top-0 left-0" alt="" />
-                                                            <img src={`/idle/Weapons/Swords/Blades/Human/${variant} Blade.png`} width={146} height={152} className="absolute top-0 left-0" alt="" />
+                                                            <img src={`/idle/Weapons/Swords/Hilts/${art.folder}/${art.variant} Hilt.png`} width={146} height={152} className="absolute top-0 left-0" alt="" />
+                                                            <img src={`/idle/Weapons/Swords/Blades/${art.folder}/${art.variant} Blade.png`} width={146} height={152} className="absolute top-0 left-0" alt="" />
                                                         </>;
                                                     })()}
                                                     <img src="/idle/Character/Male/Main Arm_1.png" width={146} height={152} className="absolute top-0 left-0" alt="" />
