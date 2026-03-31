@@ -211,7 +211,7 @@ export default function HorizontalNavbar() {
                     <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${openSection === section.id ? "rotate-180" : ""}`} />
                 </button>
                 {openSection === section.id && pages.length > 0 && (
-                    <div className="absolute top-full left-0 mt-1 z-50 border border-(--outline)/40 rounded-lg shadow-xl min-w-52 max-h-80 overflow-y-auto" style={{ animation: "dropdown-in 150ms ease forwards", background: "#1a1208" }}>
+                    <div className="absolute top-full left-0 mt-1 z-50 border border-(--outline)/40 rounded-lg shadow-xl min-w-52 max-h-80 overflow-y-auto" style={{ animation: "dropdown-in 150ms ease forwards", background: darkMode ? "#1a1208" : "color-mix(in srgb, var(--primary, #794e3b) 95%, transparent)" }}>
                         {pages.map((page) => (
                             <button
                                 key={page.id}
@@ -262,7 +262,7 @@ export default function HorizontalNavbar() {
                             <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${moreOpen ? "rotate-180" : ""}`} />
                         </button>
                         {moreOpen && (
-                            <div className="absolute top-full left-0 mt-1 z-50 border border-(--outline)/40 rounded-lg shadow-xl min-w-52 max-h-[80vh] overflow-y-auto" style={{ animation: "dropdown-in 150ms ease forwards", background: "#1a1208" }}>
+                            <div className="absolute top-full left-0 mt-1 z-50 border border-(--outline)/40 rounded-lg shadow-xl min-w-52 max-h-[80vh] overflow-y-auto" style={{ animation: "dropdown-in 150ms ease forwards", background: darkMode ? "#1a1208" : "color-mix(in srgb, var(--primary, #794e3b) 95%, transparent)" }}>
                                 {overflowSections.map(section => {
                                     const pages = [...(section.pages ?? [])].sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0));
                                     return (
