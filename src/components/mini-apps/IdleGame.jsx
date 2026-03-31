@@ -99,6 +99,9 @@ function getSwordArtVariant(inventory) {
 // Matched against the primary part of the armor item (plate for chest/legs, shell for helm)
 // so prefixed items (e.g. "Reinforced Soldier's Breastplate") still resolve correctly.
 const ARMOR_ART_MAP = {
+    // Iron kit → Iron Armor
+    "Iron Helm":    "Iron Armor",
+    "Iron Greaves": "Iron Armor",
     // Soldier's kit → Leather Armor
     "Soldier's Breastplate": "Leather Armor",
     "Soldier's Helm":        "Leather Armor",
@@ -129,13 +132,6 @@ function calcEnemyDmg(enemy, character) {
     return Math.max(1, Math.round(enemy.attack * (1 - reduction)));
 }
 
-function calcKillsInInterval(character, enemy, seconds) {
-    const dmg = calcPlayerDmg(character, enemy);
-    const attacksPerSec = calcAttacksPerSec(character);
-    const hitsToKill = Math.max(1, Math.ceil(enemy.hp / dmg));
-    const timeToKill = hitsToKill / attacksPerSec;
-    return Math.floor(seconds / timeToKill);
-}
 
 function formatDuration(seconds) {
     if (seconds < 60) return `${seconds}s`;
@@ -242,29 +238,6 @@ function XpBar({ xp, xpNeeded, level }) {
     );
 }
 
-function EnemyCard({ enemy, selected, onSelect, character }) {
-    const kills = character ? calcKillsInInterval(character, enemy, 1) : 0;
-    const kps = kills === 1 ? "1/s" : kills > 1 ? `${kills}/s` : "<1/s";
-    return (
-        <button
-            onClick={() => onSelect(enemy)}
-            className={`w-full text-left px-3 py-2.5 rounded-lg border transition-colors cursor-pointer ${
-                selected
-                    ? "border-(--primary) bg-(--primary)/10"
-                    : "border-(--surface-background) hover:border-(--primary)/40"
-            }`}
-        >
-            <div className="flex justify-between items-center">
-                <span className="font-medium text-sm">{enemy.name}</span>
-                <span className="text-xs opacity-50">Lv.{enemy.level}</span>
-            </div>
-            <div className="text-xs opacity-50 mt-0.5">
-                HP {enemy.hp} · ATK {enemy.attack} · DEF {enemy.defense} · {kps}
-            </div>
-        </button>
-    );
-}
-
 function DropFeed({ drops }) {
     if (drops.length === 0) return null;
     return (
@@ -278,23 +251,6 @@ function DropFeed({ drops }) {
                     <span>+{d.count}×</span>
                     <span>{d.name}</span>
                 </div>
-            ))}
-        </div>
-    );
-}
-
-function CombatLog({ entries }) {
-    const ref = useRef(null);
-    useEffect(() => {
-        if (ref.current) ref.current.scrollTop = ref.current.scrollHeight;
-    }, [entries]);
-    return (
-        <div
-            ref={ref}
-            className="h-full overflow-y-auto text-xs opacity-60 space-y-0.5 font-mono"
-        >
-            {entries.map((e, i) => (
-                <div key={i}>{e}</div>
             ))}
         </div>
     );
