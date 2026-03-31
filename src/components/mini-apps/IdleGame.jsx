@@ -34,6 +34,30 @@ const BLADE_ART_MAP = {
     "Woven Fate": { folder: "Elven", variant: "Woven Fate" },
 };
 
+const WORLD_NAMES = { forest: "Forest", cave: "Cave", dungeon: "Dungeon" };
+const WORLDS_ORDER = ["forest", "cave", "dungeon"];
+const PREV_WORLD = { cave: "forest", dungeon: "cave" };
+
+const ENEMY_EMOJI = {
+    "Forest Goblin": "👺",
+    "Wild Wolf": "🐺",
+    "Forest Troll": "👹",
+    "Giant Slime": "🟢",
+    "Cave Bat": "🦇",
+    "Rock Golem": "🪨",
+    "Cave Troll": "👹",
+    "Thornwood Ancient": "🌳",
+    "Skeleton Warrior": "💀",
+    "Dark Knight": "🗡️",
+    "Ancient Dragon": "🐉",
+    "Dungeon Warden": "🏰",
+};
+
+function getEnemyEmoji(enemy) {
+    if (!enemy) return "👾";
+    return ENEMY_EMOJI[enemy.name] ?? (enemy.isBoss ? "👑" : "👾");
+}
+
 function getSwordArtVariant(inventory) {
     const sword = inventory?.find((w) => w.equipped && SWORD_TYPES.has(w.type));
     if (!sword) return null;
@@ -477,9 +501,6 @@ export default function IdleGame() {
     const { isAuthenticated, isLoading: authLoading, logout, user } = useAuth();
 
     const [character, setCharacter] = useState(null);
-    const [zones, setZones] = useState([]);
-    const [enemies, setEnemies] = useState([]);
-    const [selectedEnemy, setSelectedEnemy] = useState(null);
     const [recentDrops, setRecentDrops] = useState([]);
     const [offlineGains, setOfflineGains] = useState(null);
     const [log, setLog] = useState([]);
@@ -601,19 +622,14 @@ export default function IdleGame() {
         }
     }, [addLog]);
 
-    // ── Load character + zones on mount (also re-runs when Retry button resets loading to true) ──
+    // ── Load character on mount (also re-runs when Retry button resets loading to true) ──
     useEffect(() => {
         if (!isAuthenticated || !loading) return;
         (async () => {
             try {
-                const [charRes, zonesRes] = await Promise.all([
-                    fetch(`${currentAPI}/idle/character`, {
-                        credentials: "include",
-                    }),
-                    fetch(`${currentAPI}/idle/zones`, {
-                        credentials: "include",
-                    }),
-                ]);
+                const charRes = await fetch(`${currentAPI}/idle/character`, {
+                    credentials: "include",
+                });
                 if (!charRes.ok) {
                     let msg = `Server error: ${charRes.status}`;
                     try {
@@ -626,12 +642,10 @@ export default function IdleGame() {
                 }
                 const { character: charData, offlineGains: gains } =
                     await charRes.json();
-                const zonesData = await zonesRes.json();
                 setCharacter(charData);
                 playerCurrentHpRef.current = charData.currentHp;
                 setPlayerCurrentHp(charData.currentHp);
                 setPlayerIsAlive(charData.currentHp > 0);
-                setZones(zonesData);
                 if (gains) {
                     setOfflineGains(gains);
                     addLog(
@@ -659,30 +673,8 @@ export default function IdleGame() {
             document.removeEventListener("visibilitychange", handleVisibility);
     }, [isAuthenticated, reloadCharacter]);
 
-    // ── Load enemies when zone changes ──
-    useEffect(() => {
-        if (!character) return;
-        (async () => {
-            const res = await fetch(
-                `${currentAPI}/idle/enemies?zone=${character.currentZone}`,
-                { credentials: "include" },
-            );
-            const data = await res.json();
-            setEnemies(data);
-            setSelectedEnemy((prev) => {
-                if (prev) {
-                    const stillValid = data.find((e) => e.id === prev.id);
-                    if (stillValid) return stillValid;
-                }
-                const last = character.currentEnemyId
-                    ? data.find((e) => e.id === character.currentEnemyId)
-                    : null;
-                return last ?? data[0] ?? null;
-            });
-        })();
-    }, [character?.currentZone]);
-
     // ── Combat loop (rAF) ──
+    const selectedEnemy = character?.currentEnemy ?? null;
     useEffect(() => {
         cancelAnimationFrame(rAFRef.current);
         if (!selectedEnemy || !character) return;
@@ -835,7 +827,6 @@ export default function IdleGame() {
                     credentials: "include",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        enemyId: selectedEnemy.id,
                         kills,
                         durationSeconds,
                     }),
@@ -888,6 +879,12 @@ export default function IdleGame() {
                     addLog(
                         `Killed ${data.killsProcessed}× ${selectedEnemy.name} (+${data.xpGained} XP)`,
                     );
+                    if (data.floorAdvanced)
+                        addLog(
+                            `Advanced to floor ${data.character.currentFloor}!`,
+                        );
+                    if (data.bossKilled)
+                        addLog(`Boss defeated! New world unlocked.`);
                 }
 
                 if (data.levelUps > 0 || data.drops?.length > 0) {
@@ -916,18 +913,18 @@ export default function IdleGame() {
         return () => clearInterval(serverTickRef.current);
     }, [selectedEnemy, character?.id, addLog, showToast]);
 
-    // ── Zone change ──
-    async function handleZoneChange(zone) {
-        const res = await fetch(`${currentAPI}/idle/character/zone`, {
+    // ── Floor change ──
+    async function changeFloor(world, floor) {
+        const res = await fetch(`${currentAPI}/idle/character/floor`, {
             method: "POST",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ zone }),
+            body: JSON.stringify({ world, floor }),
         });
         if (res.ok) {
             const data = await res.json();
             setCharacter(data);
-            addLog(`Moved to ${zone}.`);
+            addLog(`Moved to ${WORLD_NAMES[world] ?? world} floor ${floor}.`);
         }
     }
 
@@ -1556,7 +1553,7 @@ export default function IdleGame() {
                                                 <div
                                                     className={`text-5xl transition-transform duration-100 select-none ${attacking ? "scale-110" : "scale-100"}`}
                                                 >
-                                                    👾
+                                                    {getEnemyEmoji(selectedEnemy)}
                                                 </div>
                                             )}
                                         </div>
@@ -1586,16 +1583,28 @@ export default function IdleGame() {
                                     </div>
                                 </div>
 
-                                {/* Enemy name */}
+                                {/* Enemy name + floor kill progress */}
                                 <div className="text-center">
                                     <div className="font-semibold">
                                         {selectedEnemy.name}
+                                        {selectedEnemy.isBoss && (
+                                            <span className="ml-1.5 text-xs font-bold text-yellow-400 align-middle">
+                                                BOSS
+                                            </span>
+                                        )}
                                     </div>
                                     <div className="text-xs opacity-50">
                                         Lv.{selectedEnemy.level} ·{" "}
-                                        {selectedEnemy.currentZone ??
-                                            character.currentZone}
+                                        {WORLD_NAMES[character.currentWorld] ?? character.currentWorld}{" "}
+                                        Floor {character.currentFloor}
                                     </div>
+                                    {/* Kill progress — only on regular floors not yet cleared */}
+                                    {character.currentFloor < 10 &&
+                                        (character.worldProgress?.[character.currentWorld] ?? 0) < character.currentFloor && (
+                                        <div className="mt-1 text-xs opacity-50">
+                                            {character.killsOnFloor ?? 0} / 10 kills
+                                        </div>
+                                    )}
                                 </div>
 
                                 {recentDrops.length > 0 && (
@@ -1606,7 +1615,7 @@ export default function IdleGame() {
                             </>
                         ) : (
                             <div className="opacity-30 text-sm">
-                                Open Map to select an enemy
+                                Loading enemy...
                             </div>
                         )}
                     </div>
@@ -1665,42 +1674,103 @@ export default function IdleGame() {
                         background: "var(--surface-background, #fff)",
                     }}
                 >
-                    {/* Zone selector header */}
-                    <div className="flex gap-1 flex-wrap px-4 pt-4 pb-3 border-b border-(--surface-background)/50 shrink-0">
-                        {zones.map((z) => (
-                            <button
-                                key={z}
-                                onClick={() => handleZoneChange(z)}
-                                className={`px-3 py-1 rounded-full text-xs font-semibold capitalize cursor-pointer transition-colors ${
-                                    z === character.currentZone
-                                        ? "bg-(--primary) text-white"
-                                        : "border border-(--primary)/30 opacity-60 hover:opacity-90"
-                                }`}
-                            >
-                                {z}
-                            </button>
-                        ))}
+                    <div className="shrink-0 px-4 pt-4 pb-2 border-b border-(--surface-background)/50">
+                        <div className="text-xs font-semibold uppercase opacity-40 tracking-wider">
+                            World Map
+                        </div>
                     </div>
-
-                    {/* Enemy list */}
-                    <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2">
-                        {enemies.map((e) => (
-                            <EnemyCard
-                                key={e.id}
-                                enemy={e}
-                                selected={selectedEnemy?.id === e.id}
-                                onSelect={(enemy) => {
-                                    setSelectedEnemy(enemy);
-                                    setScreen(null);
-                                }}
-                                character={character}
-                            />
-                        ))}
-                        {enemies.length === 0 && (
-                            <div className="opacity-30 text-sm text-center py-8">
-                                No enemies in this zone.
-                            </div>
-                        )}
+                    <div className="flex-1 overflow-y-auto px-4 py-3 space-y-5">
+                        {WORLDS_ORDER.map((world) => {
+                            const prevWorld = PREV_WORLD[world];
+                            const worldUnlocked =
+                                !prevWorld ||
+                                (character.worldProgress?.[prevWorld] ?? 0) >= 10;
+                            const progress = character.worldProgress?.[world] ?? 0;
+                            const isCurrentWorld =
+                                character.currentWorld === world;
+                            return (
+                                <div key={world}>
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <span
+                                            className={`text-sm font-bold ${worldUnlocked ? "" : "opacity-30"}`}
+                                        >
+                                            {WORLD_NAMES[world]}
+                                        </span>
+                                        {!worldUnlocked && (
+                                            <span className="text-xs opacity-30">
+                                                🔒 Locked
+                                            </span>
+                                        )}
+                                        {worldUnlocked && progress >= 10 && (
+                                            <span className="text-xs text-yellow-400 font-semibold">
+                                                ✓ Cleared
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="grid grid-cols-5 gap-1.5">
+                                        {Array.from({ length: 10 }, (_, i) => {
+                                            const floor = i + 1;
+                                            const isBoss = floor === 10;
+                                            const isActive =
+                                                isCurrentWorld &&
+                                                character.currentFloor === floor;
+                                            let floorUnlocked = false;
+                                            if (worldUnlocked) {
+                                                if (floor === 1)
+                                                    floorUnlocked = true;
+                                                else if (floor <= 9)
+                                                    floorUnlocked = progress >= floor - 1;
+                                                else
+                                                    floorUnlocked = progress >= 9;
+                                            }
+                                            return (
+                                                <button
+                                                    key={floor}
+                                                    disabled={!floorUnlocked}
+                                                    onClick={() => {
+                                                        if (floorUnlocked) {
+                                                            changeFloor(world, floor);
+                                                            setScreen(null);
+                                                        }
+                                                    }}
+                                                    className={`relative flex flex-col items-center justify-center rounded-lg py-2 text-xs font-semibold transition-colors cursor-pointer ${
+                                                        isActive
+                                                            ? "bg-(--primary) text-white"
+                                                            : floorUnlocked
+                                                              ? "border border-(--primary)/30 hover:border-(--primary)/70"
+                                                              : "opacity-20 border border-(--surface-background) cursor-not-allowed"
+                                                    }`}
+                                                >
+                                                    {isBoss && (
+                                                        <span
+                                                            className="absolute -top-1 -right-1 px-1 rounded text-[9px] font-bold leading-tight"
+                                                            style={{
+                                                                background:
+                                                                    "#b45309",
+                                                                color: "#fff",
+                                                            }}
+                                                        >
+                                                            BOSS
+                                                        </span>
+                                                    )}
+                                                    <span>{floor}</span>
+                                                    {progress >= floor && !isActive && (
+                                                        <span
+                                                            className="text-[9px] opacity-50"
+                                                            style={{
+                                                                lineHeight: 1,
+                                                            }}
+                                                        >
+                                                            ✓
+                                                        </span>
+                                                    )}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
 
