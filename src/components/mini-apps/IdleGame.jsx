@@ -1065,21 +1065,26 @@ export default function IdleGame() {
                                                     </div>
                                                 </div>
                                             ) : (
-                                                <>
-                                                    {["Legs_1","Side Arm_1","Head_1"].map(name => (
-                                                        <img key={name} src={`/idle/Character/Male/${name}.png`} width={146} height={152} className="absolute top-0 left-0" alt="" />
-                                                    ))}
-                                                    <img src="/idle/Character/Male/Hair/Hair_sprite_1.png" width={146} height={152} className="absolute top-0 left-0" alt="" />
-                                                    <img src="/idle/Character/Male/Chest_1.png" width={146} height={152} className="absolute top-0 left-0" alt="" />
-                                                    {(() => {
-                                                        const art = getSwordArtVariant(character.inventory);
-                                                        if (!art) return null;
-                                                        return <>
-                                                            <img src={`/idle/Weapons/Swords/Hilts/${art.folder}/${art.variant} Hilt.png`} width={146} height={152} className="absolute top-0 left-0" alt="" />
-                                                            <img src={`/idle/Weapons/Swords/Blades/${art.folder}/${art.variant} Blade.png`} width={146} height={152} className="absolute top-0 left-0" alt="" />
-                                                        </>;
-                                                    })()}
-                                                    <img src="/idle/Character/Male/Main Arm_1.png" width={146} height={152} className="absolute top-0 left-0" alt="" />
+                                                {(() => {
+                                                    const hasChest = equippedItems.some(i => i.type === "chest");
+                                                    const hasHelm  = equippedItems.some(i => i.type === "helm");
+                                                    const hasLegs  = equippedItems.some(i => i.type === "legs");
+                                                    const armorSet = "Rags"; // only set for now; extend when more armor art is added
+                                                    const img = (src) => <img key={src} src={src} width={146} height={152} className="absolute top-0 left-0" alt="" />;
+                                                    const charImg  = (name) => img(`/idle/Character/Male/${name}.png`);
+                                                    const armorImg = (slot) => img(`/idle/Armor/${armorSet}/${slot}_${armorSet}_1.png`);
+                                                    const art = getSwordArtVariant(character.inventory);
+                                                    return <>
+                                                        {hasLegs  ? armorImg("Legs")     : charImg("Legs_1")}
+                                                        {hasChest ? armorImg("Side Arm") : charImg("Side Arm_1")}
+                                                        {hasHelm  ? armorImg("Head")     : charImg("Head_1")}
+                                                        {charImg("Hair/Hair_sprite_1")}
+                                                        {hasChest ? armorImg("Chest")    : charImg("Chest_1")}
+                                                        {art && <img src={`/idle/Weapons/Swords/Hilts/${art.folder}/${art.variant} Hilt.png`} width={146} height={152} className="absolute top-0 left-0" alt="" />}
+                                                        {art && <img src={`/idle/Weapons/Swords/Blades/${art.folder}/${art.variant} Blade.png`} width={146} height={152} className="absolute top-0 left-0" alt="" />}
+                                                        {hasChest ? armorImg("Main Arm") : charImg("Main Arm_1")}
+                                                    </>;
+                                                })()}
                                                 </>
                                             )}
                                         </div>
