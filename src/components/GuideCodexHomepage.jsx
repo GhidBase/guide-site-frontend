@@ -452,15 +452,6 @@ export default function GuideCodexHomepage() {
                                                     pointerEvents: "none",
                                                 }} />
 
-                                                <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", position: "relative" }}>
-                                                    <div
-                                                        className="gcx-accent-bar"
-                                                        style={{ height: "2px", background: primary, borderRadius: "2px", flexShrink: 0, color: primary }}
-                                                    />
-                                                    <span style={{ fontSize: "0.6rem", letterSpacing: "0.2em", textTransform: "uppercase", opacity: 0.4 }}>
-                                                        {String(i + 1).padStart(2, "0")}
-                                                    </span>
-                                                </div>
 
                                                 <h2
                                                     className="gcx-title"

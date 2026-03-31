@@ -307,12 +307,6 @@ const ImageTextBlock = forwardRef(function ImageTextBlock(
                                     }}>
                                         <div style={{ position: "absolute", [imageIsLeft ? "left" : "right"]: "-30px", top: "-30px", width: "160px", height: "160px", background: `radial-gradient(circle, ${accent}1a 0%, transparent 70%)`, pointerEvents: "none" }} />
 
-                                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", position: "relative" }}>
-                                            <div className="itb-accent-bar" style={{ height: "2px", background: accent, borderRadius: "2px", flexShrink: 0 }} />
-                                            <span style={{ fontSize: "0.58rem", letterSpacing: "0.2em", textTransform: "uppercase", opacity: 0.35 }}>
-                                                {String(i + 1).padStart(2, "0")}
-                                            </span>
-                                        </div>
 
                                         {/* Title */}
                                         {adminMode ? (
