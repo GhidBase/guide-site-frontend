@@ -575,6 +575,7 @@ export default function IdleGame() {
     const [localKillCount, setLocalKillCount] = useState(0);
     const localKillCountRef = useRef(0);
     const visualEnemyHpRef = useRef(null);
+    const enemyMaxHpRef = useRef(0);
     const tickStartRef = useRef(Date.now());
     const serverTickRef = useRef(null);
     const lastReviveTimeRef = useRef(0);
@@ -693,6 +694,7 @@ export default function IdleGame() {
         const enemyHitInterval = (1 / enemyAttackSpeed) * 1000;
         const enemyDmgPerHit = calcEnemyDmg(selectedEnemy, character);
 
+        enemyMaxHpRef.current = selectedEnemy.hp;
         visualEnemyHpRef.current = selectedEnemy.hp;
         enemyDeadRef.current = false;
         lastPlayerHitRef.current = performance.now();
@@ -736,8 +738,8 @@ export default function IdleGame() {
                     enemyDeadRef.current = true;
                     setEnemyDeathPause(true);
                     setTimeout(() => {
-                        visualEnemyHpRef.current = selectedEnemy.hp;
-                        setEnemyCurrentHp(selectedEnemy.hp);
+                        visualEnemyHpRef.current = enemyMaxHpRef.current;
+                        setEnemyCurrentHp(enemyMaxHpRef.current);
                         enemyDeadRef.current = false;
                         setEnemyDeathPause(false);
                         lastPlayerHitRef.current = performance.now();
@@ -764,7 +766,7 @@ export default function IdleGame() {
         rAFRef.current = requestAnimationFrame(loop);
         return () => cancelAnimationFrame(rAFRef.current);
     }, [
-        selectedEnemy,
+        selectedEnemy?.id,
         character?.attack,
         character?.baseAttack,
         character?.speed,
@@ -911,7 +913,7 @@ export default function IdleGame() {
 
         serverTickRef.current = setInterval(sync, TICK_INTERVAL);
         return () => clearInterval(serverTickRef.current);
-    }, [selectedEnemy, character?.id, addLog, showToast]);
+    }, [selectedEnemy?.id, character?.id, addLog, showToast]);
 
     // ── Floor change ──
     async function changeFloor(world, floor) {
