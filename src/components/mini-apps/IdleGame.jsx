@@ -47,19 +47,20 @@ function getSwordArtVariant(inventory) {
         : { folder: "Human", variant: "Rusty" };
 }
 
-// Maps armor item names to their art set folder under /idle/Armor/.
-// All unlisted items fall back to "Rags".
+// Maps primary part names → art set folder under /idle/Armor/.
+// Matched against the primary part of the armor item (plate for chest/legs, shell for helm)
+// so prefixed items (e.g. "Reinforced Soldier's Breastplate") still resolve correctly.
 const ARMOR_ART_MAP = {
-    // chest
-    // "Iron Chestplate": "Iron",
-    // helm
-    // "Iron Helm": "Iron",
-    // legs
-    // "Iron Legguards": "Iron",
+    // Soldier's kit → Leather Armor
+    "Soldier's Breastplate": "Leather Armor",
+    "Soldier's Helm":        "Leather Armor",
+    "Soldier's Greaves":     "Leather Armor",
 };
 
-function getArmorSet(itemName) {
-    return ARMOR_ART_MAP[itemName] ?? "Rags";
+function getArmorSet(item) {
+    // Primary slot key: "plate" for chest/legs, "shell" for helm
+    const primaryName = item.parts?.plate?.name ?? item.parts?.shell?.name;
+    return ARMOR_ART_MAP[primaryName] ?? "Rags";
 }
 
 function calcAttacksPerSec(character) {
@@ -485,6 +486,7 @@ export default function IdleGame() {
     const [loading, setLoading] = useState(true);
     const [fetchError, setFetchError] = useState(null);
     const [screen, setScreen] = useState(null); // null | "map" | "inventory" | "log"
+    const [unviewedItems, setUnviewedItems] = useState(0);
     const [showSettings, setShowSettings] = useState(false);
     const [invFilterSlot, setInvFilterSlot] = useState("all");
     const [invFilterRarity, setInvFilterRarity] = useState("all");
@@ -748,7 +750,7 @@ export default function IdleGame() {
                         setEnemyDeathPause(false);
                         lastPlayerHitRef.current = performance.now();
                         lastEnemyHitRef.current = performance.now();
-                    }, 500);
+                    }, 1500);
                 } else {
                     setEnemyCurrentHp(visualEnemyHpRef.current);
                 }
@@ -877,6 +879,7 @@ export default function IdleGame() {
                         setTimeout(() => setRecentDrops([]), 4000);
                         for (const d of data.drops)
                             addLog(`Dropped: ${d.name}`);
+                        setUnviewedItems((n) => n + data.drops.length);
                     }
                     if (data.levelUps > 0)
                         addLog(
@@ -1033,6 +1036,7 @@ export default function IdleGame() {
         setSelectedItem(null);
         setPendingDiscardKey(null);
         setSwipedOpenKey(null);
+        if (name === "inventory") setUnviewedItems(0);
     }
 
     // ── Render states ──
@@ -1110,15 +1114,12 @@ export default function IdleGame() {
     const equippedItems = character.inventory.filter((i) => i.equipped);
     const unequippedItems = character.inventory.filter((i) => !i.equipped);
     const swordArt = getSwordArtVariant(character.inventory);
-    const armorLegs = equippedItems.find((i) => i.type === "legs")
-        ? getArmorSet(equippedItems.find((i) => i.type === "legs").name)
-        : null;
-    const armorChest = equippedItems.find((i) => i.type === "chest")
-        ? getArmorSet(equippedItems.find((i) => i.type === "chest").name)
-        : null;
-    const armorHelm = equippedItems.find((i) => i.type === "helm")
-        ? getArmorSet(equippedItems.find((i) => i.type === "helm").name)
-        : null;
+    const _legsItem  = equippedItems.find((i) => i.type === "legs");
+    const _chestItem = equippedItems.find((i) => i.type === "chest");
+    const _helmItem  = equippedItems.find((i) => i.type === "helm");
+    const armorLegs  = _legsItem  ? getArmorSet(_legsItem)  : null;
+    const armorChest = _chestItem ? getArmorSet(_chestItem) : null;
+    const armorHelm  = _helmItem  ? getArmorSet(_helmItem)  : null;
 
     const selectedSlot = panelItem ? getItemSlot(panelItem) : null;
     const equippedInSlot = selectedSlot
@@ -1350,10 +1351,7 @@ export default function IdleGame() {
                                                                             25
                                                                           ? "#facc15"
                                                                           : "#f87171",
-                                                                transitionDuration:
-                                                                    !playerIsAlive
-                                                                        ? "1000ms"
-                                                                        : `${Math.round(1000 / (selectedEnemy.attackSpeed ?? 1))}ms`,
+                                                                transitionDuration: !playerIsAlive ? "1000ms" : "150ms",
                                                             }}
                                                         />
                                                     </div>
@@ -1417,29 +1415,6 @@ export default function IdleGame() {
                                                         />
                                                     )}
                                                     <img
-                                                        src="/idle/Character/Male/Head_1.png"
-                                                        width={146}
-                                                        height={152}
-                                                        className="absolute top-0 left-0"
-                                                        alt=""
-                                                    />
-                                                    {armorHelm && (
-                                                        <img
-                                                            src={`/idle/Armor/${armorHelm}/Head_${armorHelm}_1.png`}
-                                                            width={146}
-                                                            height={152}
-                                                            className="absolute top-0 left-0"
-                                                            alt=""
-                                                        />
-                                                    )}
-                                                    <img
-                                                        src="/idle/Character/Male/Hair/Hair_sprite_1.png"
-                                                        width={146}
-                                                        height={152}
-                                                        className="absolute top-0 left-0"
-                                                        alt=""
-                                                    />
-                                                    <img
                                                         src="/idle/Character/Male/Chest_1.png"
                                                         width={146}
                                                         height={152}
@@ -1455,6 +1430,9 @@ export default function IdleGame() {
                                                             alt=""
                                                         />
                                                     )}
+                                                    <img src="/idle/Character/Male/Head_1.png" width={146} height={152} className="absolute top-0 left-0" alt="" />
+                                                    {armorHelm && <img src={`/idle/Armor/${armorHelm}/Head_${armorHelm}_1.png`} width={146} height={152} className="absolute top-0 left-0" alt="" />}
+                                                    {!armorHelm && <img src="/idle/Character/Male/Hair/Hair_sprite_1.png" width={146} height={152} className="absolute top-0 left-0" alt="" />}
                                                     {swordArt && (
                                                         <img
                                                             src={`/idle/Weapons/Swords/Hilts/${swordArt.folder}/${swordArt.variant} Hilt.png`}
@@ -1558,7 +1536,7 @@ export default function IdleGame() {
                                                                 className="h-full rounded-full bg-red-400 transition-all"
                                                                 style={{
                                                                     width: `${pct}%`,
-                                                                    transitionDuration: `${Math.round(1000 / calcAttacksPerSec(character))}ms`,
+                                                                    transitionDuration: "150ms",
                                                                 }}
                                                             />
                                                         </div>
@@ -2866,7 +2844,14 @@ export default function IdleGame() {
                                 : "opacity-40 hover:opacity-70"
                         }`}
                     >
-                        <IconBag />
+                        <div className="relative">
+                            <IconBag />
+                            {unviewedItems > 0 && (
+                                <span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] px-0.5 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center leading-none">
+                                    {unviewedItems > 99 ? "99+" : unviewedItems}
+                                </span>
+                            )}
+                        </div>
                         <span className="text-xs font-medium">Inventory</span>
                     </button>
                     <button
