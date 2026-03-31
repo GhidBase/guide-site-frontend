@@ -577,6 +577,9 @@ export default function IdleGame() {
     const [invView, setInvView] = useState("list");
 
     const [attacking, setAttacking] = useState(false);
+    const [enemyAttacking, setEnemyAttacking] = useState(false);
+    const [floatNums, setFloatNums] = useState([]);
+    const floatIdRef = useRef(0);
     const [enemyCurrentHp, setEnemyCurrentHp] = useState(null);
     const [playerCurrentHp, setPlayerCurrentHp] = useState(null);
     const [playerChargeProgress, setPlayerChargeProgress] = useState(0);
@@ -752,6 +755,9 @@ export default function IdleGame() {
                 lastPlayerHitRef.current = now;
                 setAttacking(true);
                 setTimeout(() => setAttacking(false), 150);
+                const fid = floatIdRef.current++;
+                setFloatNums(prev => [...prev, { id: fid, value: dmg, side: "enemy" }]);
+                setTimeout(() => setFloatNums(prev => prev.filter(f => f.id !== fid)), 1000);
 
                 localKillsRef.current += 1 / hitsToKillEnemy;
                 visualEnemyHpRef.current -= dmg;
@@ -776,6 +782,11 @@ export default function IdleGame() {
 
             if (enemyElapsed >= enemyHitInterval) {
                 lastEnemyHitRef.current = now;
+                setEnemyAttacking(true);
+                setTimeout(() => setEnemyAttacking(false), 150);
+                const fid2 = floatIdRef.current++;
+                setFloatNums(prev => [...prev, { id: fid2, value: enemyDmgPerHit, side: "player" }]);
+                setTimeout(() => setFloatNums(prev => prev.filter(f => f.id !== fid2)), 1000);
                 playerCurrentHpRef.current = Math.max(
                     0,
                     playerCurrentHpRef.current - enemyDmgPerHit,
@@ -1205,6 +1216,26 @@ export default function IdleGame() {
         });
 
     return (
+        <>
+        <style>{`
+            @keyframes floatUp {
+                0%   { transform: translateX(-50%) translateY(0);     opacity: 1; }
+                100% { transform: translateX(-50%) translateY(-56px); opacity: 0; }
+            }
+            .dmg-float {
+                position: absolute;
+                left: 50%;
+                top: 10px;
+                pointer-events: none;
+                font-weight: 700;
+                font-size: 15px;
+                line-height: 1;
+                text-shadow: 0 1px 3px rgba(0,0,0,0.9);
+                white-space: nowrap;
+                z-index: 20;
+                animation: floatUp 1s ease-out forwards;
+            }
+        `}</style>
         <div
             className="text-(--text-color)"
             style={{
@@ -1384,8 +1415,15 @@ export default function IdleGame() {
                                         {/* Character sprite */}
                                         <div
                                             className="relative"
-                                            style={{ width: 146, height: 152 }}
+                                            style={{
+                                                width: 146, height: 152,
+                                                transform: attacking ? "translateX(18px)" : "translateX(0)",
+                                                transition: "transform 150ms",
+                                            }}
                                         >
+                                        {floatNums.filter(f => f.side === "player").map(f => (
+                                            <div key={f.id} className="dmg-float" style={{ color: "#f87171" }}>-{f.value}</div>
+                                        ))}
                                             {!playerIsAlive ? (
                                                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                                                     <div className="text-3xl select-none">
@@ -1568,17 +1606,22 @@ export default function IdleGame() {
                                             })()}
                                         {/* Enemy art */}
                                         <div
-                                            className="flex items-center justify-center"
-                                            style={{ width: 120, height: 125 }}
+                                            className="relative flex items-center justify-center"
+                                            style={{
+                                                width: 120, height: 125,
+                                                transform: enemyAttacking ? "translateX(-18px)" : "translateX(0)",
+                                                transition: "transform 150ms",
+                                            }}
                                         >
+                                            {floatNums.filter(f => f.side === "enemy").map(f => (
+                                                <div key={f.id} className="dmg-float" style={{ color: "#fbbf24" }}>-{f.value}</div>
+                                            ))}
                                             {enemyDeathPause ? (
                                                 <div className="text-5xl select-none animate-bounce">
                                                     💥
                                                 </div>
                                             ) : (
-                                                <div
-                                                    className={`text-5xl transition-transform duration-100 select-none ${attacking ? "scale-110" : "scale-100"}`}
-                                                >
+                                                <div className="text-5xl select-none">
                                                     {getEnemyEmoji(selectedEnemy)}
                                                 </div>
                                             )}
@@ -2964,5 +3007,6 @@ export default function IdleGame() {
                 </div>
             </div>
         </div>
+        </>
     );
 }
