@@ -34,9 +34,13 @@ const BLADE_ART_MAP = {
     "Woven Fate": { folder: "Elven", variant: "Woven Fate" },
 };
 
-const WORLD_NAMES = { forest: "Forest", cave: "Cave", dungeon: "Dungeon" };
-const WORLDS_ORDER = ["forest", "cave", "dungeon"];
-const PREV_WORLD = { cave: "forest", dungeon: "cave" };
+const WORLD_NAMES = {
+    forest: "Forest", cave: "Cave", dungeon: "Dungeon",
+    swamp: "Swamp", tundra: "Tundra", volcano: "Volcano",
+    abyss: "Abyss", celestial: "Celestial",
+};
+const WORLDS_ORDER = ["forest", "cave", "dungeon", "swamp", "tundra", "volcano", "abyss", "celestial"];
+const PREV_WORLD = { cave: "forest", dungeon: "cave", swamp: "dungeon", tundra: "swamp", volcano: "tundra", abyss: "volcano", celestial: "abyss" };
 
 const ENEMY_EMOJI = {
     "Forest Goblin": "👺",
@@ -51,6 +55,26 @@ const ENEMY_EMOJI = {
     "Dark Knight": "🗡️",
     "Ancient Dragon": "🐉",
     "Dungeon Warden": "🏰",
+    "Bog Witch": "🧙",
+    "Swamp Lurker": "🐊",
+    "Venomfang Serpent": "🐍",
+    "Hydra": "🐲",
+    "Frost Wraith": "👻",
+    "Yeti": "🦍",
+    "Ice Elemental": "❄️",
+    "Frost Giant": "🧊",
+    "Lava Imp": "😈",
+    "Magma Golem": "🌋",
+    "Fire Drake": "🔥",
+    "Inferno Wyrm": "🐉",
+    "Void Shade": "🌑",
+    "Abyssal Fiend": "👿",
+    "Chaos Spawn": "🕳️",
+    "Abyssal Lord": "💀",
+    "Fallen Seraph": "🪽",
+    "Astral Sentinel": "⭐",
+    "Storm Archon": "⚡",
+    "Celestial Arbiter": "✨",
 };
 
 function getEnemyEmoji(enemy) {
