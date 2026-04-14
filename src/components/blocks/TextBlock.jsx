@@ -49,6 +49,12 @@ const TextBlock = forwardRef(function TextBlock({
         }
     }
 
+    async function handleSaveClick() {
+        await saveRef.current?.();
+    }
+
+    const showInlineSave = adminMode && isDirty;
+
     return (
         <div
             id={"text-block-" + block.id}
@@ -60,6 +66,14 @@ const TextBlock = forwardRef(function TextBlock({
                 <div className="absolute top-2 right-3 flex items-center gap-2 z-10 pointer-events-none">
                     {isDirty && (
                         <span className="text-xs text-(--primary) opacity-70 pointer-events-none">unsaved</span>
+                    )}
+                    {showInlineSave && (
+                        <button
+                            onClick={handleSaveClick}
+                            className="text-xs px-2 py-1 rounded bg-(--primary) text-amber-50 pointer-events-auto cursor-pointer hover:opacity-90"
+                        >
+                            {canDelete ? "Save" : "Submit"}
+                        </button>
                     )}
                     {canDelete && (
                         <button

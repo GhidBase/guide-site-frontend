@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { currentAPI } from "@/config/api";
+import ReviewDiff from "./ReviewDiff";
 
 export default function ReviewPanel() {
     const [reviews, setReviews] = useState([]);
@@ -52,7 +53,7 @@ export default function ReviewPanel() {
                 throw new Error("Failed to accept review");
             }
 
-            setReviews(reviews.filter((r) => r.id !== reviewId));
+            setReviews((current) => current.filter((r) => r.id !== reviewId));
         } catch (err) {
             setError(err.message);
         } finally {
@@ -86,7 +87,7 @@ export default function ReviewPanel() {
                 throw new Error("Failed to refuse review");
             }
 
-            setReviews(reviews.filter((r) => r.id !== reviewId));
+            setReviews((current) => current.filter((r) => r.id !== reviewId));
             setReviewMessage({ ...reviewMessage, [reviewId]: "" });
         } catch (err) {
             setError(err.message);
@@ -127,52 +128,12 @@ export default function ReviewPanel() {
                         </p>
                     </div>
 
-                    {review.content && (
-                        <div className="mb-3 p-2 bg-(--primary)/10 rounded">
-                            <p className="text-(--text-color) text-sm font-semibold mb-1">
-                                Proposed Changes:
-                            </p>
-                            <div className="text-(--text-color) text-sm">
-                                {review.operation === "CREATE" ? (
-                                    <div>
-                                        <p>
-                                            <strong>Type:</strong>{" "}
-                                            {review.content.type}
-                                        </p>
-                                        <p>
-                                            <strong>Order:</strong>{" "}
-                                            {review.content.order}
-                                        </p>
-                                        <p>
-                                            <strong>Page ID:</strong>{" "}
-                                            {review.content.pageId}
-                                        </p>
-                                        {review.content.content && (
-                                            <div className="mt-2">
-                                                <p className="font-semibold">
-                                                    Content:
-                                                </p>
-                                                <div
-                                                    dangerouslySetInnerHTML={{
-                                                        __html: review.content
-                                                            .content,
-                                                    }}
-                                                />
-                                            </div>
-                                        )}
-                                    </div>
-                                ) : (
-                                    <div
-                                        dangerouslySetInnerHTML={{
-                                            __html:
-                                                review.content.content ||
-                                                JSON.stringify(review.content),
-                                        }}
-                                    />
-                                )}
-                            </div>
-                        </div>
-                    )}
+                    <div className="mb-4 rounded border border-(--primary)/20 bg-(--primary)/8 p-3">
+                        <p className="mb-3 text-(--text-color) text-sm font-semibold">
+                            Proposed Changes
+                        </p>
+                        <ReviewDiff review={review} />
+                    </div>
 
                     <div className="flex flex-col gap-2 mb-3">
                         <textarea
