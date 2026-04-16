@@ -68,7 +68,17 @@ export default function MobileBottomBar({ toggleNav }) {
 
             {adminMode && dirtyBlocks.size > 0 && saveAll && (
                 <button
-                    onClick={async () => { setIsSaving(true); try { await saveAll(); } finally { setIsSaving(false); } }}
+                    onClick={async () => {
+                        console.log("[save] mobile save clicked, dirtyBlocks:", dirtyBlocks.size, "saveAll:", typeof saveAll);
+                        setIsSaving(true);
+                        try {
+                            await saveAll();
+                        } catch (err) {
+                            console.error("[save] mobile save error:", err);
+                        } finally {
+                            setIsSaving(false);
+                        }
+                    }}
                     title={`Save (${dirtyBlocks.size})`}
                     className={btnBase}
                     style={{ ...btnStyle, background: "rgba(21,128,61,0.7)" }}

@@ -34,8 +34,19 @@ export default function PageBuilder() {
     }
 
     async function saveAllChanges() {
+        console.log("[save] saveAllChanges called, dirtyBlocks:", [...dirtyBlocks]);
         for (const id of dirtyBlocks) {
-            await blockRefs.current[id]?.save();
+            const ref = blockRefs.current[id];
+            if (!ref) {
+                console.warn("[save] ref is null for block", id);
+                continue;
+            }
+            try {
+                await ref.save();
+                console.log("[save] block", id, "saved");
+            } catch (err) {
+                console.error("[save] error saving block", id, err);
+            }
         }
     }
 
@@ -113,17 +124,26 @@ export default function PageBuilder() {
     }
 
     async function updateBlockWithEditorData(block, editorRef) {
+        if (!editorRef.current) {
+            console.error("[save] editorRef.current is null for block", block.id);
+            throw new Error("Editor not initialized");
+        }
         const content = editorRef.current.getContent();
         const content2 = block.content2;
+        console.log("[save] PUT block", block.id, "content length:", content?.length);
         const response = await fetch(blockUrl(block.id), {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             credentials: "include",
             body: JSON.stringify({ content, content2 }),
         });
+        console.log("[save] PUT response status:", response.status);
         if (response.status === 202) {
             setShowPendingNotification(true);
             return;
+        }
+        if (!response.ok) {
+            throw new Error(`Save failed with status ${response.status}`);
         }
         await refreshBlock(block.id);
     }
