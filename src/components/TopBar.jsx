@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { PanelTop, PanelLeft, Sun, Moon, LogOut, LogIn, Pencil, Eye, Settings } from "lucide-react";
 import { useDarkMode } from "../contexts/ThemeProvider.jsx";
-import { useEditMode } from "../contexts/EditModeContext.jsx";
+import { useEditMode, useSaving } from "../contexts/EditModeContext.jsx";
 import GlassBar from "./GlassBar.jsx";
 
 // ── Primitives ───────────────────────────────────────────────────────────────
@@ -110,7 +110,8 @@ const BAR_STYLE = { display: "flex", alignItems: "center", justifyContent: "spac
 
 export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
     const { pageData, pageSlug, gameData, sectionsMap, isLDG } = useRouteLoaderData("main");
-    const { adminMode, dirtyBlocks, saveAll, setIsSaving } = useEditMode();
+    const { adminMode, dirtyBlocks, saveAll } = useEditMode();
+    const { setIsSaving } = useSaving();
     const navigate = useNavigate();
     const matches = useMatches();
 

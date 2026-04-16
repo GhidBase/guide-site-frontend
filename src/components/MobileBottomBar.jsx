@@ -1,6 +1,6 @@
 import { Menu, Pencil, Eye, Settings, Save } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { useEditMode } from "../contexts/EditModeContext.jsx";
+import { useEditMode, useSaving } from "../contexts/EditModeContext.jsx";
 import { useDarkMode, useTheme, THEME_DEFAULTS } from "../contexts/ThemeProvider.jsx";
 import { useRouteLoaderData, useNavigate } from "react-router";
 
@@ -17,7 +17,8 @@ export default function MobileBottomBar({ toggleNav }) {
     const { user, isAuthenticated } = useAuth();
     const isAdmin = user?.role === "ADMIN";
     const isContributor = isAuthenticated && !isAdmin;
-    const { adminMode, setAdminMode, dirtyBlocks, saveAll, setIsSaving } = useEditMode();
+    const { adminMode, setAdminMode, dirtyBlocks, saveAll } = useEditMode();
+    const { setIsSaving } = useSaving();
     const { darkMode } = useDarkMode();
     const { theme } = useTheme();
     const { gameData, isLDG } = useRouteLoaderData("main");
