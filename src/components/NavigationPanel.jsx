@@ -226,15 +226,16 @@ export default function NavigationPanel() {
     // Quick-add dropdown open state per section (stores section id or null)
     const [openQuickAdd, setOpenQuickAdd] = useState(null);
     const quickAddRef = useRef(null);
+    const quickAddMobileRef = useRef(null);
 
     // Close quick-add dropdown when clicking outside
+    // Two refs are needed because both desktop and mobile versions are rendered in the DOM simultaneously
     useEffect(() => {
         if (!openQuickAdd) return;
         function handleClickOutside(e) {
-            if (
-                quickAddRef.current &&
-                !quickAddRef.current.contains(e.target)
-            ) {
+            const insideDesktop = quickAddRef.current && quickAddRef.current.contains(e.target);
+            const insideMobile = quickAddMobileRef.current && quickAddMobileRef.current.contains(e.target);
+            if (!insideDesktop && !insideMobile) {
                 setOpenQuickAdd(null);
             }
         }
@@ -1931,7 +1932,7 @@ export default function NavigationPanel() {
                                             className="relative mt-1"
                                             ref={
                                                 openQuickAdd === section.id
-                                                    ? quickAddRef
+                                                    ? quickAddMobileRef
                                                     : null
                                             }
                                         >
