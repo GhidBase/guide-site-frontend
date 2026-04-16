@@ -37,10 +37,9 @@ const TextBlock = forwardRef(function TextBlock({
 
     const content = block?.content?.content;
 
-    function handleEditorChange(_content, editor) {
-        const dirty = editor.isDirty();
-        setIsDirty(dirty);
-        onDirty?.(block.id, dirty);
+    function handleEditorChange(_content, _editor) {
+        setIsDirty(true);
+        onDirty?.(block.id, true);
     }
 
     function checkDeletion() {
