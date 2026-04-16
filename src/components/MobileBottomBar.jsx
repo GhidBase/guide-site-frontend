@@ -17,7 +17,7 @@ export default function MobileBottomBar({ toggleNav }) {
     const { user, isAuthenticated } = useAuth();
     const isAdmin = user?.role === "ADMIN";
     const isContributor = isAuthenticated && !isAdmin;
-    const { adminMode, setAdminMode, dirtyBlocks, saveAll } = useEditMode();
+    const { adminMode, setAdminMode, dirtyBlocks, saveAll, setIsSaving } = useEditMode();
     const { darkMode } = useDarkMode();
     const { theme } = useTheme();
     const { gameData, isLDG } = useRouteLoaderData("main");
@@ -67,7 +67,7 @@ export default function MobileBottomBar({ toggleNav }) {
 
             {adminMode && dirtyBlocks.size > 0 && saveAll && (
                 <button
-                    onClick={saveAll}
+                    onClick={async () => { setIsSaving(true); try { await saveAll(); } finally { setIsSaving(false); } }}
                     title={`Save (${dirtyBlocks.size})`}
                     className={btnBase}
                     style={{ ...btnStyle, background: "rgba(21,128,61,0.7)" }}

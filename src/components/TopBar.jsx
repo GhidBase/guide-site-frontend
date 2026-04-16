@@ -110,7 +110,7 @@ const BAR_STYLE = { display: "flex", alignItems: "center", justifyContent: "spac
 
 export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
     const { pageData, pageSlug, gameData, sectionsMap, isLDG } = useRouteLoaderData("main");
-    const { adminMode, dirtyBlocks, saveAll } = useEditMode();
+    const { adminMode, dirtyBlocks, saveAll, setIsSaving } = useEditMode();
     const navigate = useNavigate();
     const matches = useMatches();
 
@@ -164,7 +164,7 @@ export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
             <div className="hidden lg:flex" style={{ alignItems: "center", gap: "0.75rem" }}>
                 {adminMode && dirtyBlocks.size > 0 && saveAll && (
                     <button
-                        onClick={saveAll}
+                        onClick={async () => { setIsSaving(true); try { await saveAll(); } finally { setIsSaving(false); } }}
                         style={{ cursor: "pointer", background: "rgba(21,128,61,0.55)", border: "none", color: "#fff", borderRadius: "4px", padding: "0.25rem 0.6rem", fontSize: "0.75rem", fontWeight: 600, transition: "background 0.2s" }}
                         onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(21,128,61,0.8)")}
                         onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(21,128,61,0.55)")}
