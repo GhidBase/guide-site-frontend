@@ -34,19 +34,12 @@ export default function PageBuilder() {
     }
 
     async function saveAllChanges() {
-        console.log("[save] saveAllChanges called, dirtyBlocks:", [...dirtyBlocks]);
         for (const id of dirtyBlocks) {
             const ref = blockRefs.current[id];
             if (!ref) {
-                console.warn("[save] ref is null for block", id);
-                continue;
+                throw new Error(`Ref is null for block ${id} — try exiting and re-entering edit mode`);
             }
-            try {
-                await ref.save();
-                console.log("[save] block", id, "saved");
-            } catch (err) {
-                console.error("[save] error saving block", id, err);
-            }
+            await ref.save();
         }
     }
 
