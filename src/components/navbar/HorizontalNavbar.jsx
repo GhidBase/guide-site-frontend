@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useEditMode } from "../../contexts/EditModeContext.jsx";
 import { useDarkMode } from "../../contexts/ThemeProvider.jsx";
 import { ChevronDown, Search, X, Pencil, Eye, Trophy, Settings } from "lucide-react";
-import GlassBar from "../GlassBar.jsx";
+import { useGlassBarStyle } from "../../hooks/useGlassBarStyle.js";
 
 function HorizontalSearch({ gameData, isLDG, sectionsMap }) {
     const [query, setQuery] = useState("");
@@ -122,6 +122,7 @@ export default function HorizontalNavbar() {
     const isContributor = isAuthenticated && !isAdmin;
     const { adminMode, setAdminMode, dirtyBlocks } = useEditMode();
     const { darkMode } = useDarkMode();
+    const glassStyle = useGlassBarStyle("top");
     const navigate = useNavigate();
 
     const [openSection, setOpenSection] = useState(null);
@@ -229,7 +230,7 @@ export default function HorizontalNavbar() {
     }
 
     return (
-        <GlassBar ref={navRef} className="flex items-center gap-1 px-4 py-1.5 border-t border-(--outline)/50">
+        <nav ref={navRef} style={{ ...glassStyle }} className="flex items-center gap-1 px-4 py-1.5">
 
             {/* Hidden measurement clone — renders all sections offscreen to measure widths */}
             <div
@@ -334,6 +335,6 @@ export default function HorizontalNavbar() {
                     </button>
                 )}
             </div>
-        </GlassBar>
+        </nav>
     );
 }

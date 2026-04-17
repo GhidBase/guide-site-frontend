@@ -6,7 +6,7 @@ import { useAuth } from "../hooks/useAuth";
 import { PanelTop, PanelLeft, Sun, Moon, LogOut, LogIn, Pencil, Eye, Settings } from "lucide-react";
 import { useDarkMode } from "../contexts/ThemeProvider.jsx";
 import { useEditMode, useSaving } from "../contexts/EditModeContext.jsx";
-import GlassBar from "./GlassBar.jsx";
+import { useGlassBarStyle } from "../hooks/useGlassBarStyle.js";
 
 // ── Primitives ───────────────────────────────────────────────────────────────
 
@@ -119,13 +119,14 @@ export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
         if (pageData?.notFound) navigate("/404", { replace: true });
     }, [pageSlug]);
 
+    const glassStyle = useGlassBarStyle("bottom");
     const hardCodedTitle = matches?.find((m) => m.handle?.title)?.handle.title;
     const pageTitle = hardCodedTitle ?? pageData?.page?.title;
     const isLDGHomepage = pageTitle === "LD Homepage";
 
     if (!gameData) {
         return (
-            <GlassBar style={BAR_STYLE}>
+            <div style={{ ...glassStyle, ...BAR_STYLE }}>
                 <span style={{ fontSize: "0.58rem", letterSpacing: "0.32em", textTransform: "uppercase", opacity: 0.6, fontWeight: 700, textShadow: "0 0 20px rgba(232,213,183,0.3)" }}>
                     GuideCodex
                 </span>
@@ -134,12 +135,12 @@ export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
                     <BarDarkToggle />
                     <BarAuth showUsername={false} />
                 </div>
-            </GlassBar>
+            </div>
         );
     }
 
     return (
-        <GlassBar style={BAR_STYLE}>
+        <div style={{ ...glassStyle, ...BAR_STYLE }}>
             {/* Left: logo + page title */}
             <div style={{ display: "flex", alignItems: isLDG ? "center" : "baseline", gap: "0.6rem", minWidth: 0 }}>
                 <Link
@@ -199,6 +200,6 @@ export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
                     </BarBtn>
                 )}
             </div>
-        </GlassBar>
+        </div>
     );
 }
