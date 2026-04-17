@@ -141,7 +141,7 @@ export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
     return (
         <GlassBar style={BAR_STYLE}>
             {/* Left: logo + page title */}
-            <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", minWidth: 0 }}>
+            <div style={{ display: "flex", alignItems: isLDG ? "center" : "baseline", gap: "0.6rem", minWidth: 0 }}>
                 <Link
                     to={gameData ? (isLDG ? "/" : "/games/" + gameData.slug) : "/"}
                     style={{ display: "flex", alignItems: "center", flexShrink: 0, color: "inherit", textDecoration: "none" }}
