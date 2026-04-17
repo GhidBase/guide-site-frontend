@@ -1,4 +1,4 @@
-import { useRouteLoaderData, useLocation } from "react-router";
+import { useRouteLoaderData, useLocation, Link } from "react-router";
 import { useDarkMode } from "../contexts/ThemeProvider.jsx";
 import { useGlassBarStyle } from "../hooks/useGlassBarStyle.js";
 export default function Footer() {
@@ -10,14 +10,14 @@ export default function Footer() {
         <div style={{ ...glassStyle, padding: "1rem 2.5rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "1.25rem", fontSize: "0.68rem", opacity: 0.75, boxShadow: "none" }}>
             <span>© {new Date().getFullYear()} GuideCodex</span>
             <span style={{ opacity: 0.4 }}>·</span>
-            <a
-                href="/pages/privacy-policy.html"
+            <Link
+                to="/privacy-policy"
                 style={{ color: "inherit", textDecoration: "none", transition: "opacity 0.2s" }}
                 onMouseEnter={(e) => (e.currentTarget.style.opacity = 0.6)}
                 onMouseLeave={(e) => (e.currentTarget.style.opacity = 1)}
             >
                 Privacy Policy
-            </a>
+            </Link>
         </div>
     );
     const siteName = isLDG ? "LuckyDefenseGuides.com" : "GuideCodex";
