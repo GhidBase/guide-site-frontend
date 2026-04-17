@@ -63,7 +63,7 @@ const TOOLBAR_MOBILE =
     "alignright alignjustify bullist numlist outdent indent " +
     "removeformat link image media help";
 
-export default function BundledEditor({ imagePickerTriggerRef, ...props }) {
+export default function BundledEditor({ imagePickerTriggerRef, contentStyle, ...props }) {
     return (
         <Editor
             licenseKey="gpl"
@@ -98,7 +98,7 @@ export default function BundledEditor({ imagePickerTriggerRef, ...props }) {
                 toolbar_sticky_offset: 0,
 
                 content_css: "/editor-content.css",
-                content_style: "body { padding: 0px 26px }",
+                content_style: contentStyle ?? "body { padding: 0px 26px }",
 
                 setup: (editor) => {
                     editor.ui.registry.addButton("imagepicker", {
