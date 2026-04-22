@@ -1,9 +1,9 @@
 import { forwardRef, useImperativeHandle, useState, useEffect, useRef } from "react";
-import { Trash2, Pencil, X, Check } from "lucide-react";
+import { Trash2, Pencil, X, Check, GripVertical } from "lucide-react";
 import { currentAPI } from "../../config/api";
 import ImagePickerModal from "../ImagePickerModal";
 
-const DEFAULTS = { checklistId: null, imageOneLabel: "In-game image", imageTwoLabel: "Map image" };
+const DEFAULTS = { checklistId: null, imageOneLabel: "In-game image", imageTwoLabel: "Map image", itemOrder: null };
 
 function parse(content) {
     if (!content) return { ...DEFAULTS };
@@ -38,9 +38,11 @@ const ChecklistBlock = forwardRef(function ChecklistBlock(
     const [titleDraft, setTitleDraft] = useState("");
     const [creatingChecklist, setCreatingChecklist] = useState(false);
     const [newChecklistTitle, setNewChecklistTitle] = useState("");
+    const [newItemTitle, setNewItemTitle] = useState("");
+    const [addingItem, setAddingItem] = useState(false);
 
-    // Image picker modal state: { itemId, slot: "imageOne" | "imageTwo" } | null
     const [pickerTarget, setPickerTarget] = useState(null);
+    const dragId = useRef(null);
 
     useImperativeHandle(ref, () => ({
         save: async () => {
@@ -63,6 +65,8 @@ const ChecklistBlock = forwardRef(function ChecklistBlock(
             .then(r => r.json())
             .then(result => setItems(result.sort((a, b) => a.title.localeCompare(b.title))))
             .catch(() => {});
+        // Reset stored order when switching checklists
+        setData(prev => ({ ...prev, itemOrder: null }));
     }, [data.checklistId]);
 
     function selectChecklist(id) {
@@ -115,6 +119,30 @@ const ChecklistBlock = forwardRef(function ChecklistBlock(
         onDirty?.(block.id, true);
     }
 
+    function reorderItems(fromId, toId) {
+        if (fromId === toId) return;
+        const order = data.itemOrder ?? items.map(i => i.id);
+        const from = order.indexOf(fromId);
+        const to = order.indexOf(toId);
+        if (from === -1 || to === -1) return;
+        const next = [...order];
+        next.splice(from, 1);
+        next.splice(to, 0, fromId);
+        setData(prev => ({ ...prev, itemOrder: next }));
+        onDirty?.(block.id, true);
+    }
+
+    const orderedItems = data.itemOrder
+        ? [...items].sort((a, b) => {
+            const ai = data.itemOrder.indexOf(a.id);
+            const bi = data.itemOrder.indexOf(b.id);
+            if (ai === -1 && bi === -1) return a.title.localeCompare(b.title);
+            if (ai === -1) return 1;
+            if (bi === -1) return -1;
+            return ai - bi;
+        })
+        : [...items].sort((a, b) => a.title.localeCompare(b.title));
+
     async function saveItem(updatedItem) {
         const res = await fetch(`${currentAPI}/games/checklistItems/${updatedItem.id}`, {
             method: "PUT",
@@ -129,6 +157,19 @@ const ChecklistBlock = forwardRef(function ChecklistBlock(
         });
         const saved = await res.json();
         setItems(prev => prev.map(i => i.id === saved.id ? saved : i).sort((a, b) => a.title.localeCompare(b.title)));
+    }
+
+    async function addItem() {
+        if (!newItemTitle.trim() || !data.checklistId) return;
+        const res = await fetch(`${currentAPI}/games/checklists/${data.checklistId}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ title: newItemTitle.trim() }),
+        });
+        const created = await res.json();
+        setItems(prev => [...prev, created]);
+        setNewItemTitle("");
     }
 
     function handlePickImage(url) {
@@ -261,8 +302,8 @@ const ChecklistBlock = forwardRef(function ChecklistBlock(
                         </div>
                     </div>
 
-                    <ul className="px-4 py-3 space-y-2">
-                        {items.map(item => (
+                    <ul className="px-4 py-3">
+                        {orderedItems.map(item => (
                             <ChecklistItemRow
                                 key={item.id}
                                 item={item}
@@ -274,6 +315,9 @@ const ChecklistBlock = forwardRef(function ChecklistBlock(
                                 onOpenPicker={(slot) => setPickerTarget({ itemId: item.id, slot })}
                                 imageOneLabel={data.imageOneLabel}
                                 imageTwoLabel={data.imageTwoLabel}
+                                onDragStart={() => { dragId.current = item.id; }}
+                                onDragOver={e => e.preventDefault()}
+                                onDrop={() => reorderItems(dragId.current, item.id)}
                             />
                         ))}
                         {checkedCount === items.length && items.length > 0 && showAll && (
@@ -282,6 +326,34 @@ const ChecklistBlock = forwardRef(function ChecklistBlock(
                             </li>
                         )}
                     </ul>
+                    {adminMode && (
+                        <div className="px-4 pb-3">
+                            {addingItem ? (
+                                <div className="flex gap-2">
+                                    <input
+                                        autoFocus
+                                        value={newItemTitle}
+                                        onChange={e => setNewItemTitle(e.target.value)}
+                                        onKeyDown={e => {
+                                            if (e.key === "Enter") { addItem(); }
+                                            if (e.key === "Escape") { setAddingItem(false); setNewItemTitle(""); }
+                                        }}
+                                        placeholder="Item name…"
+                                        className="flex-1 bg-(--accent) border border-(--outline-brown)/40 rounded px-3 py-1.5 text-sm text-(--text-color)"
+                                    />
+                                    <button onClick={addItem} className="text-green-400 hover:text-green-300"><Check size={14} /></button>
+                                    <button onClick={() => { setAddingItem(false); setNewItemTitle(""); }} className="opacity-50 hover:opacity-100 text-(--text-color)"><X size={14} /></button>
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={() => setAddingItem(true)}
+                                    className="w-full py-1.5 text-sm text-(--text-color) opacity-40 hover:opacity-70 border border-dashed border-(--outline-brown)/40 rounded transition-opacity"
+                                >
+                                    + Add item
+                                </button>
+                            )}
+                        </div>
+                    )}
                 </div>
             ) : (
                 !adminMode && (
@@ -300,7 +372,7 @@ const ChecklistBlock = forwardRef(function ChecklistBlock(
     );
 });
 
-function ChecklistItemRow({ item, checked, hidden, onToggle, adminMode, onSave, onOpenPicker, imageOneLabel, imageTwoLabel }) {
+function ChecklistItemRow({ item, checked, hidden, onToggle, adminMode, onSave, onOpenPicker, imageOneLabel, imageTwoLabel, onDragStart, onDragOver, onDrop }) {
     const [expanded, setExpanded] = useState(false);
     const [editing, setEditing] = useState(false);
     const [draft, setDraft] = useState(null);
@@ -310,6 +382,8 @@ function ChecklistItemRow({ item, checked, hidden, onToggle, adminMode, onSave, 
     const images = [item.imageOne, item.imageTwo].filter(Boolean);
     const hasDetails = item.imageOne || item.imageTwo || item.description;
 
+    const liRef = useRef(null);
+    const cardRef = useRef(null);
     const detailsRef = useRef(null);
     const editRef = useRef(null);
     const [detailsHeight, setDetailsHeight] = useState(0);
@@ -360,19 +434,113 @@ function ChecklistItemRow({ item, checked, hidden, onToggle, adminMode, onSave, 
         prevImagesRef.current = { imageOne: item.imageOne, imageTwo: item.imageTwo };
     }, [item.imageOne, item.imageTwo]);
 
+    const isInitialRender = useRef(true);
+
+    useEffect(() => {
+        const el = liRef.current;
+        if (!el) return;
+
+        // Set initial state without animation
+        if (isInitialRender.current) {
+            isInitialRender.current = false;
+            if (hidden) {
+                el.style.height = "0px";
+                el.style.opacity = "0";
+                el.style.marginBottom = "0px";
+            } else {
+                el.style.height = "auto";
+                el.style.opacity = "1";
+                el.style.marginBottom = "0.5rem";
+            }
+            return;
+        }
+
+        const card = cardRef.current;
+
+        if (hidden) {
+            const closeDuration = 0.5;
+            const scaleDuration = closeDuration / 2;
+            const heightDelay   = scaleDuration / 2;
+
+            el.style.transition = "none";
+            el.style.height = el.offsetHeight + "px";
+            el.style.marginBottom = "0.5rem";
+            if (card) { card.style.transition = "none"; card.style.transform = "scaleY(1)"; card.style.transformOrigin = "center"; }
+            el.getBoundingClientRect();
+
+            if (card) {
+                card.style.transition = `transform ${scaleDuration}s ease-in, opacity ${scaleDuration}s ease-in`;
+                card.style.transform = "scaleY(0)";
+                card.style.opacity = "0";
+            }
+            el.style.transition = `height ${scaleDuration}s ease-in ${heightDelay}s, margin-bottom ${scaleDuration}s ease-in ${heightDelay}s`;
+            el.style.height = "0px";
+            el.style.marginBottom = "0px";
+            const onHideEnd = (e) => {
+                if (e.propertyName !== "height") return;
+                if (card) { card.style.transition = ""; card.style.transform = ""; card.style.opacity = ""; card.style.transformOrigin = ""; }
+                el.removeEventListener("transitionend", onHideEnd);
+            };
+            el.addEventListener("transitionend", onHideEnd);
+        } else {
+            // Phase 1: open space (height 0 → full)
+            // Phase 2 (starts halfway): card scales in from center
+            const spaceDuration = 0.3;   // seconds
+            const scaleDelay   = spaceDuration / 2;
+            const scaleDuration = spaceDuration / 2;
+
+            // Measure target height
+            el.style.transition = "none";
+            el.style.height = "auto";
+            el.style.marginBottom = "0.5rem";
+            if (card) { card.style.transition = "none"; card.style.transform = "scaleY(0)"; card.style.opacity = "0"; card.style.transformOrigin = "center"; }
+            const target = el.offsetHeight;
+            el.style.height = "0px";
+            el.getBoundingClientRect();
+
+            // Animate height
+            el.style.transition = `height ${spaceDuration}s ease-out, margin-bottom ${spaceDuration}s ease-out`;
+            el.style.height = target + "px";
+
+            // Animate card scale + fade after delay
+            if (card) {
+                card.style.transition = `transform ${scaleDuration}s ease-out ${scaleDelay}s, opacity ${scaleDuration}s ease-out ${scaleDelay}s`;
+                card.style.transform = "scaleY(1)";
+                card.style.opacity = "1";
+            }
+
+            const onEnd = (e) => {
+                if (e.propertyName !== "height") return;
+                el.style.height = "auto";
+                if (card) { card.style.transition = ""; card.style.transform = ""; card.style.opacity = ""; card.style.transformOrigin = ""; }
+                el.removeEventListener("transitionend", onEnd);
+            };
+            el.addEventListener("transitionend", onEnd);
+        }
+    }, [hidden]);
+
     return (
         <li
-            className="transition-all duration-300 overflow-hidden"
-            style={{ maxHeight: hidden ? "0px" : "2000px", opacity: hidden ? 0 : 1 }}
+            ref={liRef}
+            className="overflow-hidden"
+            draggable={adminMode}
+            onDragStart={onDragStart}
+            onDragOver={onDragOver}
+            onDrop={onDrop}
         >
-            <div className={`rounded-lg border transition-all duration-200 overflow-hidden
-                ${checked && !editing
-                    ? "border-(--outline-brown)/15 bg-(--accent)/40"
-                    : "border-(--outline-brown)/30 bg-(--accent) hover:border-(--outline-brown)/50"
-                }`}
+            <div
+                ref={cardRef}
+                className={`rounded-lg border transition-colors duration-200 overflow-hidden
+                    ${checked && !editing
+                        ? "border-(--outline-brown)/15 bg-(--accent)/40"
+                        : "border-(--outline-brown)/30 bg-(--accent) hover:border-(--outline-brown)/50"
+                    }`}
             >
                 {/* Item header */}
                 <div className="flex items-center gap-3 px-4 py-2.5">
+                    {adminMode && (
+                        <GripVertical size={14} className="shrink-0 opacity-30 cursor-grab active:cursor-grabbing" />
+                    )}
                     <input
                         type="checkbox"
                         checked={checked}
