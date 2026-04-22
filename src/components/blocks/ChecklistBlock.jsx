@@ -21,12 +21,15 @@ const ChecklistBlock = forwardRef(function ChecklistBlock(
     const [checklists, setChecklists] = useState([]);
     const [items, setItems] = useState([]);
     const [checkedItems, setCheckedItems] = useState(() => {
+        if (typeof window === "undefined") return [];
         try {
             const stored = JSON.parse(localStorage.getItem("checkedItems") ?? "[]");
             return Array.isArray(stored) ? stored : [];
         } catch { return []; }
     });
-    const [showAll, setShowAll] = useState(() => localStorage.getItem("checklistShowAll") === "true");
+    const [showAll, setShowAll] = useState(() =>
+        typeof window !== "undefined" && localStorage.getItem("checklistShowAll") !== "false"
+    );
 
     useImperativeHandle(ref, () => ({
         save: async () => {
