@@ -3,15 +3,17 @@ import { Trash2, Pencil, X, Check } from "lucide-react";
 import { currentAPI } from "../../config/api";
 import ImagePickerModal from "../ImagePickerModal";
 
+const DEFAULTS = { checklistId: null, imageOneLabel: "In-game image", imageTwoLabel: "Map image" };
+
 function parse(content) {
-    if (!content) return { checklistId: null };
+    if (!content) return { ...DEFAULTS };
     if (typeof content === "object") {
         if (content.type === "richText" && typeof content.content === "string") {
-            try { return JSON.parse(content.content); } catch { return { checklistId: null }; }
+            try { return { ...DEFAULTS, ...JSON.parse(content.content) }; } catch { return { ...DEFAULTS }; }
         }
-        return content;
+        return { ...DEFAULTS, ...content };
     }
-    try { return JSON.parse(content); } catch { return { checklistId: null }; }
+    try { return { ...DEFAULTS, ...JSON.parse(content) }; } catch { return { ...DEFAULTS }; }
 }
 
 const ChecklistBlock = forwardRef(function ChecklistBlock(
@@ -32,9 +34,10 @@ const ChecklistBlock = forwardRef(function ChecklistBlock(
         typeof window !== "undefined" && localStorage.getItem("checklistShowAll") !== "false"
     );
 
-    // Title editing for the checklist itself
     const [editingTitle, setEditingTitle] = useState(false);
     const [titleDraft, setTitleDraft] = useState("");
+    const [creatingChecklist, setCreatingChecklist] = useState(false);
+    const [newChecklistTitle, setNewChecklistTitle] = useState("");
 
     // Image picker modal state: { itemId, slot: "imageOne" | "imageTwo" } | null
     const [pickerTarget, setPickerTarget] = useState(null);
@@ -92,6 +95,26 @@ const ChecklistBlock = forwardRef(function ChecklistBlock(
         setEditingTitle(false);
     }
 
+    async function createChecklist() {
+        if (!newChecklistTitle.trim() || !gameId) return;
+        const res = await fetch(`${currentAPI}/games/${gameId}/checklists`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ title: newChecklistTitle.trim() }),
+        });
+        const created = await res.json();
+        setChecklists(prev => [...prev, created]);
+        selectChecklist(created.id);
+        setNewChecklistTitle("");
+        setCreatingChecklist(false);
+    }
+
+    function updateLabel(key, value) {
+        setData(prev => ({ ...prev, [key]: value }));
+        onDirty?.(block.id, true);
+    }
+
     async function saveItem(updatedItem) {
         const res = await fetch(`${currentAPI}/games/checklistItems/${updatedItem.id}`, {
             method: "PUT",
@@ -123,24 +146,50 @@ const ChecklistBlock = forwardRef(function ChecklistBlock(
             {/* Admin toolbar */}
             {adminMode && (
                 <div className="flex flex-col gap-2 px-4 py-2 bg-(--accent) border-b border-(--outline-brown)/30 text-sm text-(--text-color)">
-                    <div className="flex items-center gap-3">
+                    {/* Checklist selector + create */}
+                    <div className="flex items-center gap-2">
                         <label className="shrink-0 opacity-60">Checklist:</label>
-                        <select
-                            value={data.checklistId ?? ""}
-                            onChange={e => selectChecklist(e.target.value)}
-                            className="bg-(--surface-background) border border-(--outline-brown)/40 rounded px-2 py-1 text-sm text-(--text-color) flex-1"
-                        >
-                            <option value="">— select a checklist —</option>
-                            {checklists.map(c => (
-                                <option key={c.id} value={c.id}>{c.title}</option>
-                            ))}
-                        </select>
-                        {canDelete && (
-                            <button onClick={deleteBlock} className="flex items-center gap-1 text-red-400 hover:text-red-300 text-xs ml-auto shrink-0">
+                        {creatingChecklist ? (
+                            <>
+                                <input
+                                    autoFocus
+                                    value={newChecklistTitle}
+                                    onChange={e => setNewChecklistTitle(e.target.value)}
+                                    onKeyDown={e => { if (e.key === "Enter") createChecklist(); if (e.key === "Escape") setCreatingChecklist(false); }}
+                                    placeholder="New checklist name…"
+                                    className="flex-1 bg-(--surface-background) border border-(--outline-brown)/40 rounded px-2 py-1 text-sm text-(--text-color)"
+                                />
+                                <button onClick={createChecklist} className="text-green-400 hover:text-green-300 shrink-0"><Check size={14} /></button>
+                                <button onClick={() => setCreatingChecklist(false)} className="opacity-50 hover:opacity-100 shrink-0"><X size={14} /></button>
+                            </>
+                        ) : (
+                            <>
+                                <select
+                                    value={data.checklistId ?? ""}
+                                    onChange={e => selectChecklist(e.target.value)}
+                                    className="bg-(--surface-background) border border-(--outline-brown)/40 rounded px-2 py-1 text-sm text-(--text-color) flex-1"
+                                >
+                                    <option value="">— select a checklist —</option>
+                                    {checklists.map(c => (
+                                        <option key={c.id} value={c.id}>{c.title}</option>
+                                    ))}
+                                </select>
+                                <button
+                                    onClick={() => setCreatingChecklist(true)}
+                                    className="shrink-0 px-2 py-1 bg-(--surface-background) border border-(--outline-brown)/40 rounded opacity-60 hover:opacity-100 transition-opacity"
+                                    title="Create new checklist"
+                                >
+                                    + New
+                                </button>
+                            </>
+                        )}
+                        {canDelete && !creatingChecklist && (
+                            <button onClick={deleteBlock} className="flex items-center gap-1 text-red-400 hover:text-red-300 text-xs shrink-0">
                                 <Trash2 size={13} /> Delete
                             </button>
                         )}
                     </div>
+
                     {/* Checklist title editor */}
                     {data.checklistId && (
                         <div className="flex items-center gap-2">
@@ -168,6 +217,23 @@ const ChecklistBlock = forwardRef(function ChecklistBlock(
                                     </button>
                                 </>
                             )}
+                        </div>
+                    )}
+
+                    {/* Image slot label editors */}
+                    {data.checklistId && (
+                        <div className="flex gap-2">
+                            {[["imageOneLabel", "Image 1 label"], ["imageTwoLabel", "Image 2 label"]].map(([key, placeholder]) => (
+                                <div key={key} className="flex-1 flex items-center gap-1">
+                                    <label className="shrink-0 opacity-60 text-xs">{placeholder}:</label>
+                                    <input
+                                        value={data[key]}
+                                        onChange={e => updateLabel(key, e.target.value)}
+                                        placeholder={placeholder}
+                                        className="flex-1 min-w-0 bg-(--surface-background) border border-(--outline-brown)/40 rounded px-2 py-0.5 text-xs text-(--text-color)"
+                                    />
+                                </div>
+                            ))}
                         </div>
                     )}
                 </div>
@@ -206,6 +272,8 @@ const ChecklistBlock = forwardRef(function ChecklistBlock(
                                 adminMode={adminMode}
                                 onSave={saveItem}
                                 onOpenPicker={(slot) => setPickerTarget({ itemId: item.id, slot })}
+                                imageOneLabel={data.imageOneLabel}
+                                imageTwoLabel={data.imageTwoLabel}
                             />
                         ))}
                         {checkedCount === items.length && items.length > 0 && showAll && (
@@ -232,7 +300,7 @@ const ChecklistBlock = forwardRef(function ChecklistBlock(
     );
 });
 
-function ChecklistItemRow({ item, checked, hidden, onToggle, adminMode, onSave, onOpenPicker }) {
+function ChecklistItemRow({ item, checked, hidden, onToggle, adminMode, onSave, onOpenPicker, imageOneLabel, imageTwoLabel }) {
     const [expanded, setExpanded] = useState(false);
     const [editing, setEditing] = useState(false);
     const [draft, setDraft] = useState(null);
@@ -371,10 +439,10 @@ function ChecklistItemRow({ item, checked, hidden, onToggle, adminMode, onSave, 
                             />
                         </div>
                         <div className="grid grid-cols-2 gap-3">
-                            {["imageOne", "imageTwo"].map(slot => (
+                            {[["imageOne", imageOneLabel], ["imageTwo", imageTwoLabel]].map(([slot, label]) => (
                                 <div key={slot}>
                                     <label className="text-xs opacity-50 text-(--text-color) block mb-1">
-                                        {slot === "imageOne" ? "In-game image" : "Map image"}
+                                        {label}
                                     </label>
                                     <div
                                         className="relative rounded overflow-hidden border border-(--outline-brown)/30 cursor-pointer group"
@@ -435,7 +503,7 @@ function ChecklistItemRow({ item, checked, hidden, onToggle, adminMode, onSave, 
                                 </div>
                                 {images.length > 1 && (
                                     <div className="absolute bottom-2 right-2 px-2.5 py-1 rounded text-xs font-medium bg-black/60 text-white/80 pointer-events-none">
-                                        {imageIndex === 0 ? "In-game · tap for map" : "Map · tap for in-game"}
+                                        {imageIndex === 0 ? `${imageOneLabel} · tap to switch` : `${imageTwoLabel} · tap to switch`}
                                     </div>
                                 )}
                             </div>
