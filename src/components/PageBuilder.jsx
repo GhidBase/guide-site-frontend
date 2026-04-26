@@ -6,6 +6,7 @@ import SingleImageBlock from "./blocks/SingleImageBlock";
 import TierListBlock from "./blocks/TierListBlock";
 import BoardBuilderBlock from "./blocks/BoardBuilderBlock";
 import ImageTextBlock from "./blocks/ImageTextBlock";
+import InlineImageBlock from "./blocks/InlineImageBlock";
 import HeroTextBlock from "./blocks/HeroTextBlock";
 import ChecklistBlock from "./blocks/ChecklistBlock";
 import NotFound from "./NotFound";
@@ -194,6 +195,9 @@ export default function PageBuilder() {
                     <button onClick={async () => { await addBlock({ nextOrder: 0, type: "image-text" }); }} className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer">
                         + Image Text Block
                     </button>
+                    <button onClick={async () => { await addBlock({ nextOrder: 0, type: "inline-image" }); }} className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer">
+                        + Inline Image Block
+                    </button>
                     <button onClick={async () => { await addBlock({ nextOrder: 0, type: "hero-text" }); }} className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer">
                         + Hero Text Block
                     </button>
@@ -222,6 +226,9 @@ export default function PageBuilder() {
                             </button>
                             <button onClick={async () => { await addBlock({ nextOrder: block.order + 1, type: "image-text" }); }} className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer">
                                 + Image Text Block
+                            </button>
+                            <button onClick={async () => { await addBlock({ nextOrder: block.order + 1, type: "inline-image" }); }} className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer">
+                                + Inline Image Block
                             </button>
                             <button onClick={async () => { await addBlock({ nextOrder: block.order + 1, type: "hero-text" }); }} className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer">
                                 + Hero Text Block
@@ -284,6 +291,22 @@ export default function PageBuilder() {
                             blockType = (
                                 <Fragment key={block.id}>
                                     <ImageTextBlock
+                                        ref={(el) => { blockRefs.current[block.id] = el; }}
+                                        deleteBlock={() => deleteBlock(block)}
+                                        block={block}
+                                        updateBlockContent={updateBlockContent}
+                                        adminMode={adminMode}
+                                        canDelete={isAdmin}
+                                        onDirty={handleDirtyChange}
+                                    />
+                                    {buttons}
+                                </Fragment>
+                            );
+                            break;
+                        case "inline-image":
+                            blockType = (
+                                <Fragment key={block.id}>
+                                    <InlineImageBlock
                                         ref={(el) => { blockRefs.current[block.id] = el; }}
                                         deleteBlock={() => deleteBlock(block)}
                                         block={block}
