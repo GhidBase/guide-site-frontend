@@ -1,4 +1,4 @@
-import { forwardRef, useImperativeHandle, useState, useRef, lazy, Suspense } from "react";
+import { forwardRef, useImperativeHandle, useState, useRef, useEffect, lazy, Suspense } from "react";
 import { useRouteLoaderData } from "react-router";
 import { Image, Trash2 } from "lucide-react";
 import ImagePickerModal from "../ImagePickerModal.jsx";
@@ -31,9 +31,19 @@ const InlineImageBlock = forwardRef(function InlineImageBlock(
     const imagePickerTriggerRef = useRef(null);
     imagePickerTriggerRef.current = () => setImagePickerOpen(true);
 
+    // Track latest editor content without triggering re-renders
+    const latestRichText = useRef(data.richText);
+
+    // Flush editor content to state when leaving edit mode so view renders current content
+    useEffect(() => {
+        if (!adminMode) {
+            setData(prev => ({ ...prev, richText: latestRichText.current }));
+        }
+    }, [adminMode]);
+
     const saveRef = useRef(null);
     saveRef.current = async () => {
-        const richText = editorRef.current?.getContent() ?? data.richText;
+        const richText = editorRef.current?.getContent() ?? latestRichText.current;
         await updateBlockContent(block, { ...data, richText });
         editorRef.current?.setDirty?.(false);
         onDirty?.(block.id, false);
@@ -116,7 +126,7 @@ const InlineImageBlock = forwardRef(function InlineImageBlock(
                                     content={richText}
                                     imagePickerTriggerRef={imagePickerTriggerRef}
                                     onEditorChange={(content) => {
-                                        setData(prev => ({ ...prev, richText: content }));
+                                        latestRichText.current = content;
                                         onDirty?.(block.id, true);
                                     }}
                                 />
