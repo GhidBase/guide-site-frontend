@@ -13,7 +13,7 @@ const InlineImageBlock = forwardRef(function InlineImageBlock(
     const gameId = gameData?.id;
 
     const [data, setData] = useState(() => {
-        const empty = { imageUrl: "", imageSide: "right", imageWidth: 35, mobileImagePosition: "above", textVAlign: "top", richText: "" };
+        const empty = { imageUrl: "", imageSide: "right", imageWidth: 35, mobileImagePosition: "above", textVAlign: "top", imagePosX: 50, imagePosY: 50, richText: "" };
         if (!block.content) return empty;
         if (typeof block.content === "object") {
             if (block.content.type === "richText" && typeof block.content.content === "string") {
@@ -58,7 +58,7 @@ const InlineImageBlock = forwardRef(function InlineImageBlock(
         onDirty?.(block.id, true);
     }
 
-    const { imageUrl, imageSide, imageWidth, mobileImagePosition, textVAlign, richText } = data;
+    const { imageUrl, imageSide, imageWidth, mobileImagePosition, textVAlign, imagePosX, imagePosY, richText } = data;
     const imageOnLeft = imageSide === "left";
     const alignSelfMap = { top: "flex-start", center: "center", bottom: "flex-end" };
     const textAlignSelf = alignSelfMap[textVAlign ?? "top"] ?? "flex-start";
@@ -82,7 +82,7 @@ const InlineImageBlock = forwardRef(function InlineImageBlock(
                     adminMode ? "border-b border-(--primary) mb-0 bg-black/3 md:rounded" : ""
                 }`}
             >
-                <div className={`iib-layout ${imageOnLeft ? "iib-left" : "iib-right"} ${mobileImagePosition === "below" ? "iib-mobile-below" : ""}`}>
+                <div className={`iib-layout px-8 gap-6 ${imageOnLeft ? "iib-left" : "iib-right"} ${mobileImagePosition === "below" ? "iib-mobile-below" : ""}`}>
                     {/* Image panel */}
                     <div
                         className="iib-img-panel"
@@ -92,7 +92,7 @@ const InlineImageBlock = forwardRef(function InlineImageBlock(
                             <img
                                 src={imageUrl}
                                 alt=""
-                                style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", display: "block" }}
+                                style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: `${imagePosX ?? 50}% ${imagePosY ?? 50}%`, display: "block" }}
                             />
                         )}
                         {adminMode && (
@@ -133,7 +133,7 @@ const InlineImageBlock = forwardRef(function InlineImageBlock(
                             </Suspense>
                         ) : (
                             <div
-                                className="text-left px-8 py-1"
+                                className="text-left py-1"
                                 dangerouslySetInnerHTML={{ __html: richText }}
                             />
                         )}
@@ -214,6 +214,32 @@ const InlineImageBlock = forwardRef(function InlineImageBlock(
                                     }}
                                 >{label}</button>
                             ))}
+                        </label>
+
+                        <div style={{ width: "1px", height: "14px", background: "rgba(232,213,183,0.15)" }} />
+
+                        <label style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
+                            <span style={{ opacity: 0.5 }}>Img X</span>
+                            <input
+                                type="number"
+                                min={0} max={100}
+                                value={imagePosX ?? 50}
+                                onChange={e => patch({ imagePosX: +e.target.value })}
+                                style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(232,213,183,0.12)", borderRadius: "4px", color: "#e8d5b7", padding: "0.2rem 0.4rem", fontSize: "0.72rem", width: "52px" }}
+                            />
+                            <span style={{ opacity: 0.4 }}>%</span>
+                        </label>
+
+                        <label style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
+                            <span style={{ opacity: 0.5 }}>Img Y</span>
+                            <input
+                                type="number"
+                                min={0} max={100}
+                                value={imagePosY ?? 50}
+                                onChange={e => patch({ imagePosY: +e.target.value })}
+                                style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(232,213,183,0.12)", borderRadius: "4px", color: "#e8d5b7", padding: "0.2rem 0.4rem", fontSize: "0.72rem", width: "52px" }}
+                            />
+                            <span style={{ opacity: 0.4 }}>%</span>
                         </label>
 
                         {canDelete && (
