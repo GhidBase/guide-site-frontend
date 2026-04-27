@@ -1,4 +1,4 @@
-import { useDarkMode, useTheme, THEME_DEFAULTS } from "../contexts/ThemeProvider.jsx";
+import { useDarkMode, useActiveColors } from "../contexts/ThemeProvider.jsx";
 
 function hexLuminance(hex) {
     if (!hex || hex.length < 7) return 0.5;
@@ -11,8 +11,8 @@ function hexLuminance(hex) {
 
 export function useGlassBarStyle(borderSide = "bottom") {
     const { darkMode } = useDarkMode();
-    const { theme } = useTheme();
-    const primary = theme?.primary ?? THEME_DEFAULTS.primary;
+    const activeColors = useActiveColors();
+    const primary = activeColors.primary;
     const lightTextColor = hexLuminance(primary) < 0.35 ? "var(--accent, #f0e3c3)" : "var(--accent-text, #3a2a1a)";
     const border = darkMode
         ? "1px solid rgba(232,213,183,0.06)"
