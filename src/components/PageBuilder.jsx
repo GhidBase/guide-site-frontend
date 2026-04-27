@@ -7,6 +7,7 @@ import TierListBlock from "./blocks/TierListBlock";
 import BoardBuilderBlock from "./blocks/BoardBuilderBlock";
 import ImageTextBlock from "./blocks/ImageTextBlock";
 import InlineImageBlock from "./blocks/InlineImageBlock";
+import CollapsibleSection from "./blocks/CollapsibleSection";
 import HeroTextBlock from "./blocks/HeroTextBlock";
 import ChecklistBlock from "./blocks/ChecklistBlock";
 import NotFound from "./NotFound";
@@ -62,6 +63,86 @@ export default function PageBuilder() {
 
     function isOrderTaken(order) {
         return blocks.find((block) => block.order == order) != undefined;
+    }
+
+    function groupBlocks(sortedBlocks) {
+        const result = [];
+        let i = 0;
+        while (i < sortedBlocks.length) {
+            const block = sortedBlocks[i];
+            if (block.type === "collapsible-start") {
+                let j = i + 1;
+                while (j < sortedBlocks.length && sortedBlocks[j].type !== "collapsible-end") j++;
+                result.push({
+                    _group: true,
+                    key: `cg-${block.id}`,
+                    startBlock: block,
+                    innerBlocks: sortedBlocks.slice(i + 1, j),
+                    endBlock: sortedBlocks[j] ?? null,
+                });
+                i = sortedBlocks[j] ? j + 1 : sortedBlocks.length;
+            } else if (block.type === "collapsible-end") {
+                i++; // orphaned end marker — skip silently
+            } else {
+                result.push(block);
+                i++;
+            }
+        }
+        return result;
+    }
+
+    function makeButtons(order) {
+        if (!adminMode || !isAdmin) return null;
+        const cls = "flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer";
+        const last = "flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) cursor-pointer";
+        return (
+            <div className="flex w-full bg-(--accent) border border-t-0 border-(--outline-brown)/50 md:rounded-b mb-4">
+                <button onClick={async () => { await addBlock({ nextOrder: order + 1 }); }} className={cls}>+ Text Block</button>
+                <button onClick={async () => { await addBlock({ nextOrder: order + 1, type: "single-image" }); }} className={cls}>+ Image Block</button>
+                <button onClick={async () => { await addBlock({ nextOrder: order + 1, type: "tier-list" }); }} className={cls}>+ Tier List Block</button>
+                <button onClick={async () => { await addBlock({ nextOrder: order + 1, type: "board-builder" }); }} className={cls}>+ Board Builder Block</button>
+                <button onClick={async () => { await addBlock({ nextOrder: order + 1, type: "image-text" }); }} className={cls}>+ Image Text Block</button>
+                <button onClick={async () => { await addBlock({ nextOrder: order + 1, type: "inline-image" }); }} className={cls}>+ Inline Image Block</button>
+                <button onClick={async () => { await addBlock({ nextOrder: order + 1, type: "hero-text" }); }} className={cls}>+ Hero Text Block</button>
+                <button onClick={async () => { await addBlock({ nextOrder: order + 1, type: "checklist" }); }} className={cls}>+ Checklist Block</button>
+                <button onClick={async () => { await addCollapsibleSection(order + 1); }} className={last}>+ Collapsible Section</button>
+            </div>
+        );
+    }
+
+    function renderBlockComponent(block) {
+        switch (block.type) {
+            case null:
+                return <TextBlock ref={(el) => { blockRefs.current[block.id] = el; }} deleteBlock={() => deleteBlock(block)} block={block} updateBlockWithEditorData={updateBlockWithEditorData} adminMode={adminMode} canDelete={isAdmin} onDirty={handleDirtyChange} />;
+            case "board-builder":
+                return <BoardBuilderBlock ref={(el) => { blockRefs.current[block.id] = el; }} deleteBlock={() => deleteBlock(block)} block={block} updateBlockContent={updateBlockContent} adminMode={adminMode} canDelete={isAdmin} onDirty={handleDirtyChange} />;
+            case "tier-list":
+                return <TierListBlock ref={(el) => { blockRefs.current[block.id] = el; }} deleteBlock={() => deleteBlock(block)} block={block} updateBlockContent={updateBlockContent} adminMode={adminMode} canDelete={isAdmin} onDirty={handleDirtyChange} />;
+            case "image-text":
+                return <ImageTextBlock ref={(el) => { blockRefs.current[block.id] = el; }} deleteBlock={() => deleteBlock(block)} block={block} updateBlockContent={updateBlockContent} adminMode={adminMode} canDelete={isAdmin} onDirty={handleDirtyChange} />;
+            case "inline-image":
+                return <InlineImageBlock ref={(el) => { blockRefs.current[block.id] = el; }} deleteBlock={() => deleteBlock(block)} block={block} updateBlockContent={updateBlockContent} adminMode={adminMode} canDelete={isAdmin} onDirty={handleDirtyChange} />;
+            case "hero-text":
+                return <HeroTextBlock ref={(el) => { blockRefs.current[block.id] = el; }} deleteBlock={() => deleteBlock(block)} block={block} updateBlockContent={updateBlockContent} adminMode={adminMode} canDelete={isAdmin} onDirty={handleDirtyChange} />;
+            case "checklist":
+                return <ChecklistBlock ref={(el) => { blockRefs.current[block.id] = el; }} deleteBlock={() => deleteBlock(block)} block={block} updateBlockContent={updateBlockContent} adminMode={adminMode} canDelete={isAdmin} onDirty={handleDirtyChange} gameId={gameId} />;
+            default:
+                return <SingleImageBlock deleteBlock={() => deleteBlock(block)} block={block} refreshBlock={refreshBlock} adminMode={adminMode} addBlock={addBlock} canDelete={isAdmin} />;
+        }
+    }
+
+    function renderBlockItem(block) {
+        return (
+            <Fragment key={block.id}>
+                {renderBlockComponent(block)}
+                {makeButtons(block.order)}
+            </Fragment>
+        );
+    }
+
+    async function addCollapsibleSection(atOrder) {
+        await addBlock({ nextOrder: atOrder, type: "collapsible-start" });
+        await addBlock({ nextOrder: atOrder + 1, type: "collapsible-end" });
     }
 
     const blocksUrl = gameId
@@ -179,196 +260,42 @@ export default function PageBuilder() {
                 onDismiss={() => setShowPendingNotification(false)}
             />
             {adminMode && isAdmin && (
-                <div className="flex w-full bg-(--accent) border border-(--outline-brown)/50 md:rounded-t mt-4 mb-4">
-                    <button onClick={async () => { await addBlock({ nextOrder: 0 }); }} className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer">
-                        + Text Block
-                    </button>
-                    <button onClick={async () => { await addBlock({ nextOrder: 0, type: "single-image" }); }} className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer">
-                        + Image Block
-                    </button>
-                    <button onClick={async () => { await addBlock({ nextOrder: 0, type: "tier-list" }); }} className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer">
-                        + Tier List Block
-                    </button>
-                    <button onClick={async () => { await addBlock({ nextOrder: 0, type: "board-builder" }); }} className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer">
-                        + Board Builder Block
-                    </button>
-                    <button onClick={async () => { await addBlock({ nextOrder: 0, type: "image-text" }); }} className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer">
-                        + Image Text Block
-                    </button>
-                    <button onClick={async () => { await addBlock({ nextOrder: 0, type: "inline-image" }); }} className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer">
-                        + Inline Image Block
-                    </button>
-                    <button onClick={async () => { await addBlock({ nextOrder: 0, type: "hero-text" }); }} className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer">
-                        + Hero Text Block
-                    </button>
-                    <button onClick={async () => { await addBlock({ nextOrder: 0, type: "checklist" }); }} className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) cursor-pointer">
-                        + Checklist Block
-                    </button>
+                <div className="flex w-full bg-(--accent) border border-(--outline-brown)/50 md:rounded-t mt-4 mb-0">
+                    <button onClick={async () => { await addBlock({ nextOrder: 0 }); }} className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer">+ Text Block</button>
+                    <button onClick={async () => { await addBlock({ nextOrder: 0, type: "single-image" }); }} className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer">+ Image Block</button>
+                    <button onClick={async () => { await addBlock({ nextOrder: 0, type: "tier-list" }); }} className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer">+ Tier List Block</button>
+                    <button onClick={async () => { await addBlock({ nextOrder: 0, type: "board-builder" }); }} className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer">+ Board Builder Block</button>
+                    <button onClick={async () => { await addBlock({ nextOrder: 0, type: "image-text" }); }} className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer">+ Image Text Block</button>
+                    <button onClick={async () => { await addBlock({ nextOrder: 0, type: "inline-image" }); }} className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer">+ Inline Image Block</button>
+                    <button onClick={async () => { await addBlock({ nextOrder: 0, type: "hero-text" }); }} className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer">+ Hero Text Block</button>
+                    <button onClick={async () => { await addBlock({ nextOrder: 0, type: "checklist" }); }} className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer">+ Checklist Block</button>
+                    <button onClick={async () => { await addCollapsibleSection(0); }} className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) cursor-pointer">+ Collapsible Section</button>
                 </div>
             )}
-            {blocks
-                .sort((a, b) => a.order - b.order)
-                .map((block) => {
-                    let blockType;
-                    const buttons = adminMode && isAdmin ? (
-                        <div className="flex w-full bg-(--accent) border border-t-0 border-(--outline-brown)/50 md:rounded-b mb-4">
-                            <button onClick={async () => { await addBlock({ nextOrder: block.order + 1 }); }} className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer">
-                                + Text Block
-                            </button>
-                            <button onClick={async () => { await addBlock({ nextOrder: block.order + 1, type: "single-image" }); }} className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer">
-                                + Image Block
-                            </button>
-                            <button onClick={async () => { await addBlock({ nextOrder: block.order + 1, type: "tier-list" }); }} className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer">
-                                + Tier List Block
-                            </button>
-                            <button onClick={async () => { await addBlock({ nextOrder: block.order + 1, type: "board-builder" }); }} className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer">
-                                + Board Builder Block
-                            </button>
-                            <button onClick={async () => { await addBlock({ nextOrder: block.order + 1, type: "image-text" }); }} className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer">
-                                + Image Text Block
-                            </button>
-                            <button onClick={async () => { await addBlock({ nextOrder: block.order + 1, type: "inline-image" }); }} className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer">
-                                + Inline Image Block
-                            </button>
-                            <button onClick={async () => { await addBlock({ nextOrder: block.order + 1, type: "hero-text" }); }} className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer">
-                                + Hero Text Block
-                            </button>
-                            <button onClick={async () => { await addBlock({ nextOrder: block.order + 1, type: "checklist" }); }} className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) cursor-pointer">
-                                + Checklist Block
-                            </button>
-                        </div>
-                    ) : null;
-                    switch (block.type) {
-                        case null:
-                            blockType = (
-                                <Fragment key={block.id}>
-                                    <TextBlock
-                                        ref={(el) => { blockRefs.current[block.id] = el; }}
-                                        deleteBlock={() => deleteBlock(block)}
-                                        block={block}
-                                        updateBlockWithEditorData={updateBlockWithEditorData}
-                                        adminMode={adminMode}
-                                        canDelete={isAdmin}
-                                        onDirty={handleDirtyChange}
-                                    />
-                                    {buttons}
-                                </Fragment>
-                            );
-                            break;
-                        case "board-builder":
-                            blockType = (
-                                <Fragment key={block.id}>
-                                    <BoardBuilderBlock
-                                        ref={(el) => { blockRefs.current[block.id] = el; }}
-                                        deleteBlock={() => deleteBlock(block)}
-                                        block={block}
-                                        updateBlockContent={updateBlockContent}
-                                        adminMode={adminMode}
-                                        canDelete={isAdmin}
-                                        onDirty={handleDirtyChange}
-                                    />
-                                    {buttons}
-                                </Fragment>
-                            );
-                            break;
-                        case "tier-list":
-                            blockType = (
-                                <Fragment key={block.id}>
-                                    <TierListBlock
-                                        ref={(el) => { blockRefs.current[block.id] = el; }}
-                                        deleteBlock={() => deleteBlock(block)}
-                                        block={block}
-                                        updateBlockContent={updateBlockContent}
-                                        adminMode={adminMode}
-                                        canDelete={isAdmin}
-                                        onDirty={handleDirtyChange}
-                                    />
-                                    {buttons}
-                                </Fragment>
-                            );
-                            break;
-                        case "image-text":
-                            blockType = (
-                                <Fragment key={block.id}>
-                                    <ImageTextBlock
-                                        ref={(el) => { blockRefs.current[block.id] = el; }}
-                                        deleteBlock={() => deleteBlock(block)}
-                                        block={block}
-                                        updateBlockContent={updateBlockContent}
-                                        adminMode={adminMode}
-                                        canDelete={isAdmin}
-                                        onDirty={handleDirtyChange}
-                                    />
-                                    {buttons}
-                                </Fragment>
-                            );
-                            break;
-                        case "inline-image":
-                            blockType = (
-                                <Fragment key={block.id}>
-                                    <InlineImageBlock
-                                        ref={(el) => { blockRefs.current[block.id] = el; }}
-                                        deleteBlock={() => deleteBlock(block)}
-                                        block={block}
-                                        updateBlockContent={updateBlockContent}
-                                        adminMode={adminMode}
-                                        canDelete={isAdmin}
-                                        onDirty={handleDirtyChange}
-                                    />
-                                    {buttons}
-                                </Fragment>
-                            );
-                            break;
-                        case "hero-text":
-                            blockType = (
-                                <Fragment key={block.id}>
-                                    <HeroTextBlock
-                                        ref={(el) => { blockRefs.current[block.id] = el; }}
-                                        deleteBlock={() => deleteBlock(block)}
-                                        block={block}
-                                        updateBlockContent={updateBlockContent}
-                                        adminMode={adminMode}
-                                        canDelete={isAdmin}
-                                        onDirty={handleDirtyChange}
-                                    />
-                                    {buttons}
-                                </Fragment>
-                            );
-                            break;
-                        case "checklist":
-                            blockType = (
-                                <Fragment key={block.id}>
-                                    <ChecklistBlock
-                                        ref={(el) => { blockRefs.current[block.id] = el; }}
-                                        deleteBlock={() => deleteBlock(block)}
-                                        block={block}
-                                        updateBlockContent={updateBlockContent}
-                                        adminMode={adminMode}
-                                        canDelete={isAdmin}
-                                        onDirty={handleDirtyChange}
-                                        gameId={gameId}
-                                    />
-                                    {buttons}
-                                </Fragment>
-                            );
-                            break;
-                        default:
-                            blockType = (
-                                <Fragment key={block.id}>
-                                    <SingleImageBlock
-                                        deleteBlock={() => deleteBlock(block)}
-                                        block={block}
-                                        refreshBlock={refreshBlock}
-                                        adminMode={adminMode}
-                                        addBlock={addBlock}
-                                        canDelete={isAdmin}
-                                    />
-                                    {buttons}
-                                </Fragment>
-                            );
-                    }
-                    return blockType;
-                })}
+            {groupBlocks(blocks.slice().sort((a, b) => a.order - b.order)).map(item => {
+                if (item._group) {
+                    return (
+                        <Fragment key={item.key}>
+                            <CollapsibleSection
+                                ref={(el) => { blockRefs.current[item.startBlock.id] = el; }}
+                                startBlock={item.startBlock}
+                                endBlock={item.endBlock}
+                                innerBlocks={item.innerBlocks}
+                                adminMode={adminMode}
+                                isAdmin={isAdmin}
+                                renderInnerBlock={renderBlockItem}
+                                makeButtons={makeButtons}
+                                updateBlockContent={updateBlockContent}
+                                onDirty={handleDirtyChange}
+                                deleteStart={() => deleteBlock(item.startBlock)}
+                                deleteEnd={() => item.endBlock && deleteBlock(item.endBlock)}
+                            />
+                            {makeButtons(item.endBlock?.order ?? item.startBlock.order)}
+                        </Fragment>
+                    );
+                }
+                return renderBlockItem(item);
+            })}
             {pageData?.page?.contributors?.length > 0 && (
                 <div className="mt-6 px-8 py-3 border-t border-(--outline) text-sm text-(--text-color)">
                     <span className="font-semibold">Contributors: </span>
