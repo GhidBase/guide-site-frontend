@@ -7,7 +7,7 @@ import MobileBottomBar from "./MobileBottomBar.jsx";
 import MobileNavbar from "./navbar/MobileNavbar.jsx";
 import { useEffect, useState } from "react";
 import { usePageTracking } from "../hooks/usePageTracking.js";
-import { useTheme, themeToStyle, useDarkMode, computeDarkTheme, THEME_DEFAULTS } from "../contexts/ThemeProvider.jsx";
+import { useTheme, themeToStyle, useDarkMode, normalizeTheme, useActiveColors } from "../contexts/ThemeProvider.jsx";
 import { EditModeProvider } from "../contexts/EditModeContext.jsx";
 import { PanelLeftOpen, PanelLeftClose } from "lucide-react";
 import Footer from "./Footer.jsx";
@@ -26,11 +26,12 @@ export default function Main() {
         setNavbarLayout((prev) => (prev === "vertical" ? "horizontal" : "vertical"));
     }
     const { gameData, sectionsMap, pageData } = useLoaderData();
-    const { setTheme } = useTheme();
+    const { theme, setTheme } = useTheme();
     const { darkMode } = useDarkMode();
+    const activeColors = useActiveColors();
 
     useEffect(() => {
-        setTheme(gameData?.theme ?? null);
+        setTheme(normalizeTheme(gameData?.theme ?? null));
     }, [gameData?.id]);
 
     useEffect(() => {
@@ -46,10 +47,6 @@ export default function Main() {
         ro.observe(el);
         return () => ro.disconnect();
     }, []);
-
-    const activeTheme = darkMode
-        ? computeDarkTheme(gameData?.theme ?? THEME_DEFAULTS)
-        : gameData?.theme ?? null;
 
     function toggleNav(state) {
         // I go by typeof because events can
@@ -86,14 +83,14 @@ export default function Main() {
     }, [navOpen]);
 
     const isWide = pageData?.page?.wide ?? false;
-    const accentColor = activeTheme?.primary ?? "#9b6a4e";
+    const accentColor = activeColors.primary;
 
     return (
         <EditModeProvider>
         <div
             id="main-page-sections"
             className="h-full w-full flex flex-col grow box-border bg-(--surface-background)"
-            style={themeToStyle(activeTheme)}
+            style={themeToStyle(theme, darkMode)}
         >
             {/* Ambient flares */}
             <div aria-hidden="true" style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0, overflow: "hidden" }}>
