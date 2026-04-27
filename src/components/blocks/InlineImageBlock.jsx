@@ -82,7 +82,7 @@ const InlineImageBlock = forwardRef(function InlineImageBlock(
                     adminMode ? "border-b border-(--primary) mb-0 bg-black/3 md:rounded" : ""
                 }`}
             >
-                <div className={`iib-layout px-8 gap-6 ${imageOnLeft ? "iib-left" : "iib-right"} ${mobileImagePosition === "below" ? "iib-mobile-below" : ""}`}>
+                <div className={`iib-layout px-8 py-4 gap-6 ${imageOnLeft ? "iib-left" : "iib-right"} ${mobileImagePosition === "below" ? "iib-mobile-below" : ""}`}>
                     {/* Image panel */}
                     <div
                         className="iib-img-panel"
