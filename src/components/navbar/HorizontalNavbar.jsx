@@ -129,10 +129,24 @@ export default function HorizontalNavbar() {
     const [moreOpen, setMoreOpen] = useState(false);
     const [visibleCount, setVisibleCount] = useState(Infinity);
 
-    const navRef = useRef(null);         // whole bar — for click-outside
-    const sectionsAreaRef = useRef(null); // flex-1 area sections live in
-    const measureRef = useRef(null);      // hidden clone for measurement
+    const navRef = useRef(null);
+    const sectionsAreaRef = useRef(null);
+    const measureRef = useRef(null);
     const moreRef = useRef(null);
+    const closeTimer = useRef(null);
+
+    function openDropdown(id) {
+        clearTimeout(closeTimer.current);
+        setOpenSection(id);
+        setMoreOpen(id === "more");
+    }
+
+    function closeDropdown() {
+        closeTimer.current = setTimeout(() => {
+            setOpenSection(null);
+            setMoreOpen(false);
+        }, 80);
+    }
 
     const sections = Array.from(sectionsMap?.values() ?? [])
         .sort((a, b) => a.order - b.order);
@@ -201,9 +215,11 @@ export default function HorizontalNavbar() {
     function renderSectionButton(section) {
         const pages = [...(section.pages ?? [])].sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0));
         return (
-            <div key={section.id} className="relative shrink-0">
+            <div key={section.id} className="relative shrink-0"
+                onMouseEnter={() => openDropdown(section.id)}
+                onMouseLeave={closeDropdown}
+            >
                 <button
-                    onClick={() => setOpenSection(openSection === section.id ? null : section.id)}
                     className={`flex items-center gap-1 px-3 py-1 text-sm rounded-md transition-colors whitespace-nowrap font-medium
                         ${openSection === section.id ? "bg-black/10" : "hover:bg-black/5"}`}
                     style={{ textShadow: "none" }}
@@ -252,9 +268,11 @@ export default function HorizontalNavbar() {
 
                 {/* More dropdown */}
                 {overflowSections.length > 0 && (
-                    <div ref={moreRef} className="relative shrink-0">
+                    <div ref={moreRef} className="relative shrink-0"
+                        onMouseEnter={() => openDropdown("more")}
+                        onMouseLeave={closeDropdown}
+                    >
                         <button
-                            onClick={() => setMoreOpen(o => !o)}
                             className={`flex items-center gap-1 px-3 py-1 text-sm rounded-md transition-colors whitespace-nowrap font-medium
                                 ${moreOpen ? "bg-black/10" : "hover:bg-black/5"}`}
                             style={{ textShadow: "none" }}
