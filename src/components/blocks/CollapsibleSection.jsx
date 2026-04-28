@@ -38,9 +38,9 @@ const CollapsibleSection = forwardRef(function CollapsibleSection(
         const addInsideOrder = endBlock ? endBlock.order - 1 : startBlock.order;
 
         return (
-            <div style={{ border: "2px dashed rgba(155,106,78,0.35)", borderRadius: "8px", margin: "0.25rem 0 1rem" }}>
+            <div style={{ border: "2px dashed color-mix(in srgb, var(--primary) 35%, transparent)", borderRadius: "8px", margin: "0.25rem 0 1rem" }}>
                 {/* Header */}
-                <div style={{ background: "rgba(155,106,78,0.12)", padding: "0.5rem 1rem", display: "flex", alignItems: "center", gap: "0.75rem", borderBottom: "1px dashed rgba(155,106,78,0.25)", borderRadius: "6px 6px 0 0" }}>
+                <div style={{ background: "color-mix(in srgb, var(--primary) 12%, transparent)", padding: "0.5rem 1rem", display: "flex", alignItems: "center", gap: "0.75rem", borderBottom: "1px dashed color-mix(in srgb, var(--primary) 25%, transparent)", borderRadius: "6px 6px 0 0" }}>
                     <ChevronDown size={14} style={{ opacity: 0.4, flexShrink: 0 }} />
                     <input
                         value={data.title}
@@ -82,7 +82,7 @@ const CollapsibleSection = forwardRef(function CollapsibleSection(
                 </div>
 
                 {/* End marker */}
-                <div style={{ background: "rgba(155,106,78,0.06)", borderTop: "1px dashed rgba(155,106,78,0.2)", padding: "0.3rem 1rem", fontSize: "0.6rem", letterSpacing: "0.15em", textTransform: "uppercase", opacity: 0.3, borderRadius: "0 0 6px 6px" }}>
+                <div style={{ background: "color-mix(in srgb, var(--primary) 6%, transparent)", borderTop: "1px dashed color-mix(in srgb, var(--primary) 20%, transparent)", padding: "0.3rem 1rem", fontSize: "0.6rem", letterSpacing: "0.15em", textTransform: "uppercase", opacity: 0.3, borderRadius: "0 0 6px 6px" }}>
                     End of collapsible section
                 </div>
             </div>
@@ -99,7 +99,7 @@ const CollapsibleSection = forwardRef(function CollapsibleSection(
                     padding: "0.75rem 2rem",
                     background: "transparent", border: "none", cursor: "pointer",
                     color: "inherit", textAlign: "left",
-                    borderBottom: "1px solid rgba(232,213,183,0.1)",
+                    borderBottom: "1px solid var(--outline)",
                 }}
             >
                 <span style={{ fontWeight: 600, fontSize: "0.95rem" }}>{data.title || "Section"}</span>
@@ -108,11 +108,16 @@ const CollapsibleSection = forwardRef(function CollapsibleSection(
                     style={{ transition: "transform 0.25s ease", transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", flexShrink: 0, opacity: 0.6 }}
                 />
             </button>
-            {isOpen && (
-                <div>
+            <div style={{
+                display: "grid",
+                gridTemplateRows: isOpen ? "1fr" : "0fr",
+                transition: "grid-template-rows 0.35s ease",
+                borderBottom: isOpen ? "1px solid var(--outline)" : "none",
+            }}>
+                <div style={{ overflow: "hidden", borderLeft: "3px solid var(--primary)" }}>
                     {innerBlocks.map(block => renderInnerBlock(block))}
                 </div>
-            )}
+            </div>
         </div>
     );
 });
