@@ -11,6 +11,7 @@ import { useTheme, themeToStyle, useDarkMode, computeDarkTheme, THEME_DEFAULTS }
 import { EditModeProvider } from "../contexts/EditModeContext.jsx";
 import { PanelLeftOpen, PanelLeftClose } from "lucide-react";
 import Footer from "./Footer.jsx";
+import ScrollToTop from "./ScrollToTop.jsx";
 
 export default function Main() {
     usePageTracking();
@@ -185,6 +186,7 @@ export default function Main() {
             )}
 
             {gameData && <MobileBottomBar toggleNav={toggleNav} />}
+            <ScrollToTop />
         </div>
         </EditModeProvider>
     );
