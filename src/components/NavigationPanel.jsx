@@ -79,8 +79,15 @@ export default function NavigationPanel() {
     const [themeClosing, setThemeClosing] = useState(false);
     const [editingTheme, setEditingTheme] = useState(null);
     const [savedTheme, setSavedTheme] = useState(null);
-    const [themeMode, setThemeMode] = useState("light"); // "light" | "dark"
+    const [themeMode, setThemeMode] = useState("light");
     const [detailClosing, setDetailClosing] = useState(false);
+
+    const [presets, setPresets] = useState([]);
+    const [presetNewName, setPresetNewName] = useState("");
+    const [savingPreset, setSavingPreset] = useState(false);
+    const [editingPresetId, setEditingPresetId] = useState(null);
+    const [editingPresetName, setEditingPresetName] = useState("");
+    const [activePresetId, setActivePresetId] = useState(null);
 
     const [discordUrl, setDiscordUrl] = useState(gameData?.discordUrl ?? "");
     const [showSupportButton, setShowSupportButton] = useState(gameData?.showSupportButton !== false);
@@ -819,7 +826,7 @@ export default function NavigationPanel() {
         setDetailPage(page);
     }
 
-    function openThemeEditor() {
+    async function openThemeEditor() {
         let current;
         if (!gameId) {
             try { current = JSON.parse(localStorage.getItem("guidecodex_global_theme") ?? "null"); } catch { current = null; }
@@ -831,7 +838,99 @@ export default function NavigationPanel() {
         setEditingTheme(current);
         setSavedTheme(current);
         setThemeMode("light");
+        setPresetNewName("");
+        setEditingPresetId(null);
+        setActivePresetId(null);
+        // fetch presets
+        try {
+            const res = await fetch(currentAPI + "/presets", { credentials: "include" });
+            if (res.ok) setPresets(await res.json());
+        } catch { /* non-fatal */ }
         setThemeOpen(true);
+    }
+
+    function applyPreset(preset) {
+        const next = {
+            light: { ...THEME_DEFAULTS, ...preset.light },
+            dark: { ...THEME_DEFAULTS_DARK, ...preset.dark },
+            animations: { ...ANIMATION_DEFAULTS, ...(preset.animations ?? {}) },
+        };
+        setEditingTheme(next);
+        setTheme(next);
+        setActivePresetId(preset.id);
+    }
+
+    async function updateActivePreset() {
+        if (!activePresetId) return;
+        try {
+            const res = await fetch(`${currentAPI}/presets/${activePresetId}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({
+                    light: editingTheme.light,
+                    dark: editingTheme.dark,
+                    animations: editingTheme.animations ?? {},
+                }),
+            });
+            if (res.ok) {
+                const updated = await res.json();
+                setPresets(p => p.map(x => x.id === activePresetId ? updated : x));
+            }
+        } catch { /* non-fatal */ }
+    }
+
+    async function saveAsPreset() {
+        const name = presetNewName.trim();
+        if (!name) return;
+        setSavingPreset(true);
+        try {
+            const res = await fetch(currentAPI + "/presets", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({
+                    name,
+                    light: editingTheme.light,
+                    dark: editingTheme.dark,
+                    animations: editingTheme.animations ?? {},
+                }),
+            });
+            if (res.ok) {
+                const created = await res.json();
+                setPresets(p => [...p, created]);
+                setPresetNewName("");
+            }
+        } catch { /* non-fatal */ }
+        setSavingPreset(false);
+    }
+
+    async function updatePresetName(id) {
+        const name = editingPresetName.trim();
+        if (!name) return;
+        try {
+            const res = await fetch(`${currentAPI}/presets/${id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ name }),
+            });
+            if (res.ok) {
+                const updated = await res.json();
+                setPresets(p => p.map(x => x.id === id ? updated : x));
+            }
+        } catch { /* non-fatal */ }
+        setEditingPresetId(null);
+    }
+
+    async function deletePreset(id) {
+        try {
+            const res = await fetch(`${currentAPI}/presets/${id}`, {
+                method: "DELETE",
+                credentials: "include",
+            });
+            if (res.ok) { setPresets(p => p.filter(x => x.id !== id)); if (activePresetId === id) setActivePresetId(null); }
+        } catch { /* non-fatal */ }
     }
 
     function handleThemeChange(key, value) {
@@ -2276,6 +2375,85 @@ export default function NavigationPanel() {
                             </button>
                         </div>
 
+                        {/* Presets */}
+                        <div className="flex flex-col gap-2">
+                            <p className="text-xs font-bold uppercase tracking-wider text-(--text-color) opacity-60">Presets</p>
+                            {presets.length > 0 && (
+                                <div className="flex flex-col gap-1.5 max-h-48 overflow-y-auto pr-1">
+                                    {presets.map(preset => (
+                                        <div key={preset.id} className={`flex items-center gap-2 px-3 py-2 rounded-lg border-2 transition-colors ${activePresetId === preset.id ? "border-(--primary)" : "border-(--outline)/50 hover:border-(--primary)/60"}`} style={{ background: activePresetId === preset.id ? "color-mix(in srgb, var(--primary) 18%, transparent)" : "rgba(0,0,0,0.06)" }}>
+                                            {/* Color swatches */}
+                                            <div className="flex gap-1 shrink-0">
+                                                <div className="w-4 h-4 rounded-full border border-black/20" style={{ background: preset.light?.primary ?? "#794e3b" }} title="Light primary" />
+                                                <div className="w-4 h-4 rounded-full border border-black/20" style={{ background: preset.dark?.primary ?? "#5a3828" }} title="Dark primary" />
+                                            </div>
+
+                                            {/* Name — editable inline */}
+                                            {editingPresetId === preset.id ? (
+                                                <input
+                                                    autoFocus
+                                                    value={editingPresetName}
+                                                    onChange={e => setEditingPresetName(e.target.value)}
+                                                    onBlur={() => updatePresetName(preset.id)}
+                                                    onKeyDown={e => { if (e.key === "Enter") updatePresetName(preset.id); if (e.key === "Escape") setEditingPresetId(null); }}
+                                                    className="flex-1 min-w-0 text-sm bg-transparent border-b border-(--primary) outline-none text-(--accent-text)"
+                                                />
+                                            ) : (
+                                                <button
+                                                    onClick={() => applyPreset(preset)}
+                                                    className="flex-1 min-w-0 text-left text-sm font-medium text-(--accent-text) truncate cursor-pointer hover:opacity-70 transition-opacity"
+                                                >
+                                                    {preset.name}
+                                                </button>
+                                            )}
+
+                                            {/* Edit name */}
+                                            <button
+                                                onClick={() => { setEditingPresetId(preset.id); setEditingPresetName(preset.name); }}
+                                                className="shrink-0 text-(--text-color) hover:text-(--accent-text) cursor-pointer transition-opacity opacity-50 hover:opacity-100"
+                                                title="Rename"
+                                            >
+                                                <PencilIcon size={12} />
+                                            </button>
+
+                                            {/* Delete */}
+                                            <button
+                                                onClick={() => deletePreset(preset.id)}
+                                                className="shrink-0 text-red-400 hover:text-red-300 cursor-pointer transition-opacity opacity-50 hover:opacity-100"
+                                                title="Delete preset"
+                                            >
+                                                <Trash size={12} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            {presets.length === 0 && (
+                                <p className="text-xs text-(--text-color) opacity-40">No presets yet.</p>
+                            )}
+
+                            {/* Save current as preset */}
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    placeholder="Preset name..."
+                                    value={presetNewName}
+                                    onChange={e => setPresetNewName(e.target.value)}
+                                    onKeyDown={e => e.key === "Enter" && saveAsPreset()}
+                                    className="flex-1 min-w-0 text-sm bg-(--surface-background) border border-(--outline) rounded px-2 py-1.5 text-(--accent-text) outline-none focus:border-(--primary)"
+                                />
+                                <button
+                                    onClick={saveAsPreset}
+                                    disabled={savingPreset || !presetNewName.trim()}
+                                    className="text-xs font-semibold px-3 py-1.5 rounded bg-(--primary) text-white cursor-pointer hover:opacity-90 disabled:opacity-40 shrink-0"
+                                >
+                                    Save as preset
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="border-t border-(--outline)/40" />
+
                         {/* Light / Dark mode tabs */}
                         <div className="flex gap-1 p-1 rounded-lg border border-(--outline)" style={{ background: "rgba(0,0,0,0.08)" }}>
                             {["light", "dark"].map((mode) => (
@@ -2384,8 +2562,17 @@ export default function NavigationPanel() {
                                 onClick={resetThemeToDefaults}
                                 className="text-sm text-(--text-color) border border-(--outline) px-3 py-1.5 rounded cursor-pointer hover:bg-(--accent)"
                             >
-                                Reset to defaults
+                                Reset
                             </button>
+                            {activePresetId && (
+                                <button
+                                    onClick={updateActivePreset}
+                                    className="text-sm text-(--text-color) border border-(--outline) px-3 py-1.5 rounded cursor-pointer hover:bg-(--accent)"
+                                    title="Save changes back to the preset without applying to this game"
+                                >
+                                    Update preset
+                                </button>
+                            )}
                             <button
                                 onClick={cancelTheme}
                                 className="ml-auto text-sm text-(--text-color) border border-(--outline) px-3 py-1.5 rounded cursor-pointer hover:bg-(--accent)"
