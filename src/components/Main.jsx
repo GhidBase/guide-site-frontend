@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { usePageTracking } from "../hooks/usePageTracking.js";
 import { useTheme, themeToStyle, useDarkMode, computeDarkTheme, THEME_DEFAULTS } from "../contexts/ThemeProvider.jsx";
 import { EditModeProvider } from "../contexts/EditModeContext.jsx";
+import { GameEditorProvider } from "../contexts/GameEditorContext.jsx";
 import { PanelLeftOpen, PanelLeftClose } from "lucide-react";
 import Footer from "./Footer.jsx";
 import ScrollToTop from "./ScrollToTop.jsx";
@@ -90,6 +91,7 @@ export default function Main() {
     const accentColor = activeTheme?.primary ?? "#9b6a4e";
 
     return (
+        <GameEditorProvider gameId={gameData?.id}>
         <EditModeProvider>
         <div
             id="main-page-sections"
@@ -189,5 +191,6 @@ export default function Main() {
             <ScrollToTop />
         </div>
         </EditModeProvider>
+        </GameEditorProvider>
     );
 }
