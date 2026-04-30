@@ -3,7 +3,7 @@ import { useRouteLoaderData, useNavigate } from "react-router";
 import { useAuth } from "@/hooks/useAuth";
 import { useEditMode } from "../../contexts/EditModeContext.jsx";
 import { useDarkMode } from "../../contexts/ThemeProvider.jsx";
-import { ChevronDown, Search, X, Pencil, Eye, Trophy, Settings } from "lucide-react";
+import { ChevronDown, Search, X, Pencil, Eye, Trophy, Settings, MessageSquare, Inbox } from "lucide-react";
 import { useGlassBarStyle } from "../../hooks/useGlassBarStyle.js";
 import { useGameEditor } from "../../contexts/GameEditorContext.jsx";
 
@@ -321,6 +321,28 @@ export default function HorizontalNavbar() {
                 >
                     <Trophy className="w-4 h-4" />
                 </button>
+
+                {gameData && (
+                    <button
+                        onClick={() => navigateTo(buildSlug("chat"))}
+                        title="Game Chat"
+                        className="p-1.5 cursor-pointer hover:opacity-60 transition-opacity"
+                        style={{ textShadow: "none" }}
+                    >
+                        <MessageSquare className="w-4 h-4" />
+                    </button>
+                )}
+
+                {isAuthenticated && (
+                    <button
+                        onClick={() => navigate("/dm")}
+                        title="Messages"
+                        className="p-1.5 cursor-pointer hover:opacity-60 transition-opacity"
+                        style={{ textShadow: "none" }}
+                    >
+                        <Inbox className="w-4 h-4" />
+                    </button>
+                )}
 
                 <HorizontalSearch gameData={gameData} isLDG={isLDG} sectionsMap={sectionsMap} />
 
