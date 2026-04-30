@@ -50,6 +50,9 @@ export default [
             route("analytics", "routes/analytics.jsx", {
                 id: "game-analytics",
             }),
+            route("chat", "routes/game-chat.jsx", {
+                id: "game-chat",
+            }),
         ]),
 
         // Top-level LDG-mode special routes

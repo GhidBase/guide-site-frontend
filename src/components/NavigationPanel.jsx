@@ -11,6 +11,10 @@ import {
     Info,
     Palette,
     ExternalLink,
+    ShieldPlus,
+    ShieldMinus,
+    Users,
+    MessageSquare,
 } from "lucide-react";
 import {
     useTheme,
@@ -22,6 +26,7 @@ import {
     normalizeTheme,
     computeDarkTheme,
 } from "../contexts/ThemeProvider.jsx";
+import { useGameEditors } from "../hooks/useGameEditors.js";
 
 const secret = import.meta.env.VITE_SECRET;
 
@@ -91,6 +96,38 @@ export default function NavigationPanel() {
 
     const [discordUrl, setDiscordUrl] = useState(gameData?.discordUrl ?? "");
     const [showSupportButton, setShowSupportButton] = useState(gameData?.showSupportButton !== false);
+
+    // ── PER-GAME EDITORS ─────────────────────────────────────────────────────
+    const { editors, grantEditor, revokeEditor } = useGameEditors(gameId);
+    const [editorSearchQuery, setEditorSearchQuery] = useState("");
+    const [editorSearchResults, setEditorSearchResults] = useState([]);
+    const [editorSearching, setEditorSearching] = useState(false);
+    const [editorActionLoading, setEditorActionLoading] = useState(null);
+
+    async function searchUsers(q) {
+        if (!q.trim()) { setEditorSearchResults([]); return; }
+        setEditorSearching(true);
+        try {
+            const res = await fetch(`${currentAPI}/users?search=${encodeURIComponent(q)}`, { credentials: "include" });
+            if (res.ok) setEditorSearchResults(await res.json());
+        } finally {
+            setEditorSearching(false);
+        }
+    }
+
+    async function handleGrantEditor(userId) {
+        setEditorActionLoading(userId);
+        try { await grantEditor(userId); setEditorSearchQuery(""); setEditorSearchResults([]); }
+        catch {}
+        finally { setEditorActionLoading(null); }
+    }
+
+    async function handleRevokeEditor(userId) {
+        setEditorActionLoading(userId);
+        try { await revokeEditor(userId); }
+        catch {}
+        finally { setEditorActionLoading(null); }
+    }
 
     // ── IMAGE POOL ────────────────────────────────────────────────────────────
     const imagesBaseUrl = gameId
@@ -1102,6 +1139,13 @@ export default function NavigationPanel() {
                     className="px-4 py-2 bg-(--primary) text-amber-50 rounded hover:opacity-90 text-sm font-medium">
                     Dashboard
                 </Link>
+                {gameId && (
+                    <Link to="../chat"
+                        className="flex items-center gap-1.5 px-4 py-2 bg-(--primary) text-amber-50 rounded hover:opacity-90 text-sm font-medium">
+                        <MessageSquare className="w-3.5 h-3.5" />
+                        Game Chat
+                    </Link>
+                )}
             </div>
             {/* ── Game Settings ─────────────────────────────────────────────── */}
             <div className="mt-8 max-w-4xl mb-6 border border-(--outline)/40 rounded-lg overflow-hidden">
@@ -1277,6 +1321,70 @@ export default function NavigationPanel() {
                     )}
                 </div>
             </div>
+
+            {/* ── Per-Game Editors ──────────────────────────────────────────── */}
+            {gameId && (
+                <div className="mt-0 mb-6 max-w-4xl border border-(--outline)/40 rounded-lg overflow-hidden">
+                    <div className="bg-(--primary) px-4 py-2 flex items-center gap-2">
+                        <Users size={14} className="text-amber-50" />
+                        <h2 className="text-white font-semibold text-sm uppercase tracking-wide">Game Editors</h2>
+                    </div>
+                    <div className="p-4 flex flex-col gap-3 bg-(--accent)">
+                        {/* Current editors list */}
+                        {editors.length === 0 ? (
+                            <p className="text-sm text-(--text-color) opacity-60 italic">No editors assigned yet.</p>
+                        ) : (
+                            <div className="flex flex-col gap-1.5">
+                                {editors.map((e) => (
+                                    <div key={e.id} className="flex items-center justify-between gap-2 px-3 py-2 bg-(--surface-background) rounded-lg">
+                                        <span className="text-sm text-(--accent-text) font-medium">{e.username}</span>
+                                        <button
+                                            onClick={() => handleRevokeEditor(e.id)}
+                                            disabled={editorActionLoading === e.id}
+                                            title="Revoke editor access"
+                                            className="flex items-center gap-1 text-xs text-red-500 px-2 py-1 rounded hover:bg-red-100 cursor-pointer disabled:opacity-50 transition-colors"
+                                        >
+                                            <ShieldMinus size={12} />
+                                            Revoke
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                        {/* Add editor by username search */}
+                        <div className="flex flex-col gap-1.5">
+                            <p className="text-xs font-semibold text-(--text-color) uppercase tracking-wide">Add Editor</p>
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    value={editorSearchQuery}
+                                    onChange={(e) => { setEditorSearchQuery(e.target.value); searchUsers(e.target.value); }}
+                                    placeholder="Search username..."
+                                    className="bg-(--surface-background) text-(--accent-text) placeholder-(--text-color) px-3 py-2 rounded flex-1 min-w-0 text-sm"
+                                />
+                            </div>
+                            {editorSearchResults.length > 0 && (
+                                <div className="flex flex-col gap-1 border border-(--outline)/40 rounded-lg overflow-hidden">
+                                    {editorSearchResults.filter((u) => !editors.some((e) => e.id === u.id)).slice(0, 5).map((u) => (
+                                        <div key={u.id} className="flex items-center justify-between px-3 py-2 bg-(--surface-background) hover:bg-(--accent) transition-colors">
+                                            <span className="text-sm text-(--accent-text)">{u.username}</span>
+                                            <button
+                                                onClick={() => handleGrantEditor(u.id)}
+                                                disabled={editorActionLoading === u.id}
+                                                className="flex items-center gap-1 text-xs bg-(--primary) text-white px-2 py-1 rounded cursor-pointer hover:opacity-90 disabled:opacity-50 font-semibold"
+                                            >
+                                                <ShieldPlus size={12} />
+                                                Grant
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            {editorSearching && <p className="text-xs text-(--text-color) opacity-50">Searching...</p>}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* ── Add Section / Add Page ─────────────────────────────────────── */}
             <div className="max-w-4xl mb-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
