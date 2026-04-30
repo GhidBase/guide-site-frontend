@@ -39,7 +39,19 @@ function setL(hex, targetL) {
     return hslToHex(h, s, targetL);
 }
 
-/** Auto-compute a dark variant of any game theme */
+// ── Defaults ─────────────────────────────────────────────────────
+
+export const THEME_DEFAULTS = {
+    primary: "#794e3b",
+    secondary: "#845744",
+    accent: "#f0e3c3",
+    surfaceBackground: "#d1bc9f",
+    outline: "#352b22",
+    textColor: "#604f45",
+    accentText: "#3a2a1a",
+};
+
+/** Auto-compute a dark variant of any light theme */
 export function computeDarkTheme(theme) {
     const t = { ...THEME_DEFAULTS, ...theme };
     return {
@@ -50,6 +62,25 @@ export function computeDarkTheme(theme) {
         outline:           setL(t.outline,           32),
         textColor:         setL(t.textColor,         80),
         accentText:        setL(t.accentText,        82),
+    };
+}
+
+export const THEME_DEFAULTS_DARK = computeDarkTheme(THEME_DEFAULTS);
+
+/**
+ * Normalize any stored theme to the split { light, dark, animations } format.
+ * Old flat themes are wrapped transparently; already-split themes pass through.
+ */
+export function normalizeTheme(theme) {
+    if (!theme) return null;
+    if (theme.light && theme.dark) return theme;
+    // Old flat format — strip animations key from colors
+    const { animations, ...colors } = theme;
+    const light = { ...THEME_DEFAULTS, ...colors };
+    return {
+        light,
+        dark: computeDarkTheme(light),
+        animations: animations ?? {},
     };
 }
 
@@ -84,6 +115,8 @@ export function DarkModeProvider({ children }) {
     );
 }
 
+// ── Hooks ─────────────────────────────────────────────────────────
+
 export function useTheme() {
     return useContext(ThemeContext);
 }
@@ -92,35 +125,36 @@ export function useDarkMode() {
     return useContext(DarkModeContext);
 }
 
-export const THEME_DEFAULTS = {
-    primary: "#794e3b",
-    secondary: "#845744",
-    accent: "#f0e3c3",
-    surfaceBackground: "#d1bc9f",
-    outline: "#352b22",
-    textColor: "#604f45",
-    accentText: "#3a2a1a",
-};
+/** Returns the flat color object for the currently active mode */
+export function useActiveColors() {
+    const { theme } = useTheme();
+    const { darkMode } = useDarkMode();
+    if (!theme) return darkMode ? THEME_DEFAULTS_DARK : THEME_DEFAULTS;
+    const normalized = normalizeTheme(theme);
+    return darkMode ? normalized.dark : normalized.light;
+}
+
+// ── Field definitions ─────────────────────────────────────────────
 
 export const THEME_FIELDS = [
-    { key: "primary", label: "Primary", description: "Buttons, navbar, header" },
-    { key: "secondary", label: "Secondary", description: "Background stripe" },
-    { key: "surfaceBackground", label: "Surface", description: "Main content area" },
-    { key: "accent", label: "Accent", description: "Cards and panels" },
-    { key: "outline", label: "Borders", description: "Lines and borders" },
-    { key: "textColor", label: "Text", description: "General text" },
-    { key: "accentText", label: "Accent Text", description: "Text on cards" },
+    { key: "primary",           label: "Primary",      description: "Buttons, navbar, header" },
+    { key: "secondary",         label: "Secondary",    description: "Background stripe" },
+    { key: "surfaceBackground", label: "Surface",      description: "Main content area" },
+    { key: "accent",            label: "Accent",       description: "Cards and panels" },
+    { key: "outline",           label: "Borders",      description: "Lines and borders" },
+    { key: "textColor",         label: "Text",         description: "General text" },
+    { key: "accentText",        label: "Accent Text",  description: "Text on cards" },
 ];
 
 export const ANIMATION_DEFAULTS = {
-    pageTransition: "fade",       // "fade" | "slide-up" | "slide-left" | "none"
-    transitionDuration: 300,      // ms, 100–800
-    blockEntrance: "fade-up",     // "fade-up" | "fade-in" | "pop" | "none"
-    scrollReveal: true,           // animate blocks as they scroll into view
-    hoverEffect: "lift",          // "lift" | "glow" | "none"
-    navbarBlur: 28,               // px, backdrop-filter blur on navbar/topbar (4–60)
-    cardRadius: 12,               // px, border-radius on cards (0–32)
-    buttonRadius: 6,              // px, border-radius on buttons (0–24)
+    pageTransition: "fade",
+    transitionDuration: 300,
+    blockEntrance: "fade-up",
+    scrollReveal: true,
+    hoverEffect: "lift",
+    navbarBlur: 28,
+    cardRadius: 12,
+    buttonRadius: 6,
 };
 
 export const ANIMATION_FIELDS = [
@@ -203,28 +237,30 @@ export const ANIMATION_FIELDS = [
     },
 ];
 
-/** Convert a theme object into React inline style CSS custom properties */
-export function themeToStyle(theme) {
-    if (!theme) return {};
-    const anim = { ...ANIMATION_DEFAULTS, ...(theme.animations ?? {}) };
+/** Convert a split theme + darkMode into CSS custom properties for inline style */
+export function themeToStyle(theme, darkMode = false) {
+    const normalized = theme
+        ? normalizeTheme(theme)
+        : { light: THEME_DEFAULTS, dark: THEME_DEFAULTS_DARK, animations: {} };
+    const colors = darkMode ? normalized.dark : normalized.light;
+    const anim = { ...ANIMATION_DEFAULTS, ...(normalized.animations ?? {}) };
     return {
-        "--red-brown": theme.primary,
-        "--primary": theme.primary,
-        "--khaki-brown": theme.secondary,
-        "--secondary": theme.secondary,
-        "--accent": theme.accent,
-        "--surface-background": theme.surfaceBackground,
-        "--outline-brown": theme.outline,
-        "--outline": theme.outline,
-        "--text-color": theme.textColor,
-        "--accent-text": theme.accentText,
-        // Animation/style vars
+        "--red-brown":          colors.primary,
+        "--primary":            colors.primary,
+        "--khaki-brown":        colors.secondary,
+        "--secondary":          colors.secondary,
+        "--accent":             colors.accent,
+        "--surface-background": colors.surfaceBackground,
+        "--outline-brown":      colors.outline,
+        "--outline":            colors.outline,
+        "--text-color":         colors.textColor,
+        "--accent-text":        colors.accentText,
         "--transition-duration": anim.transitionDuration + "ms",
-        "--navbar-blur": anim.navbarBlur + "px",
-        "--card-radius": anim.cardRadius + "px",
-        "--button-radius": anim.buttonRadius + "px",
-        "--hover-effect": anim.hoverEffect,
-        "--block-entrance": anim.blockEntrance,
-        "--page-transition": anim.pageTransition,
+        "--navbar-blur":         anim.navbarBlur + "px",
+        "--card-radius":         anim.cardRadius + "px",
+        "--button-radius":       anim.buttonRadius + "px",
+        "--hover-effect":        anim.hoverEffect,
+        "--block-entrance":      anim.blockEntrance,
+        "--page-transition":     anim.pageTransition,
     };
 }

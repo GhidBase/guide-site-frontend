@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import BundledEditor from "../BundledEditor.jsx";
 import "../css/textEditor.css";
-import { useDarkMode, useTheme, THEME_DEFAULTS, computeDarkTheme } from "../contexts/ThemeProvider.jsx";
+import { useActiveColors } from "../contexts/ThemeProvider.jsx";
 
 export default function TextEditor({
     editorRef,
@@ -9,14 +9,9 @@ export default function TextEditor({
     imagePickerTriggerRef,
     onEditorChange,
 }) {
-    const { darkMode } = useDarkMode();
-    const { theme } = useTheme();
-
-    const activeTheme = darkMode
-        ? computeDarkTheme(theme || THEME_DEFAULTS)
-        : (theme || THEME_DEFAULTS);
-    const bgColor = activeTheme.surfaceBackground;
-    const textColor = activeTheme.textColor;
+    const activeColors = useActiveColors();
+    const bgColor = activeColors.surfaceBackground;
+    const textColor = activeColors.textColor;
 
     // Update the editor body when dark mode or theme changes after init
     useEffect(() => {
@@ -26,7 +21,7 @@ export default function TextEditor({
         if (!body) return;
         body.style.backgroundColor = bgColor;
         body.style.color = textColor;
-    }, [darkMode, bgColor, textColor]);
+    }, [bgColor, textColor]);
 
     const contentStyle = `body { background-color: ${bgColor}; color: ${textColor}; padding: 0px 26px; }`;
 
