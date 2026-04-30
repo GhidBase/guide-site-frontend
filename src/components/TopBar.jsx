@@ -32,7 +32,7 @@ function BarDarkToggle() {
     const { darkMode, toggleDarkMode } = useDarkMode();
     return (
         <BarBtn onClick={toggleDarkMode} title={darkMode ? "Switch to light mode" : "Switch to dark mode"}>
-            {darkMode ? <Sun size={13} /> : <Moon size={13} />}
+            {darkMode ? <Sun size={16} /> : <Moon size={16} />}
         </BarBtn>
     );
 }
@@ -43,10 +43,10 @@ function BarAuth({ showUsername = true }) {
         return (
             <>
                 {showUsername && (
-                    <span className="hidden lg:block" style={{ fontSize: "0.68rem" }}>{user?.username}</span>
+                    <span className="hidden lg:block" style={{ fontSize: "0.8rem" }}>{user?.username}</span>
                 )}
                 <BarBtn onClick={logout} title="Logout">
-                    <LogOut size={13} />
+                    <LogOut size={16} />
                 </BarBtn>
             </>
         );
@@ -64,7 +64,7 @@ function BarAuth({ showUsername = true }) {
             onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.1)"; e.currentTarget.style.color = "rgba(232,220,200,1)"; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "rgba(232,220,200,0.7)"; }}
         >
-            <LogIn size={13} />
+            <LogIn size={16} />
         </Link>
     );
 }
@@ -89,7 +89,7 @@ function BarAdminControls({ isLDG, gameData }) {
                     onMouseEnter={(e) => (e.currentTarget.style.opacity = 0.65)}
                     onMouseLeave={(e) => (e.currentTarget.style.opacity = 1)}
                 >
-                    <Settings size={13} />
+                    <Settings size={16} />
                 </a>
             )}
             <BarBtn
@@ -101,7 +101,7 @@ function BarAdminControls({ isLDG, gameData }) {
                 }}
                 title={adminMode ? "Exit edit mode" : "Enter edit mode"}
             >
-                {adminMode ? <Eye size={13} /> : <Pencil size={13} />}
+                {adminMode ? <Eye size={16} /> : <Pencil size={16} />}
             </BarBtn>
         </>
     );
@@ -130,7 +130,7 @@ export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
     if (!gameData) {
         return (
             <div style={{ ...glassStyle, ...BAR_STYLE }}>
-                <span style={{ fontSize: "0.58rem", letterSpacing: "0.32em", textTransform: "uppercase", opacity: 0.6, fontWeight: 700, textShadow: "0 0 20px rgba(232,213,183,0.3)" }}>
+                <span style={{ fontSize: "0.72rem", letterSpacing: "0.32em", textTransform: "uppercase", opacity: 0.6, fontWeight: 700, textShadow: "0 0 20px rgba(232,213,183,0.3)" }}>
                     GuideCodex
                 </span>
                 <div className="hidden lg:flex" style={{ alignItems: "center", gap: "0.75rem" }}>
@@ -153,13 +153,13 @@ export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
                     {isLDG ? (
                         <img src={ldgLogo} style={{ height: "2rem", objectFit: "contain" }} alt="Lucky Defense Guides" />
                     ) : (
-                        <span style={{ fontWeight: 700, fontSize: "1rem", letterSpacing: "0.01em" }}>
+                        <span style={{ fontWeight: 700, fontSize: "1.1rem", letterSpacing: "0.01em" }}>
                             {gameData?.title ?? "GuideCodex"}
                         </span>
                     )}
                 </Link>
                 {pageTitle && !isLDGHomepage && (
-                    <span style={{ fontSize: "0.72rem", opacity: 0.6 }} className="truncate">
+                    <span style={{ fontSize: "0.85rem", opacity: 0.6 }} className="truncate">
                         / {pageTitle}
                     </span>
                 )}
@@ -199,7 +199,7 @@ export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
                         title={navbarLayout === "horizontal" ? "Switch to vertical sidebar" : "Switch to horizontal navbar"}
                         className="hidden lg:flex"
                     >
-                        {navbarLayout === "horizontal" ? <PanelLeft size={13} /> : <PanelTop size={13} />}
+                        {navbarLayout === "horizontal" ? <PanelLeft size={16} /> : <PanelTop size={16} />}
                     </BarBtn>
                 )}
             </div>
