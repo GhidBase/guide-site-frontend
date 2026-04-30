@@ -3,6 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useEditMode, useSaving } from "../contexts/EditModeContext.jsx";
 import { useDarkMode, useActiveColors } from "../contexts/ThemeProvider.jsx";
 import { useRouteLoaderData, useNavigate } from "react-router";
+import { useGameEditor } from "../contexts/GameEditorContext.jsx";
 
 function hexLuminance(hex) {
     if (!hex || hex.length < 7) return 0.5;
@@ -16,7 +17,9 @@ function hexLuminance(hex) {
 export default function MobileBottomBar({ toggleNav }) {
     const { user, isAuthenticated } = useAuth();
     const isAdmin = user?.role === "ADMIN";
-    const isContributor = isAuthenticated && !isAdmin;
+    const isGlobalEditor = user?.role === "EDITOR";
+    const { isPerGameEditor } = useGameEditor();
+    const canEdit = isAdmin || isGlobalEditor || isPerGameEditor;
     const { adminMode, setAdminMode, dirtyBlocks, saveAll } = useEditMode();
     const { setIsSaving } = useSaving();
     const { darkMode } = useDarkMode();
@@ -49,7 +52,7 @@ export default function MobileBottomBar({ toggleNav }) {
                 </button>
             )}
 
-            {(isAdmin || isContributor) && (
+            {canEdit && (
                 <button
                     onClick={() => {
                         if (adminMode && dirtyBlocks.size > 0) {

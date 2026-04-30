@@ -7,6 +7,7 @@ import { PanelTop, PanelLeft, Sun, Moon, LogOut, LogIn, Pencil, Eye, Settings } 
 import { useDarkMode } from "../contexts/ThemeProvider.jsx";
 import { useEditMode, useSaving } from "../contexts/EditModeContext.jsx";
 import { useGlassBarStyle } from "../hooks/useGlassBarStyle.js";
+import { useGameEditor } from "../contexts/GameEditorContext.jsx";
 
 // ── Primitives ───────────────────────────────────────────────────────────────
 
@@ -71,10 +72,12 @@ function BarAuth({ showUsername = true }) {
 function BarAdminControls({ isLDG, gameData }) {
     const { user, isAuthenticated } = useAuth();
     const isAdmin = user?.role === "ADMIN";
-    const isContributor = isAuthenticated && !isAdmin;
+    const isGlobalEditor = user?.role === "EDITOR";
+    const { isPerGameEditor } = useGameEditor();
+    const canEdit = isAdmin || isGlobalEditor || isPerGameEditor;
     const { adminMode, setAdminMode, dirtyBlocks } = useEditMode();
 
-    if (!isAdmin && !isContributor) return null;
+    if (!canEdit) return null;
 
     return (
         <>

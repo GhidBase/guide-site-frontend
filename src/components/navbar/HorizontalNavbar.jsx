@@ -5,6 +5,7 @@ import { useEditMode } from "../../contexts/EditModeContext.jsx";
 import { useDarkMode } from "../../contexts/ThemeProvider.jsx";
 import { ChevronDown, Search, X, Pencil, Eye, Trophy, Settings } from "lucide-react";
 import { useGlassBarStyle } from "../../hooks/useGlassBarStyle.js";
+import { useGameEditor } from "../../contexts/GameEditorContext.jsx";
 
 function HorizontalSearch({ gameData, isLDG, sectionsMap }) {
     const [query, setQuery] = useState("");
@@ -119,7 +120,9 @@ export default function HorizontalNavbar() {
     const { gameData, sectionsMap, isLDG } = useRouteLoaderData("main");
     const { user, isAuthenticated } = useAuth();
     const isAdmin = user?.role === "ADMIN";
-    const isContributor = isAuthenticated && !isAdmin;
+    const isGlobalEditor = user?.role === "EDITOR";
+    const { isPerGameEditor } = useGameEditor();
+    const canEdit = isAdmin || isGlobalEditor || isPerGameEditor;
     const { adminMode, setAdminMode, dirtyBlocks } = useEditMode();
     const { darkMode } = useDarkMode();
     const glassStyle = useGlassBarStyle("top");
@@ -332,7 +335,7 @@ export default function HorizontalNavbar() {
                     </a>
                 )}
 
-                {(isAdmin || isContributor) && (
+                {canEdit && (
                     <button
                         onClick={() => {
                             if (adminMode && dirtyBlocks.size > 0) {
