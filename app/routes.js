@@ -92,6 +92,7 @@ export default [
         }),
 
         route("privacy-policy", "routes/privacy-policy.jsx"),
+        route("dm", "routes/dm.jsx"),
 
         route("404", "routes/not-found.jsx", { id: "not-found-404" }),
         route("*", "routes/not-found.jsx", { id: "not-found-wildcard" }),

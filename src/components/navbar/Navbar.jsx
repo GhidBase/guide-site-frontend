@@ -351,6 +351,26 @@ export default function Navbar({
         nonEditable: true,
     });
 
+    if (gameData) {
+        navbarItems.push({
+            id: "game-chat",
+            slug: "chat",
+            navbarTitle: "Game Chat",
+            type: "page",
+            nonEditable: true,
+        });
+    }
+
+    if (isAuthenticated) {
+        navbarItems.push({
+            id: "dm",
+            slug: "/dm",
+            navbarTitle: "Messages",
+            type: "page",
+            nonEditable: true,
+        });
+    }
+
     return (
         <Fragment>
             <div id="nav-bar" className={className} style={{ fontFamily: "'Outfit', sans-serif", ...(darkMode ? { background: "#0f0c0a", color: "rgba(255,235,200,0.85)" } : {}) }}>
