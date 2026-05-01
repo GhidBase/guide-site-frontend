@@ -15,6 +15,7 @@ import {
     ShieldMinus,
     Users,
     MessageSquare,
+    Plus,
 } from "lucide-react";
 import {
     useTheme,
@@ -23,8 +24,10 @@ import {
     THEME_FIELDS,
     ANIMATION_DEFAULTS,
     ANIMATION_FIELDS,
+    BACKGROUND_DEFAULTS,
     normalizeTheme,
     computeDarkTheme,
+    computeBackground,
 } from "../contexts/ThemeProvider.jsx";
 import { useGameEditors } from "../hooks/useGameEditors.js";
 
@@ -85,6 +88,10 @@ export default function NavigationPanel() {
     const [editingTheme, setEditingTheme] = useState(null);
     const [savedTheme, setSavedTheme] = useState(null);
     const [themeMode, setThemeMode] = useState("light");
+    const [bgUrlDraft, setBgUrlDraft] = useState("");
+    const [bgUploading, setBgUploading] = useState(false);
+    const [bgImgError, setBgImgError] = useState(false);
+    const [bgPresetName, setBgPresetName] = useState("");
     const [detailClosing, setDetailClosing] = useState(false);
 
     const [presets, setPresets] = useState([]);
@@ -878,12 +885,15 @@ export default function NavigationPanel() {
         setPresetNewName("");
         setEditingPresetId(null);
         setActivePresetId(null);
-        // fetch presets
+        setBgUrlDraft(current?.background?.imageUrl ?? "");
+        setBgImgError(false);
+        setBgPresetName("");
+        setThemeOpen(true);
+        // fetch presets in background after modal is open
         try {
             const res = await fetch(currentAPI + "/presets", { credentials: "include" });
             if (res.ok) setPresets(await res.json());
         } catch { /* non-fatal */ }
-        setThemeOpen(true);
     }
 
     function applyPreset(preset) {
@@ -985,6 +995,100 @@ export default function NavigationPanel() {
         setTheme(next);
     }
 
+    function handleBackgroundChange(key, value) {
+        const next = { ...editingTheme, background: { ...(editingTheme.background ?? BACKGROUND_DEFAULTS), [key]: value } };
+        setEditingTheme(next);
+        setTheme(next);
+    }
+
+    function updateGradientStop(index, field, value) {
+        const stops = [...(editingTheme.background?.gradientStops ?? BACKGROUND_DEFAULTS.gradientStops)];
+        stops[index] = { ...stops[index], [field]: value };
+        handleBackgroundChange("gradientStops", stops);
+    }
+
+    function switchBackgroundType(type) {
+        const colors = editingTheme[themeMode] ?? THEME_DEFAULTS;
+        const primary = colors.primary;
+        const surface = colors.surfaceBackground;
+        const next = {
+            ...editingTheme,
+            background: {
+                ...(editingTheme.background ?? BACKGROUND_DEFAULTS),
+                type,
+                gradientStops: [
+                    { color: primary, position: 0 },
+                    { color: surface, position: 100 },
+                ],
+                imageOverlayColor: surface,
+            },
+        };
+        setEditingTheme(next);
+        setTheme(next);
+    }
+
+    function addGradientStop() {
+        const colors = editingTheme[themeMode] ?? THEME_DEFAULTS;
+        const stops = [...(editingTheme.background?.gradientStops ?? BACKGROUND_DEFAULTS.gradientStops)];
+        stops.push({ color: colors.primary, position: 50 });
+        handleBackgroundChange("gradientStops", stops);
+    }
+
+    async function uploadBgImage(file) {
+        if (!file) return;
+        setBgUploading(true);
+        setBgImgError(false);
+        const formData = new FormData();
+        formData.append("image", file);
+        formData.append("title", file.name.replace(/\.[^.]+$/, ""));
+        try {
+            const res = await fetch(imagesBaseUrl, { method: "POST", credentials: "include", body: formData });
+            if (!res.ok) throw new Error("Upload failed");
+            const newImage = await res.json();
+            setBgUrlDraft(newImage.url);
+            handleBackgroundChange("imageUrl", newImage.url);
+        } catch {
+            setBgImgError(true);
+        } finally {
+            setBgUploading(false);
+        }
+    }
+
+    function applyBgUrl() {
+        setBgImgError(false);
+        handleBackgroundChange("imageUrl", bgUrlDraft.trim());
+    }
+
+    function saveBgPreset() {
+        if (!bgPresetName.trim()) return;
+        const entry = { id: Date.now().toString(), name: bgPresetName.trim(), background: { ...(editingTheme.background ?? BACKGROUND_DEFAULTS) } };
+        const next = { ...editingTheme, backgroundPresets: [...(editingTheme.backgroundPresets ?? []), entry] };
+        setEditingTheme(next);
+        setTheme(next);
+        setBgPresetName("");
+    }
+
+    function deleteBgPreset(id) {
+        const next = { ...editingTheme, backgroundPresets: (editingTheme.backgroundPresets ?? []).filter(p => p.id !== id) };
+        setEditingTheme(next);
+        setTheme(next);
+    }
+
+    function applyBgPreset(preset) {
+        const next = { ...editingTheme, background: { ...preset.background } };
+        setEditingTheme(next);
+        setTheme(next);
+        setBgUrlDraft(preset.background?.imageUrl ?? "");
+        setBgImgError(false);
+    }
+
+    function removeGradientStop(index) {
+        const stops = [...(editingTheme.background?.gradientStops ?? BACKGROUND_DEFAULTS.gradientStops)];
+        if (stops.length <= 2) return;
+        stops.splice(index, 1);
+        handleBackgroundChange("gradientStops", stops);
+    }
+
     function autoGenerateDark() {
         const next = { ...editingTheme, dark: computeDarkTheme(editingTheme.light) };
         setEditingTheme(next);
@@ -1010,6 +1114,8 @@ export default function NavigationPanel() {
             light: { ...THEME_DEFAULTS },
             dark: { ...THEME_DEFAULTS_DARK },
             animations: !gameId ? { ...ANIMATION_DEFAULTS } : (editingTheme?.animations ?? {}),
+            background: { ...BACKGROUND_DEFAULTS },
+            backgroundPresets: editingTheme?.backgroundPresets ?? [],
         };
         setEditingTheme(defaults);
         setTheme(defaults);
@@ -2464,11 +2570,13 @@ export default function NavigationPanel() {
             {/* Theme editor modal */}
             {(themeOpen || themeClosing) && editingTheme && (
                 <div
-                    className={`modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/50${themeClosing ? " out" : ""}`}
+                    className={`modal-backdrop fixed inset-0 z-50 flex items-start justify-center bg-black/50 px-4${themeClosing ? " out" : ""}`}
+                    style={{ paddingTop: "calc(var(--sticky-header-height, 64px) + 0.75rem)", paddingBottom: "5rem" }}
                     onClick={cancelTheme}
                 >
                     <div
-                        className={`modal-panel bg-(--surface-background) border border-(--outline) rounded-xl shadow-2xl w-full max-w-md mx-4 p-6 flex flex-col gap-4 max-h-[90vh] overflow-y-auto${themeClosing ? " out" : ""}`}
+                        className={`modal-panel bg-(--surface-background) border border-(--outline) rounded-xl shadow-2xl w-full max-w-md p-6 flex flex-col gap-4 overflow-y-auto${themeClosing ? " out" : ""}`}
+                        style={{ maxHeight: "calc(100dvh - var(--sticky-header-height, 64px) - 5.75rem)" }}
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="flex items-center justify-between gap-2">
@@ -2607,6 +2715,238 @@ export default function NavigationPanel() {
                                 Auto-generate from light theme
                             </button>
                         )}
+
+                        <div className="border-t border-(--outline)/40" />
+                        <p className="text-xs font-bold uppercase tracking-wider text-(--text-color) opacity-60">Background</p>
+                        {(() => {
+                            const bg = editingTheme.background ?? BACKGROUND_DEFAULTS;
+                            return (
+                                <div className="flex flex-col gap-3">
+                                    {/* Background presets */}
+                                    {(editingTheme.backgroundPresets ?? []).length > 0 && (
+                                        <div className="flex flex-col gap-1.5">
+                                            <span className="text-xs font-bold uppercase tracking-wider text-(--text-color) opacity-60">Saved Backgrounds</span>
+                                            <div className="flex flex-col gap-1 max-h-36 overflow-y-auto pr-1">
+                                                {(editingTheme.backgroundPresets ?? []).map(preset => (
+                                                    <div key={preset.id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg border border-(--outline)/50 hover:border-(--primary)/60 transition-colors" style={{ background: "rgba(0,0,0,0.06)" }}>
+                                                        <div className="w-7 h-7 rounded border border-(--outline)/40 shrink-0"
+                                                            style={{ background: computeBackground(preset.background, editingTheme[themeMode] ?? THEME_DEFAULTS) }}
+                                                        />
+                                                        <button onClick={() => applyBgPreset(preset)}
+                                                            className="flex-1 min-w-0 text-left text-xs font-medium text-(--accent-text) truncate cursor-pointer hover:opacity-70 transition-opacity"
+                                                        >{preset.name}</button>
+                                                        <button onClick={() => deleteBgPreset(preset.id)}
+                                                            className="shrink-0 text-red-400 hover:text-red-300 cursor-pointer opacity-50 hover:opacity-100 transition-opacity"
+                                                            title="Delete"
+                                                        ><Trash size={12} /></button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Save current as preset */}
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            placeholder="Background name..."
+                                            value={bgPresetName}
+                                            onChange={e => setBgPresetName(e.target.value)}
+                                            onKeyDown={e => e.key === "Enter" && saveBgPreset()}
+                                            className="flex-1 min-w-0 text-xs bg-(--surface-background) border border-(--outline) rounded px-2 py-1.5 text-(--accent-text) outline-none focus:border-(--primary)"
+                                        />
+                                        <button onClick={saveBgPreset} disabled={!bgPresetName.trim()}
+                                            className="shrink-0 text-xs font-semibold px-3 py-1.5 rounded bg-(--primary) text-white cursor-pointer hover:opacity-90 disabled:opacity-40"
+                                        >Save</button>
+                                    </div>
+
+                                    <div className="border-t border-(--outline)/30" />
+
+                                    {/* Type tabs */}
+                                    <div className="grid grid-cols-4 gap-1">
+                                        {[["solid","Solid"],["gradient","Gradient"],["image","Image"]].map(([v,l]) => (
+                                            <button key={v} onClick={() => switchBackgroundType(v)}
+                                                className={`text-xs py-1.5 rounded border transition-colors cursor-pointer ${(bg.type ?? "solid") === v ? "bg-(--primary) text-white border-(--primary)" : "border-(--outline) text-(--text-color) hover:bg-(--accent)/30"}`}
+                                            >{l}</button>
+                                        ))}
+                                    </div>
+
+                                    {/* Solid */}
+                                    {(bg.type ?? "solid") === "solid" && (
+                                        <p className="text-xs text-(--text-color) opacity-50 italic">Uses the Surface color defined in the Colors section above.</p>
+                                    )}
+
+                                    {/* Gradient */}
+                                    {bg.type === "gradient" && (
+                                        <>
+                                            <div className="flex flex-col gap-1">
+                                                <span className="text-xs font-semibold text-(--accent-text)">Gradient Type</span>
+                                                <select value={bg.gradientType ?? "linear"}
+                                                    onChange={(e) => handleBackgroundChange("gradientType", e.target.value)}
+                                                    className="w-full text-sm rounded border border-(--outline) bg-(--surface-background) text-(--accent-text) px-2 py-1.5 cursor-pointer"
+                                                >
+                                                    {[["linear","Linear"],["radial","Radial (Center)"],["spotlight","Spotlight (Top)"],["corner","Corner (Top-Left)"],["conic","Conic"],["stripes","Stripes (Hard Stops)"],["mesh","Mesh / Aurora"]].map(([v,l]) => (
+                                                        <option key={v} value={v}>{l}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            {!["radial","spotlight","corner","mesh"].includes(bg.gradientType ?? "linear") && (
+                                                <div className="flex flex-col gap-1">
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-xs font-semibold text-(--accent-text)">Angle</span>
+                                                        <span className="font-mono text-xs text-(--text-color)">{bg.gradientAngle ?? 135}deg</span>
+                                                    </div>
+                                                    <input type="range" min={0} max={360} step={1} value={bg.gradientAngle ?? 135}
+                                                        onChange={(e) => handleBackgroundChange("gradientAngle", Number(e.target.value))}
+                                                        className="w-full accent-(--primary) cursor-pointer"
+                                                    />
+                                                </div>
+                                            )}
+                                            {(bg.gradientType ?? "linear") === "mesh" && (
+                                                <p className="text-xs text-(--text-color) opacity-50 italic">Each color stop becomes a translucent blob. Add up to 4 stops. The last stop is used as the base color.</p>
+                                            )}
+                                            <div className="flex flex-col gap-1">
+                                                <span className="text-xs font-semibold text-(--accent-text)">Animation</span>
+                                                <select value={bg.gradientAnimation ?? "none"}
+                                                    onChange={(e) => handleBackgroundChange("gradientAnimation", e.target.value)}
+                                                    className="w-full text-sm rounded border border-(--outline) bg-(--surface-background) text-(--accent-text) px-2 py-1.5 cursor-pointer"
+                                                >
+                                                    {[["none","None (Static)"],["rotate","Rotate"],["flow","Flow"],["pulse","Pulse / Breathe"]].map(([v,l]) => (
+                                                        <option key={v} value={v}>{l}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            {(bg.gradientAnimation ?? "none") !== "none" && (
+                                                <div className="flex flex-col gap-1">
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-xs font-semibold text-(--accent-text)">Speed</span>
+                                                        <span className="font-mono text-xs text-(--text-color)">{bg.gradientAnimationSpeed ?? 8}s</span>
+                                                    </div>
+                                                    <input type="range" min={2} max={30} step={1} value={bg.gradientAnimationSpeed ?? 8}
+                                                        onChange={(e) => handleBackgroundChange("gradientAnimationSpeed", Number(e.target.value))}
+                                                        className="w-full accent-(--primary) cursor-pointer"
+                                                    />
+                                                </div>
+                                            )}
+                                            <div className="flex flex-col gap-1.5">
+                                                <span className="text-xs font-semibold text-(--accent-text)">Color Stops</span>
+                                                {(bg.gradientStops ?? BACKGROUND_DEFAULTS.gradientStops).map((stop, i) => (
+                                                    <div key={i} className="flex items-center gap-2">
+                                                        <input type="color" value={stop.color}
+                                                            onChange={(e) => updateGradientStop(i, "color", e.target.value)}
+                                                            className="w-8 h-8 rounded cursor-pointer border border-(--outline) p-0.5 bg-transparent shrink-0"
+                                                        />
+                                                        <input type="range" min={0} max={100} step={1} value={stop.position}
+                                                            onChange={(e) => updateGradientStop(i, "position", Number(e.target.value))}
+                                                            className="flex-1 accent-(--primary) cursor-pointer"
+                                                        />
+                                                        <span className="font-mono text-xs text-(--text-color) w-8 shrink-0 text-right">{stop.position}%</span>
+                                                        {(bg.gradientStops ?? BACKGROUND_DEFAULTS.gradientStops).length > 2 && (
+                                                            <button onClick={() => removeGradientStop(i)} title="Remove stop"
+                                                                className="shrink-0 text-red-400 hover:text-red-300 cursor-pointer"
+                                                            ><X size={14} /></button>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                                {(bg.gradientStops ?? BACKGROUND_DEFAULTS.gradientStops).length < 5 && (
+                                                    <button onClick={addGradientStop}
+                                                        className="flex items-center gap-1 text-xs text-(--text-color) border border-(--outline) px-2 py-1 rounded cursor-pointer hover:bg-(--accent)/30 w-fit"
+                                                    ><Plus size={12} /> Add stop</button>
+                                                )}
+                                            </div>
+                                        </>
+                                    )}
+
+                                    {/* Image */}
+                                    {bg.type === "image" && (
+                                        <>
+                                            {/* Upload from device */}
+                                            <div className="flex flex-col gap-1">
+                                                <span className="text-xs font-semibold text-(--accent-text)">Upload from Device</span>
+                                                <label className={`flex items-center justify-center gap-2 px-3 py-2 rounded border border-dashed border-(--outline) cursor-pointer hover:bg-(--accent)/20 transition-colors text-xs text-(--text-color) ${bgUploading ? "opacity-50 pointer-events-none" : ""}`}>
+                                                    {bgUploading ? "Uploading..." : "Choose image file"}
+                                                    <input type="file" accept="image/*" className="hidden"
+                                                        onChange={(e) => e.target.files?.[0] && uploadBgImage(e.target.files[0])}
+                                                    />
+                                                </label>
+                                            </div>
+
+                                            <div className="flex items-center gap-2 opacity-40">
+                                                <div className="flex-1 border-t border-(--outline)" />
+                                                <span className="text-xs">or</span>
+                                                <div className="flex-1 border-t border-(--outline)" />
+                                            </div>
+
+                                            {/* URL from web */}
+                                            <div className="flex flex-col gap-1">
+                                                <span className="text-xs font-semibold text-(--accent-text)">Paste URL from Web</span>
+                                                <div className="flex gap-2">
+                                                    <input
+                                                        type="url"
+                                                        placeholder="https://example.com/image.jpg"
+                                                        value={bgUrlDraft}
+                                                        onChange={(e) => setBgUrlDraft(e.target.value)}
+                                                        onKeyDown={(e) => e.key === "Enter" && applyBgUrl()}
+                                                        className="flex-1 min-w-0 text-xs bg-(--surface-background) border border-(--outline) rounded px-2 py-1.5 text-(--accent-text) outline-none focus:border-(--primary)"
+                                                    />
+                                                    <button onClick={applyBgUrl}
+                                                        className="shrink-0 text-xs font-semibold px-3 py-1.5 rounded bg-(--primary) text-white cursor-pointer hover:opacity-90"
+                                                    >Apply</button>
+                                                </div>
+                                            </div>
+
+                                            {/* Preview */}
+                                            {bg.imageUrl && (
+                                                <div className="w-full h-24 rounded border border-(--outline) overflow-hidden bg-black/10 relative">
+                                                    <img src={bg.imageUrl} alt="Preview"
+                                                        className="w-full h-full object-cover"
+                                                        onLoad={() => setBgImgError(false)}
+                                                        onError={() => setBgImgError(true)}
+                                                    />
+                                                    {bgImgError && (
+                                                        <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                                                            <span className="text-xs text-red-300">Could not load image</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+
+                                            {/* Size */}
+                                            <div className="flex flex-col gap-1">
+                                                <span className="text-xs font-semibold text-(--accent-text)">Size</span>
+                                                <div className="grid grid-cols-3 gap-1">
+                                                    {[["cover","Cover"],["contain","Contain"],["repeat","Tile"]].map(([v,l]) => (
+                                                        <button key={v} onClick={() => handleBackgroundChange("imageSize", v)}
+                                                            className={`text-xs py-1 rounded border transition-colors cursor-pointer ${(bg.imageSize ?? "cover") === v ? "bg-(--primary) text-white border-(--primary)" : "border-(--outline) text-(--text-color) hover:bg-(--accent)/30"}`}
+                                                        >{l}</button>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            {/* Overlay */}
+                                            <div className="flex items-center gap-3">
+                                                <input type="color" value={bg.imageOverlayColor ?? "#1a0d07"}
+                                                    onChange={(e) => handleBackgroundChange("imageOverlayColor", e.target.value)}
+                                                    className="w-8 h-8 rounded cursor-pointer border border-(--outline) p-0.5 bg-transparent shrink-0"
+                                                />
+                                                <div className="flex flex-col flex-1 gap-1">
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-xs font-semibold text-(--accent-text)">Color Overlay</span>
+                                                        <span className="font-mono text-xs text-(--text-color)">{Math.round((bg.imageOverlayOpacity ?? 0.35) * 100)}%</span>
+                                                    </div>
+                                                    <input type="range" min={0} max={1} step={0.01} value={bg.imageOverlayOpacity ?? 0.35}
+                                                        onChange={(e) => handleBackgroundChange("imageOverlayOpacity", Number(e.target.value))}
+                                                        className="w-full accent-(--primary) cursor-pointer"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
+
+
+                                </div>
+                            );
+                        })()}
 
                         {!gameId && (
                             <>
