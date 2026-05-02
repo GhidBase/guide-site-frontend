@@ -39,6 +39,15 @@ function setL(hex, targetL) {
     return hslToHex(h, s, targetL);
 }
 
+function hexToRgb(hex) {
+    return {
+        r: parseInt(hex.slice(1, 3), 16),
+        g: parseInt(hex.slice(3, 5), 16),
+        b: parseInt(hex.slice(5, 7), 16),
+    };
+}
+
+
 // ── Defaults ─────────────────────────────────────────────────────
 
 export const THEME_DEFAULTS = {
@@ -67,20 +76,101 @@ export function computeDarkTheme(theme) {
 
 export const THEME_DEFAULTS_DARK = computeDarkTheme(THEME_DEFAULTS);
 
+export const BACKGROUND_DEFAULTS = {
+    type: "solid",
+    gradientType: "linear",
+    gradientAngle: 135,
+    gradientStops: [
+        { color: "#794e3b", position: 0 },
+        { color: "#d1bc9f", position: 100 },
+    ],
+    imageUrl: "",
+    imageSize: "cover",
+    imageOverlayOpacity: 0.35,
+    imageOverlayColor: "#1a0d07",
+    gradientAnimation: "none",
+    gradientAnimationSpeed: 8,
+};
+
+export function computeBackground(bg, colors) {
+    if (!bg || bg.type === "solid") return colors.surfaceBackground;
+
+    if (bg.type === "gradient") {
+        const rawStops = bg.gradientStops ?? BACKGROUND_DEFAULTS.gradientStops;
+        const anim = bg.gradientAnimation ?? "none";
+        const staticAngle = bg.gradientAngle ?? 135;
+        const angle = anim === "rotate" ? "var(--gc-angle)" : `${staticAngle}deg`;
+        const stopStr = rawStops.map(s => `${s.color} ${s.position}%`).join(", ");
+
+        if (bg.gradientType === "radial")
+            return `radial-gradient(ellipse at center, ${stopStr})`;
+
+        if (bg.gradientType === "spotlight")
+            return `radial-gradient(ellipse 90% 70% at 50% -5%, ${stopStr})`;
+
+        if (bg.gradientType === "corner")
+            return `radial-gradient(ellipse at top left, ${stopStr})`;
+
+        if (bg.gradientType === "conic")
+            return `conic-gradient(from ${angle}, ${stopStr})`;
+
+        if (bg.gradientType === "stripes") {
+            const parts = [rawStops[0].color + " " + rawStops[0].position + "%"];
+            for (let i = 1; i < rawStops.length; i++) {
+                parts.push(rawStops[i - 1].color + " " + rawStops[i].position + "%");
+                parts.push(rawStops[i].color + " " + rawStops[i].position + "%");
+            }
+            return `linear-gradient(${angle}, ${parts.join(", ")})`;
+        }
+
+        if (bg.gradientType === "mesh") {
+            const blobs = rawStops.slice(0, 4);
+            const positions = ["20% 25%", "80% 75%", "10% 80%", "90% 20%"];
+            const base = blobs[blobs.length - 1]?.color ?? colors.surfaceBackground;
+            const layers = blobs.slice(0, -1).map((s, i) => {
+                const { r, g, b } = hexToRgb(s.color);
+                return `radial-gradient(ellipse at ${positions[i]}, rgba(${r},${g},${b},0.75), transparent 55%)`;
+            });
+            return [...layers, base].join(", ");
+        }
+
+        return `linear-gradient(${angle}, ${stopStr})`;
+    }
+
+    if (bg.type === "image") {
+        if (!bg.imageUrl) return colors.surfaceBackground;
+        const opacity = bg.imageOverlayOpacity ?? 0.35;
+        const oc = bg.imageOverlayColor ?? colors.surfaceBackground;
+        const { r, g, b } = hexToRgb(oc);
+        const overlay = `linear-gradient(rgba(${r},${g},${b},${opacity}),rgba(${r},${g},${b},${opacity}))`;
+        const size = bg.imageSize === "repeat" ? "auto" : (bg.imageSize ?? "cover");
+        const repeat = bg.imageSize === "repeat" ? "repeat" : "no-repeat";
+        return `${overlay}, url("${bg.imageUrl}") center/${size} ${repeat}`;
+    }
+
+    return colors.surfaceBackground;
+}
+
 /**
- * Normalize any stored theme to the split { light, dark, animations } format.
+ * Normalize any stored theme to the split { light, dark, animations, background } format.
  * Old flat themes are wrapped transparently; already-split themes pass through.
  */
 export function normalizeTheme(theme) {
     if (!theme) return null;
-    if (theme.light && theme.dark) return theme;
-    // Old flat format — strip animations key from colors
-    const { animations, ...colors } = theme;
+    if (theme.light && theme.dark) return {
+        ...theme,
+        background: theme.background ?? { ...BACKGROUND_DEFAULTS },
+        backgroundPresets: theme.backgroundPresets ?? [],
+    };
+    // Old flat format — strip non-color keys
+    const { animations, background, backgroundPresets, ...colors } = theme;
     const light = { ...THEME_DEFAULTS, ...colors };
     return {
         light,
         dark: computeDarkTheme(light),
         animations: animations ?? {},
+        background: background ?? { ...BACKGROUND_DEFAULTS },
+        backgroundPresets: backgroundPresets ?? [],
     };
 }
 
@@ -241,20 +331,21 @@ export const ANIMATION_FIELDS = [
 export function themeToStyle(theme, darkMode = false) {
     const normalized = theme
         ? normalizeTheme(theme)
-        : { light: THEME_DEFAULTS, dark: THEME_DEFAULTS_DARK, animations: {} };
+        : { light: THEME_DEFAULTS, dark: THEME_DEFAULTS_DARK, animations: {}, background: { ...BACKGROUND_DEFAULTS } };
     const colors = darkMode ? normalized.dark : normalized.light;
     const anim = { ...ANIMATION_DEFAULTS, ...(normalized.animations ?? {}) };
+    const pageBg = computeBackground(normalized.background, colors);
     return {
-        "--red-brown":          colors.primary,
-        "--primary":            colors.primary,
-        "--khaki-brown":        colors.secondary,
-        "--secondary":          colors.secondary,
-        "--accent":             colors.accent,
-        "--surface-background": colors.surfaceBackground,
-        "--outline-brown":      colors.outline,
-        "--outline":            colors.outline,
-        "--text-color":         colors.textColor,
-        "--accent-text":        colors.accentText,
+        "--red-brown":           colors.primary,
+        "--primary":             colors.primary,
+        "--khaki-brown":         colors.secondary,
+        "--secondary":           colors.secondary,
+        "--accent":              colors.accent,
+        "--surface-background":  colors.surfaceBackground,
+        "--outline-brown":       colors.outline,
+        "--outline":             colors.outline,
+        "--text-color":          colors.textColor,
+        "--accent-text":         colors.accentText,
         "--transition-duration": anim.transitionDuration + "ms",
         "--navbar-blur":         anim.navbarBlur + "px",
         "--card-radius":         anim.cardRadius + "px",
@@ -262,5 +353,7 @@ export function themeToStyle(theme, darkMode = false) {
         "--hover-effect":        anim.hoverEffect,
         "--block-entrance":      anim.blockEntrance,
         "--page-transition":     anim.pageTransition,
+        "--page-background":     pageBg,
+        "--gc-speed":            `${normalized.background?.gradientAnimationSpeed ?? BACKGROUND_DEFAULTS.gradientAnimationSpeed}s`,
     };
 }
