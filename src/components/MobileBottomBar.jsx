@@ -70,7 +70,7 @@ export default function MobileBottomBar({ toggleNav }) {
                 <button
                     onClick={async () => {
                         setIsSaving(true);
-                        try { await saveAll(); } finally { setIsSaving(false); }
+                        try { await saveAll(); } catch (err) { alert(err.message); } finally { setIsSaving(false); }
                     }}
                     title={`Save (${dirtyBlocks.size})`}
                     className={btnBase}

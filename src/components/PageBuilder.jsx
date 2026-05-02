@@ -37,12 +37,22 @@ export default function PageBuilder() {
     }
 
     async function saveAllChanges() {
+        const failed = [];
         for (const id of dirtyBlocks) {
             const ref = blockRefs.current[id];
             if (!ref) {
-                throw new Error(`Ref is null for block ${id} — try exiting and re-entering edit mode`);
+                console.warn(`Ref is null for block ${id} — skipping`);
+                continue;
             }
-            await ref.save();
+            try {
+                await ref.save();
+            } catch (err) {
+                console.error(`Failed to save block ${id}:`, err);
+                failed.push(id);
+            }
+        }
+        if (failed.length > 0) {
+            throw new Error(`${failed.length} block(s) failed to save. Please try again.`);
         }
     }
 
@@ -233,8 +243,7 @@ export default function PageBuilder() {
             return;
         }
         if (!response.ok) {
-            console.error("Failed to save block", response.status, await response.text().catch(() => ""));
-            return;
+            throw new Error(`Save failed with status ${response.status}`);
         }
         await refreshBlock(block.id);
     }
@@ -242,10 +251,7 @@ export default function PageBuilder() {
     async function refreshBlock(id) {
         const response = await fetch(blockUrl(id));
         const result = await response.json();
-        const newBlocks = [...blocks];
-        const adjustIndex = newBlocks.findIndex((block) => block.id == result.id);
-        newBlocks[adjustIndex] = result;
-        setBlocks(newBlocks);
+        setBlocks(prev => prev.map(b => b.id == result.id ? result : b));
     }
 
     if (pageData?.notFound) {
