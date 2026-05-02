@@ -1,8 +1,9 @@
 import { Menu, Pencil, Eye, Settings, Save } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useEditMode, useSaving } from "../contexts/EditModeContext.jsx";
-import { useDarkMode, useTheme, THEME_DEFAULTS } from "../contexts/ThemeProvider.jsx";
+import { useDarkMode, useActiveColors } from "../contexts/ThemeProvider.jsx";
 import { useRouteLoaderData, useNavigate } from "react-router";
+import { useGameEditor } from "../contexts/GameEditorContext.jsx";
 
 function hexLuminance(hex) {
     if (!hex || hex.length < 7) return 0.5;
@@ -16,16 +17,17 @@ function hexLuminance(hex) {
 export default function MobileBottomBar({ toggleNav }) {
     const { user, isAuthenticated } = useAuth();
     const isAdmin = user?.role === "ADMIN";
-    const isContributor = isAuthenticated && !isAdmin;
+    const isGlobalEditor = user?.role === "EDITOR";
+    const { isPerGameEditor } = useGameEditor();
+    const canEdit = isAdmin || isGlobalEditor || isPerGameEditor;
     const { adminMode, setAdminMode, dirtyBlocks, saveAll } = useEditMode();
     const { setIsSaving } = useSaving();
     const { darkMode } = useDarkMode();
-    const { theme } = useTheme();
+    const activeColors = useActiveColors();
     const { gameData, isLDG } = useRouteLoaderData("main");
     const navigate = useNavigate();
 
-    const primary = theme?.primary ?? THEME_DEFAULTS.primary;
-    const iconColor = darkMode ? "#e8d5b7" : (hexLuminance(primary) < 0.35 ? "var(--accent, #f0e3c3)" : "var(--accent-text, #3a2a1a)");
+    const iconColor = darkMode ? "#e8d5b7" : (hexLuminance(activeColors.primary) < 0.35 ? "var(--accent, #f0e3c3)" : "var(--accent-text, #3a2a1a)");
     const btnBase = "flex items-center justify-center w-12 h-12 rounded-lg cursor-pointer hover:opacity-80 transition-opacity";
     const btnStyle = { background: darkMode ? "rgba(255,235,200,0.10)" : "var(--primary)", color: iconColor };
 
@@ -50,7 +52,7 @@ export default function MobileBottomBar({ toggleNav }) {
                 </button>
             )}
 
-            {(isAdmin || isContributor) && (
+            {canEdit && (
                 <button
                     onClick={() => {
                         if (adminMode && dirtyBlocks.size > 0) {

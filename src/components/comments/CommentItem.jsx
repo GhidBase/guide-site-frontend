@@ -95,7 +95,7 @@ export default function CommentItem({
                         {/* Reply — top-level only */}
                         {!isReply && currentUser && (
                             <button
-                                onClick={() => setShowReplyForm(!showReplyForm)}
+                                onClick={() => { setShowReplyForm(!showReplyForm); setEditing(false); }}
                                 className="flex items-center gap-1.5 text-xs text-(--text-color) px-2 py-1 rounded-md hover:bg-(--outline)/20 cursor-pointer transition-colors"
                             >
                                 <Reply className="w-3.5 h-3.5" />
@@ -106,7 +106,7 @@ export default function CommentItem({
                         {/* Edit */}
                         {canModify && (
                             <button
-                                onClick={() => setEditing(true)}
+                                onClick={() => { setEditing(true); setShowReplyForm(false); }}
                                 className="flex items-center gap-1.5 text-xs text-(--text-color) px-2 py-1 rounded-md hover:bg-(--outline)/20 cursor-pointer transition-colors"
                             >
                                 <Pencil className="w-3.5 h-3.5" />

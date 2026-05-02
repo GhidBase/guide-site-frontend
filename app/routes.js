@@ -50,6 +50,9 @@ export default [
             route("analytics", "routes/analytics.jsx", {
                 id: "game-analytics",
             }),
+            route("chat", "routes/game-chat.jsx", {
+                id: "game-chat",
+            }),
         ]),
 
         // Top-level LDG-mode special routes
@@ -89,6 +92,7 @@ export default [
         }),
 
         route("privacy-policy", "routes/privacy-policy.jsx"),
+        route("dm", "routes/dm.jsx"),
 
         route("404", "routes/not-found.jsx", { id: "not-found-404" }),
         route("*", "routes/not-found.jsx", { id: "not-found-wildcard" }),

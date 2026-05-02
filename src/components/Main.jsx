@@ -7,8 +7,9 @@ import MobileBottomBar from "./MobileBottomBar.jsx";
 import MobileNavbar from "./navbar/MobileNavbar.jsx";
 import { useEffect, useState } from "react";
 import { usePageTracking } from "../hooks/usePageTracking.js";
-import { useTheme, themeToStyle, useDarkMode, computeDarkTheme, THEME_DEFAULTS } from "../contexts/ThemeProvider.jsx";
+import { useTheme, themeToStyle, useDarkMode, normalizeTheme, useActiveColors } from "../contexts/ThemeProvider.jsx";
 import { EditModeProvider } from "../contexts/EditModeContext.jsx";
+import { GameEditorProvider } from "../contexts/GameEditorContext.jsx";
 import { PanelLeftOpen, PanelLeftClose } from "lucide-react";
 import Footer from "./Footer.jsx";
 import ScrollToTop from "./ScrollToTop.jsx";
@@ -27,11 +28,12 @@ export default function Main() {
         setNavbarLayout((prev) => (prev === "vertical" ? "horizontal" : "vertical"));
     }
     const { gameData, sectionsMap, pageData } = useLoaderData();
-    const { setTheme } = useTheme();
+    const { theme, setTheme } = useTheme();
     const { darkMode } = useDarkMode();
+    const activeColors = useActiveColors();
 
     useEffect(() => {
-        setTheme(gameData?.theme ?? null);
+        setTheme(normalizeTheme(gameData?.theme ?? null));
     }, [gameData?.id]);
 
     useEffect(() => {
@@ -47,10 +49,6 @@ export default function Main() {
         ro.observe(el);
         return () => ro.disconnect();
     }, []);
-
-    const activeTheme = darkMode
-        ? computeDarkTheme(gameData?.theme ?? THEME_DEFAULTS)
-        : gameData?.theme ?? null;
 
     function toggleNav(state) {
         // I go by typeof because events can
@@ -87,14 +85,17 @@ export default function Main() {
     }, [navOpen]);
 
     const isWide = pageData?.page?.wide ?? false;
-    const accentColor = activeTheme?.primary ?? "#9b6a4e";
+    const accentColor = activeColors.primary;
+    const bgAnim = normalizeTheme(theme)?.background?.gradientAnimation ?? "none";
+    const bgAnimClass = bgAnim === "rotate" ? "gc-anim-rotate" : bgAnim === "flow" ? "gc-anim-flow" : bgAnim === "pulse" ? "gc-anim-pulse" : "";
 
     return (
+        <GameEditorProvider gameId={gameData?.id}>
         <EditModeProvider>
         <div
             id="main-page-sections"
-            className="h-full w-full flex flex-col grow box-border bg-(--surface-background)"
-            style={themeToStyle(activeTheme)}
+            className={`h-full w-full flex flex-col grow box-border ${bgAnimClass}`}
+            style={{ ...themeToStyle(theme, darkMode), background: "var(--page-background)" }}
         >
             {/* Ambient flares */}
             <div aria-hidden="true" style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0, overflow: "hidden" }}>
@@ -122,7 +123,6 @@ export default function Main() {
             <div
                 id="side-bar-and-content"
                 className={`relative w-full box-border flex flex-1
-                bg-(--surface-background)
                 transition-[padding] duration-300 ease-in-out
                 ${gameData && !sidebarCollapsed && navbarLayout === "vertical" && "xl:pr-30 2xl:pr-60"} `}
             >
@@ -189,5 +189,6 @@ export default function Main() {
             <ScrollToTop />
         </div>
         </EditModeProvider>
+        </GameEditorProvider>
     );
 }

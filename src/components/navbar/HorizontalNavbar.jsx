@@ -3,8 +3,9 @@ import { useRouteLoaderData, useNavigate } from "react-router";
 import { useAuth } from "@/hooks/useAuth";
 import { useEditMode } from "../../contexts/EditModeContext.jsx";
 import { useDarkMode } from "../../contexts/ThemeProvider.jsx";
-import { ChevronDown, Search, X, Pencil, Eye, Trophy, Settings } from "lucide-react";
+import { ChevronDown, Search, X, Pencil, Eye, Trophy, Settings, MessageSquare, Inbox } from "lucide-react";
 import { useGlassBarStyle } from "../../hooks/useGlassBarStyle.js";
+import { useGameEditor } from "../../contexts/GameEditorContext.jsx";
 
 function HorizontalSearch({ gameData, isLDG, sectionsMap }) {
     const [query, setQuery] = useState("");
@@ -119,7 +120,9 @@ export default function HorizontalNavbar() {
     const { gameData, sectionsMap, isLDG } = useRouteLoaderData("main");
     const { user, isAuthenticated } = useAuth();
     const isAdmin = user?.role === "ADMIN";
-    const isContributor = isAuthenticated && !isAdmin;
+    const isGlobalEditor = user?.role === "EDITOR";
+    const { isPerGameEditor } = useGameEditor();
+    const canEdit = isAdmin || isGlobalEditor || isPerGameEditor;
     const { adminMode, setAdminMode, dirtyBlocks } = useEditMode();
     const { darkMode } = useDarkMode();
     const glassStyle = useGlassBarStyle("top");
@@ -319,6 +322,28 @@ export default function HorizontalNavbar() {
                     <Trophy className="w-4 h-4" />
                 </button>
 
+                {gameData && (
+                    <button
+                        onClick={() => navigateTo(buildSlug("chat"))}
+                        title="Game Chat"
+                        className="p-1.5 cursor-pointer hover:opacity-60 transition-opacity"
+                        style={{ textShadow: "none" }}
+                    >
+                        <MessageSquare className="w-4 h-4" />
+                    </button>
+                )}
+
+                {isAuthenticated && (
+                    <button
+                        onClick={() => navigate("/dm")}
+                        title="Messages"
+                        className="p-1.5 cursor-pointer hover:opacity-60 transition-opacity"
+                        style={{ textShadow: "none" }}
+                    >
+                        <Inbox className="w-4 h-4" />
+                    </button>
+                )}
+
                 <HorizontalSearch gameData={gameData} isLDG={isLDG} sectionsMap={sectionsMap} />
 
                 {isAdmin && (
@@ -332,7 +357,7 @@ export default function HorizontalNavbar() {
                     </a>
                 )}
 
-                {(isAdmin || isContributor) && (
+                {canEdit && (
                     <button
                         onClick={() => {
                             if (adminMode && dirtyBlocks.size > 0) {
