@@ -96,3 +96,9 @@
 .gc-anim-pulse {
     animation: gc-pulse var(--gc-speed, 6s) ease-in-out infinite;
 }
+
+@media (max-width: 1023px) {
+    #main-page-sections {
+        background-image: none !important;
+    }
+}
