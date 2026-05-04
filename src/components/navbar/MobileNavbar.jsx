@@ -33,13 +33,6 @@ export default function MobileNavbar({ toggleNav, navOpen }) {
         pages: [...section.pages],
     }));
 
-    const lastSection = actualSections[actualSections.length - 1];
-    if (lastSection) {
-        lastSection.pages = [
-            ...lastSection.pages,
-            { id: "leaderboard", slug: "leaderboard", title: "Leaderboard" },
-        ];
-    }
 
     async function handleLogout() {
         const res = await logout();
@@ -177,6 +170,18 @@ export default function MobileNavbar({ toggleNav, navOpen }) {
                         >
                             Privacy Policy
                         </a>
+                        {gameData && (
+                            <>
+                                {" "}|{" "}
+                                <Link
+                                    to={`/games/${gameData.slug}/leaderboard`}
+                                    onClick={() => toggleNav(false)}
+                                    className=""
+                                >
+                                    Leaderboard
+                                </Link>
+                            </>
+                        )}
                     </div>
                 </div>
             </div>
