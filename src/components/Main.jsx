@@ -7,7 +7,7 @@ import MobileBottomBar from "./MobileBottomBar.jsx";
 import MobileNavbar from "./navbar/MobileNavbar.jsx";
 import { useEffect, useState } from "react";
 import { usePageTracking } from "../hooks/usePageTracking.js";
-import { useTheme, themeToStyle, useDarkMode, normalizeTheme, useActiveColors } from "../contexts/ThemeProvider.jsx";
+import { useTheme, themeToStyle, useDarkMode, normalizeTheme, useActiveColors, BACKGROUND_DEFAULTS } from "../contexts/ThemeProvider.jsx";
 import { EditModeProvider } from "../contexts/EditModeContext.jsx";
 import { GameEditorProvider } from "../contexts/GameEditorContext.jsx";
 import { PanelLeftOpen, PanelLeftClose } from "lucide-react";
@@ -86,17 +86,35 @@ export default function Main() {
 
     const isWide = pageData?.page?.wide ?? false;
     const accentColor = activeColors.primary;
-    const bgAnim = normalizeTheme(theme)?.background?.gradientAnimation ?? "none";
+    const bgConfig = normalizeTheme(theme)?.background ?? BACKGROUND_DEFAULTS;
+    const bgAnim = bgConfig.gradientAnimation ?? "none";
     const bgAnimClass = bgAnim === "rotate" ? "gc-anim-rotate" : bgAnim === "flow" ? "gc-anim-flow" : bgAnim === "pulse" ? "gc-anim-pulse" : "";
+    const isImageBg = bgConfig.type === "image" && bgConfig.imageUrl;
+    const overlayHex = bgConfig.imageOverlayColor ?? "#1a0d07";
+    const overlayAlpha = bgConfig.imageOverlayOpacity ?? 0.35;
+    const or = parseInt(overlayHex.slice(1,3),16), og = parseInt(overlayHex.slice(3,5),16), ob = parseInt(overlayHex.slice(5,7),16);
+    const overlayRgba = `rgba(${or},${og},${ob},${overlayAlpha})`;
 
     return (
         <GameEditorProvider gameId={gameData?.id}>
         <EditModeProvider>
         <div
             id="main-page-sections"
-            className={`h-full w-full flex flex-col grow box-border ${bgAnimClass}`}
-            style={{ ...themeToStyle(theme, darkMode), background: "var(--page-background)" }}
+            className={`h-full w-full flex flex-col grow box-border`}
+            style={{
+                ...themeToStyle(theme, darkMode),
+                ...(isImageBg ? {
+                    backgroundImage: `linear-gradient(${overlayRgba},${overlayRgba}), url("${bgConfig.imageUrl}")`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                    backgroundRepeat: "no-repeat",
+                    backgroundAttachment: "fixed",
+                } : {}),
+            }}
         >
+            {!isImageBg && (
+                <div aria-hidden="true" className={bgAnimClass} style={{ position: "fixed", inset: 0, zIndex: -1, background: "var(--page-background)" }} />
+            )}
             {/* Ambient flares */}
             <div aria-hidden="true" style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0, overflow: "hidden" }}>
                 <div style={{
@@ -124,7 +142,8 @@ export default function Main() {
                 id="side-bar-and-content"
                 className={`relative w-full box-border flex flex-1
                 transition-[padding] duration-300 ease-in-out
-                ${gameData && !sidebarCollapsed && navbarLayout === "vertical" && "xl:pr-30 2xl:pr-60"} `}
+                ${gameData && !sidebarCollapsed && navbarLayout === "vertical" && "xl:pr-30 2xl:pr-60"}
+`}
             >
                 {sectionsMap && navbarLayout === "vertical" && (
                     <Navbar
@@ -169,7 +188,7 @@ export default function Main() {
                 )}
                 <div
                     id="page-outer-bounds"
-                    className={`gap-4 sm:px-4 pb-4 flex flex-col w-full mx-auto text-(--text-color) ${isWide ? "max-w-[1440px]" : "max-w-230"}`}
+                    className={`gap-4 sm:px-4 pb-4 flex flex-col w-full mx-auto text-(--text-color) bg-(--surface-background) lg:bg-transparent ${isWide ? "max-w-[1440px]" : "max-w-230"}`}
                 >
                     <Outlet />
                 </div>
