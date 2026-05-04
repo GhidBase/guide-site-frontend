@@ -116,20 +116,22 @@ export default function Main() {
                 <div aria-hidden="true" className={bgAnimClass} style={{ position: "fixed", inset: 0, zIndex: -1, background: "var(--page-background)" }} />
             )}
             {/* Ambient flares */}
-            <div aria-hidden="true" style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0, overflow: "hidden" }}>
-                <div style={{
-                    position: "absolute", left: "-12vw", top: "15%",
-                    width: "45vw", height: "70vh",
-                    background: `radial-gradient(ellipse at center, ${accentColor}18 0%, transparent 70%)`,
-                    filter: "blur(8px)",
-                }} />
-                <div style={{
-                    position: "absolute", right: "-12vw", top: "30%",
-                    width: "40vw", height: "60vh",
-                    background: `radial-gradient(ellipse at center, ${accentColor}12 0%, transparent 70%)`,
-                    filter: "blur(8px)",
-                }} />
-            </div>
+            {(bgConfig.ambientFlares ?? true) && (
+                <div aria-hidden="true" style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0, overflow: "hidden" }}>
+                    <div style={{
+                        position: "absolute", left: "-12vw", top: "15%",
+                        width: "45vw", height: "70vh",
+                        background: `radial-gradient(ellipse at center, ${accentColor}18 0%, transparent 70%)`,
+                        filter: "blur(8px)",
+                    }} />
+                    <div style={{
+                        position: "absolute", right: "-12vw", top: "30%",
+                        width: "40vw", height: "60vh",
+                        background: `radial-gradient(ellipse at center, ${accentColor}12 0%, transparent 70%)`,
+                        filter: "blur(8px)",
+                    }} />
+                </div>
+            )}
             <div id="sticky-header" className="sticky top-0 z-40 border-b-4 border-(--outline)">
                 <TopBar navbarLayout={navbarLayout} toggleNavbarLayout={toggleNavbarLayout} />
                 {gameData && sectionsMap && navbarLayout === "horizontal" && (

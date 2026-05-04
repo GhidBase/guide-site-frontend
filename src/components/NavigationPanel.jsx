@@ -2771,6 +2771,18 @@ export default function NavigationPanel() {
                                         ))}
                                     </div>
 
+                                    {/* Ambient flares toggle */}
+                                    <label className="flex items-center justify-between gap-3 cursor-pointer">
+                                        <div className="flex flex-col">
+                                            <span className="text-sm font-semibold text-(--accent-text)">Ambient Flares</span>
+                                            <span className="text-xs text-(--text-color) opacity-70">Glow effects on page sides</span>
+                                        </div>
+                                        <input type="checkbox" className="sr-only" checked={bg.ambientFlares ?? true} onChange={() => handleBackgroundChange("ambientFlares", !(bg.ambientFlares ?? true))} />
+                                        <div className={`shrink-0 w-9 h-5 rounded-full flex items-center px-0.5 transition-colors ${(bg.ambientFlares ?? true) ? "bg-(--primary)" : "bg-(--outline)"}`}>
+                                            <div className={`w-4 h-4 bg-white rounded-full shadow transition-all ${(bg.ambientFlares ?? true) ? "ml-auto" : ""}`} />
+                                        </div>
+                                    </label>
+
                                     {/* Solid */}
                                     {(bg.type ?? "solid") === "solid" && (
                                         <p className="text-xs text-(--text-color) opacity-50 italic">Uses the Surface color defined in the Colors section above.</p>

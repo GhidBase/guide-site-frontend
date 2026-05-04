@@ -90,6 +90,7 @@ export const BACKGROUND_DEFAULTS = {
     imageOverlayColor: "#1a0d07",
     gradientAnimation: "none",
     gradientAnimationSpeed: 8,
+    ambientFlares: true,
 };
 
 export function computeBackground(bg, colors) {
