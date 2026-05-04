@@ -1,9 +1,10 @@
 import ldgLogo from "../assets/LDG_Title.webp";
 import discordLogo from "../assets/icons8-discord-50.png";
 import { useRouteLoaderData, useNavigate, Link, useMatches } from "react-router";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../hooks/useAuth";
-import { PanelTop, PanelLeft, Sun, Moon, LogOut, LogIn, Pencil, Eye, Settings } from "lucide-react";
+import { PanelTop, PanelLeft, Sun, Moon, LogOut, LogIn, Pencil, Eye, Settings, ChevronDown } from "lucide-react";
+import { currentAPI } from "../config/api.js";
 import { useDarkMode } from "../contexts/ThemeProvider.jsx";
 import { useEditMode, useSaving } from "../contexts/EditModeContext.jsx";
 import { useGlassBarStyle } from "../hooks/useGlassBarStyle.js";
@@ -107,9 +108,88 @@ function BarAdminControls({ isLDG, gameData }) {
     );
 }
 
+// ── Game switcher ────────────────────────────────────────────────────────────
+
+function GameSwitcher({ gameData, isLDG }) {
+    const [open, setOpen] = useState(false);
+    const [games, setGames] = useState(null);
+    const ref = useRef(null);
+
+    useEffect(() => {
+        if (open && !games) {
+            fetch(`${currentAPI}/games`)
+                .then(r => r.json())
+                .then(data => setGames(data.filter(g => g.isActive && g.slug)))
+                .catch(() => setGames([]));
+        }
+    }, [open]);
+
+    useEffect(() => {
+        if (!open) return;
+        function onDown(e) {
+            if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+        }
+        document.addEventListener("mousedown", onDown);
+        return () => document.removeEventListener("mousedown", onDown);
+    }, [open]);
+
+    const label = isLDG ? null : (gameData?.title ?? "GuideCodex");
+
+    return (
+        <div ref={ref} style={{ position: "relative", flexShrink: 0 }}>
+            <button
+                onClick={() => setOpen(o => !o)}
+                style={{ display: "flex", alignItems: "center", gap: "0.25rem", background: "none", border: "none", color: "inherit", cursor: "pointer", padding: 0 }}
+            >
+                {isLDG ? (
+                    <img src={ldgLogo} style={{ height: "2rem", objectFit: "contain" }} alt="Lucky Defense Guides" />
+                ) : (
+                    <span style={{ fontWeight: 700, fontSize: "1.1rem", letterSpacing: "0.01em" }}>{label}</span>
+                )}
+                <ChevronDown size={13} style={{ opacity: 0.5, transition: "transform 0.2s", transform: open ? "rotate(180deg)" : "rotate(0deg)", marginTop: isLDG ? 0 : "1px" }} />
+            </button>
+
+            {open && (
+                <div style={{
+                    position: "absolute", top: "calc(100% + 8px)", left: 0, zIndex: 1000,
+                    minWidth: "160px", borderRadius: "8px", overflow: "hidden",
+                    background: "var(--surface-background)",
+                    border: "1px solid var(--outline)",
+                    boxShadow: "0 8px 24px rgba(0,0,0,0.3)",
+                }}>
+                    {!games ? (
+                        <div style={{ padding: "0.6rem 1rem", fontSize: "0.8rem", opacity: 0.5 }}>Loading…</div>
+                    ) : games.length === 0 ? (
+                        <div style={{ padding: "0.6rem 1rem", fontSize: "0.8rem", opacity: 0.5 }}>No games found</div>
+                    ) : (
+                        games.map(g => (
+                            <Link
+                                key={g.id}
+                                to={`/games/${g.slug}`}
+                                onClick={() => setOpen(false)}
+                                style={{
+                                    display: "block", padding: "0.55rem 1rem",
+                                    fontSize: "0.85rem", color: "inherit", textDecoration: "none",
+                                    fontWeight: g.id === gameData?.id ? 600 : 400,
+                                    background: g.id === gameData?.id ? "color-mix(in srgb, var(--primary) 15%, transparent)" : "transparent",
+                                    transition: "background 0.15s",
+                                }}
+                                onMouseEnter={e => { if (g.id !== gameData?.id) e.currentTarget.style.background = "color-mix(in srgb, var(--primary) 8%, transparent)"; }}
+                                onMouseLeave={e => { e.currentTarget.style.background = g.id === gameData?.id ? "color-mix(in srgb, var(--primary) 15%, transparent)" : "transparent"; }}
+                            >
+                                {g.title}
+                            </Link>
+                        ))
+                    )}
+                </div>
+            )}
+        </div>
+    );
+}
+
 // ── Main component ───────────────────────────────────────────────────────────
 
-const BAR_STYLE = { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.6rem 1rem", position: "relative" };
+const BAR_STYLE = { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.6rem 1rem", position: "relative", zIndex: 1 };
 
 export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
     const { pageData, pageSlug, gameData, sectionsMap, isLDG } = useRouteLoaderData("main");
@@ -144,20 +224,9 @@ export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
 
     return (
         <div style={{ ...glassStyle, ...BAR_STYLE }}>
-            {/* Left: logo + page title */}
+            {/* Left: game switcher + page title */}
             <div style={{ display: "flex", alignItems: isLDG ? "center" : "baseline", gap: "0.6rem", minWidth: 0 }}>
-                <Link
-                    to={gameData ? (isLDG ? "/" : "/games/" + gameData.slug) : "/"}
-                    style={{ display: "flex", alignItems: "center", flexShrink: 0, color: "inherit", textDecoration: "none" }}
-                >
-                    {isLDG ? (
-                        <img src={ldgLogo} style={{ height: "2rem", objectFit: "contain" }} alt="Lucky Defense Guides" />
-                    ) : (
-                        <span style={{ fontWeight: 700, fontSize: "1.1rem", letterSpacing: "0.01em" }}>
-                            {gameData?.title ?? "GuideCodex"}
-                        </span>
-                    )}
-                </Link>
+                <GameSwitcher gameData={gameData} isLDG={isLDG} />
                 {pageTitle && !isLDGHomepage && (
                     <span style={{ fontSize: "0.85rem", opacity: 0.6 }} className="truncate">
                         / {pageTitle}

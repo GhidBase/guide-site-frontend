@@ -65,6 +65,7 @@ export default function GameManager() {
                             title={game.title}
                             slug={game.slug}
                             id={game.id}
+                            isActive={game.isActive}
                             key={game.id}
                         />
                     );
