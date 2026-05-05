@@ -30,7 +30,7 @@ const ImageTextBlock = forwardRef(function ImageTextBlock(
     };
 
     const [data, setData] = useState(() => {
-        const empty = { sectionLabel: "", cards: [DEFAULT_CARD] };
+        const empty = { sectionLabel: "", blockSpacing: 0, cards: [DEFAULT_CARD] };
         if (!block.content) return empty;
         if (typeof block.content === "object") {
             if (block.content.type === "richText" && typeof block.content.content === "string") {
@@ -81,7 +81,7 @@ const ImageTextBlock = forwardRef(function ImageTextBlock(
         onDirty?.(block.id, true);
     }
 
-    const { cards = [], sectionLabel = "" } = data;
+    const { cards = [], sectionLabel = "", blockSpacing = 0 } = data;
 
     // Which card is currently using the image picker
     const [pickerCardId, setPickerCardId] = useState(null);
@@ -174,7 +174,7 @@ const ImageTextBlock = forwardRef(function ImageTextBlock(
                 }
             `}</style>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", padding: adminMode ? "0.5rem 0 0" : "0.5rem 0" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", padding: adminMode ? "0.5rem 0 0" : "0.5rem 0", marginBottom: `${blockSpacing}rem` }}>
                 {/* Section label */}
                 {(sectionLabel || adminMode) && (
                     <div className="itb-section-label" style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
@@ -205,8 +205,23 @@ const ImageTextBlock = forwardRef(function ImageTextBlock(
                     </div>
                 )}
 
+                {/* Block-level gap control — admin only */}
+                {adminMode && (
+                    <div style={{ display: "flex", alignItems: "center", gap: "1rem", fontSize: "0.7rem", color: "rgba(232,213,183,0.45)", padding: "0 0.25rem", flexWrap: "wrap" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                            <span>Block spacing</span>
+                            <input
+                                type="range" min={0} max={8} step={0.25} value={blockSpacing}
+                                onChange={e => { setData(p => ({ ...p, blockSpacing: Number(e.target.value) })); onDirty?.(block.id, true); }}
+                                style={{ width: "90px", cursor: "pointer" }}
+                            />
+                            <span style={{ minWidth: "2.5rem" }}>{blockSpacing}rem</span>
+                        </div>
+                    </div>
+                )}
+
                 {/* Cards */}
-                <div style={{ display: "flex", flexDirection: "column", gap: adminMode ? "2rem" : "1.5rem" }}>
+                <div className="itb-cards-list" style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
                     {cards.map((card, i) => {
                         const isEven = i % 2 === 0;
                         const imageIsLeft = card.imageSide === "right" ? false : card.imageSide === "left" ? true : isEven;
