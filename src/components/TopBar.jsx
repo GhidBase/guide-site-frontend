@@ -114,6 +114,7 @@ function GameSwitcher({ gameData, isLDG }) {
     const [open, setOpen] = useState(false);
     const [games, setGames] = useState(null);
     const ref = useRef(null);
+    const closeTimer = useRef(null);
 
     useEffect(() => {
         if (open && !games) {
@@ -124,21 +125,23 @@ function GameSwitcher({ gameData, isLDG }) {
         }
     }, [open]);
 
-    useEffect(() => {
-        if (!open) return;
-        function onDown(e) {
-            if (ref.current && !ref.current.contains(e.target)) setOpen(false);
-        }
-        document.addEventListener("mousedown", onDown);
-        return () => document.removeEventListener("mousedown", onDown);
-    }, [open]);
+    function handleEnter() {
+        clearTimeout(closeTimer.current);
+        setOpen(true);
+    }
+
+    function handleLeave() {
+        closeTimer.current = setTimeout(() => setOpen(false), 120);
+    }
 
     const label = isLDG ? null : (gameData?.title ?? "GuideCodex");
 
     return (
-        <div ref={ref} style={{ position: "relative", flexShrink: 0 }}>
+        <div ref={ref} style={{ position: "relative", flexShrink: 0 }}
+            onMouseEnter={handleEnter}
+            onMouseLeave={handleLeave}
+        >
             <button
-                onClick={() => setOpen(o => !o)}
                 style={{ display: "flex", alignItems: "center", gap: "0.25rem", background: "none", border: "none", color: "inherit", cursor: "pointer", padding: 0 }}
             >
                 {isLDG ? (
@@ -149,13 +152,16 @@ function GameSwitcher({ gameData, isLDG }) {
                 <ChevronDown size={13} style={{ opacity: 0.5, transition: "transform 0.2s", transform: open ? "rotate(180deg)" : "rotate(0deg)", marginTop: isLDG ? 0 : "1px" }} />
             </button>
 
-            {open && (
-                <div style={{
-                    position: "absolute", top: "calc(100% + 8px)", left: 0, zIndex: 1000,
-                    minWidth: "160px", borderRadius: "8px", overflow: "hidden",
+            <div style={{
+                    position: "absolute", top: "calc(100% + 6px)", left: 0, zIndex: 1000,
+                    minWidth: "210px", borderRadius: "10px", overflow: "hidden",
                     background: "var(--surface-background)",
                     border: "1px solid var(--outline)",
-                    boxShadow: "0 8px 24px rgba(0,0,0,0.3)",
+                    boxShadow: "0 12px 32px rgba(0,0,0,0.25)",
+                    opacity: open ? 1 : 0,
+                    transform: open ? "translateY(0)" : "translateY(-6px)",
+                    pointerEvents: open ? "auto" : "none",
+                    transition: "opacity 0.18s ease, transform 0.18s ease",
                 }}>
                     {!games ? (
                         <div style={{ padding: "0.6rem 1rem", fontSize: "0.8rem", opacity: 0.5 }}>Loading…</div>
@@ -182,7 +188,6 @@ function GameSwitcher({ gameData, isLDG }) {
                         ))
                     )}
                 </div>
-            )}
         </div>
     );
 }
