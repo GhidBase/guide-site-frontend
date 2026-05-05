@@ -108,23 +108,15 @@ export default function PageBuilder() {
     }
 
     async function saveAllChanges() {
-        const failed = [];
-        for (const id of dirtyBlocks) {
-            const ref = blockRefs.current[id];
-            if (!ref) {
-                console.warn(`Ref is null for block ${id} — skipping`);
-                continue;
-            }
-            try {
-                await ref.save();
-            } catch (err) {
-                console.error(`Failed to save block ${id}:`, err);
-                failed.push(id);
-            }
-        }
-        if (failed.length > 0) {
-            throw new Error(`${failed.length} block(s) failed to save. Please try again.`);
-        }
+        const results = await Promise.allSettled(
+            [...dirtyBlocks].map(id => {
+                const ref = blockRefs.current[id];
+                if (!ref) return Promise.resolve();
+                return ref.save();
+            })
+        );
+        const failed = results.filter(r => r.status === "rejected").length;
+        if (failed > 0) throw new Error(`${failed} block(s) failed to save. Please try again.`);
     }
 
     useEffect(() => {
