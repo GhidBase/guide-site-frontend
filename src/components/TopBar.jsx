@@ -168,24 +168,32 @@ function GameSwitcher({ gameData, isLDG }) {
                     ) : games.length === 0 ? (
                         <div style={{ padding: "0.6rem 1rem", fontSize: "0.8rem", opacity: 0.5 }}>No games found</div>
                     ) : (
-                        games.map(g => (
-                            <Link
-                                key={g.id}
-                                to={`/games/${g.slug}`}
-                                onClick={() => setOpen(false)}
-                                style={{
-                                    display: "block", padding: "0.55rem 1rem",
-                                    fontSize: "0.85rem", color: "inherit", textDecoration: "none",
-                                    fontWeight: g.id === gameData?.id ? 600 : 400,
-                                    background: g.id === gameData?.id ? "color-mix(in srgb, var(--primary) 15%, transparent)" : "transparent",
-                                    transition: "background 0.15s",
-                                }}
-                                onMouseEnter={e => { if (g.id !== gameData?.id) e.currentTarget.style.background = "color-mix(in srgb, var(--primary) 8%, transparent)"; }}
-                                onMouseLeave={e => { e.currentTarget.style.background = g.id === gameData?.id ? "color-mix(in srgb, var(--primary) 15%, transparent)" : "transparent"; }}
-                            >
-                                {g.title}
-                            </Link>
-                        ))
+                        games.map(g => {
+                            const isLDGGame = g.slug === "lucky-defense";
+                            const isActive = g.id === gameData?.id;
+                            const href = isLDG
+                                ? (isLDGGame ? "/" : `https://guidecodex.com/games/${g.slug}`)
+                                : (isLDGGame ? "https://luckydefenseguides.com/" : `/games/${g.slug}`);
+                            const external = isLDG ? !isLDGGame : isLDGGame;
+                            const itemStyle = {
+                                display: "block", padding: "0.55rem 1rem",
+                                fontSize: "0.85rem", color: "inherit", textDecoration: "none",
+                                fontWeight: isActive ? 600 : 400,
+                                background: isActive ? "color-mix(in srgb, var(--primary) 15%, transparent)" : "transparent",
+                                transition: "background 0.15s",
+                            };
+                            const hoverIn = e => { if (!isActive) e.currentTarget.style.background = "color-mix(in srgb, var(--primary) 8%, transparent)"; };
+                            const hoverOut = e => { e.currentTarget.style.background = isActive ? "color-mix(in srgb, var(--primary) 15%, transparent)" : "transparent"; };
+                            return external ? (
+                                <a key={g.id} href={href} style={itemStyle} onMouseEnter={hoverIn} onMouseLeave={hoverOut}>
+                                    {g.title}
+                                </a>
+                            ) : (
+                                <Link key={g.id} to={href} onClick={() => setOpen(false)} style={itemStyle} onMouseEnter={hoverIn} onMouseLeave={hoverOut}>
+                                    {g.title}
+                                </Link>
+                            );
+                        })
                     )}
                 </div>
         </div>
