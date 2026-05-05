@@ -13,44 +13,28 @@ export function EditModeProvider({ children }) {
         <EditModeContext.Provider value={{ adminMode, setAdminMode, dirtyBlocks, setDirtyBlocks, saveAll, setSaveAll }}>
             <SavingContext.Provider value={{ isSaving, setIsSaving }}>
                 {isSaving && (
-                    <div
-                        style={{
-                            position: "fixed",
-                            inset: 0,
-                            zIndex: 9999,
-                            background: "rgba(0,0,0,0.45)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            pointerEvents: "all",
-                        }}
-                    >
-                        <div
-                            style={{
-                                background: "var(--accent, #1e1e1e)",
-                                color: "var(--accent-text, #fff)",
-                                borderRadius: "12px",
-                                padding: "1.5rem 2.5rem",
-                                display: "flex",
-                                flexDirection: "column",
-                                alignItems: "center",
-                                gap: "0.75rem",
-                                boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
-                            }}
-                        >
-                            <svg
-                                width="36"
-                                height="36"
-                                viewBox="0 0 36 36"
-                                fill="none"
-                                style={{ animation: "spin 0.8s linear infinite" }}
-                            >
-                                <circle cx="18" cy="18" r="14" stroke="currentColor" strokeOpacity="0.2" strokeWidth="4" />
-                                <path d="M32 18a14 14 0 0 0-14-14" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-                                <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-                            </svg>
-                            <span style={{ fontWeight: 600, fontSize: "1rem" }}>Saving…</span>
-                        </div>
+                    <div style={{
+                        position: "fixed", bottom: "1.5rem", left: "50%", transform: "translateX(-50%)",
+                        zIndex: 9999, pointerEvents: "none",
+                        display: "flex", alignItems: "center", gap: "0.6rem",
+                        background: "rgba(10, 20, 12, 0.92)",
+                        border: "1px solid rgba(74, 222, 128, 0.25)",
+                        borderRadius: "8px",
+                        padding: "0.55rem 1rem",
+                        boxShadow: "0 4px 24px rgba(0,0,0,0.5), 0 0 0 1px rgba(74,222,128,0.08)",
+                        backdropFilter: "blur(12px)",
+                        color: "rgba(74, 222, 128, 0.9)",
+                        fontSize: "0.8rem",
+                        fontWeight: 500,
+                        letterSpacing: "0.01em",
+                        whiteSpace: "nowrap",
+                    }}>
+                        <style>{`@keyframes saving-spin { to { transform: rotate(360deg); } }`}</style>
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ animation: "saving-spin 0.8s linear infinite", flexShrink: 0 }}>
+                            <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeOpacity="0.25" strokeWidth="2" />
+                            <path d="M12.5 7a5.5 5.5 0 0 0-5.5-5.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                        </svg>
+                        Saving…
                     </div>
                 )}
                 {children}
