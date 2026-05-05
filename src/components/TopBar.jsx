@@ -213,7 +213,7 @@ export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
                 <span style={{ fontSize: "0.72rem", letterSpacing: "0.32em", textTransform: "uppercase", opacity: 0.6, fontWeight: 700, textShadow: "0 0 20px rgba(232,213,183,0.3)" }}>
                     GuideCodex
                 </span>
-                <div className="hidden lg:flex" style={{ alignItems: "center", gap: "0.75rem" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
                     <BarAdminControls isLDG={isLDG} gameData={gameData} />
                     <BarDarkToggle />
                     <BarAuth showUsername={false} />

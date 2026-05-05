@@ -1,7 +1,7 @@
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { Trash2 } from "lucide-react";
 
-const EMPTY = { title: "", subtitle: "", backgroundUrl: "", accentColor: "#9b6a4e" };
+const EMPTY = { title: "", subtitle: "", backgroundUrl: "", accentColor: "#9b6a4e", offset: 0 };
 
 function parse(content) {
     if (!content) return { ...EMPTY };
@@ -21,6 +21,7 @@ const HeroTextBlock = forwardRef(function HeroTextBlock(
     ref,
 ) {
     const [data, setData] = useState(() => parse(block.content));
+    const [saving, setSaving] = useState(false);
 
     useImperativeHandle(ref, () => ({
         save: async () => {
@@ -34,7 +35,7 @@ const HeroTextBlock = forwardRef(function HeroTextBlock(
         onDirty?.(block.id, true);
     }
 
-    const { title, subtitle, backgroundUrl, accentColor } = data;
+    const { title, subtitle, backgroundUrl, accentColor, offset = 0 } = data;
 
     const inputBase = {
         background: "transparent",
@@ -86,6 +87,18 @@ const HeroTextBlock = forwardRef(function HeroTextBlock(
                             onChange={e => update({ accentColor: e.target.value })}
                             style={{ height: "18px", width: "28px", border: "none", background: "none", cursor: "pointer", padding: 0 }}
                         />
+                        <div style={{ width: "1px", height: "14px", background: "rgba(232,213,183,0.2)" }} />
+                        <button
+                            onClick={async () => { setSaving(true); await updateBlockContent(block, data); onDirty?.(block.id, false); setSaving(false); }}
+                            style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(130,220,130,0.8)", fontSize: "0.7rem", padding: 0 }}
+                        >{saving ? "Saving…" : "Save"}</button>
+                        <div style={{ width: "1px", height: "14px", background: "rgba(232,213,183,0.2)" }} />
+                        <label style={{ fontSize: "0.65rem", opacity: 0.5, color: "#e8d5b7" }}>Offset</label>
+                        <input
+                            type="range" min={0} max={80} step={1} value={offset}
+                            onChange={e => update({ offset: Number(e.target.value) })}
+                            style={{ width: "70px", cursor: "pointer", accentColor }}
+                        />
                         {canDelete && (
                             <>
                                 <div style={{ width: "1px", height: "14px", background: "rgba(232,213,183,0.2)" }} />
@@ -103,11 +116,11 @@ const HeroTextBlock = forwardRef(function HeroTextBlock(
                         value={title}
                         onChange={e => update({ title: e.target.value })}
                         placeholder="Title"
-                        style={{ ...inputBase, color: "#f5ede0", textShadow: `0 4px 60px ${accentColor}44` }}
+                        style={{ ...inputBase, color: "#f5ede0", textShadow: `0 4px 60px ${accentColor}44`, position: "relative", left: `-${offset * 0.025}em` }}
                     />
                 ) : (
                     title && (
-                        <h1 className="m-0 font-black leading-none tracking-tight" style={{ fontSize: "clamp(3rem, 10vw, 7rem)", letterSpacing: "-0.04em", color: "#f5ede0", textShadow: `0 4px 60px ${accentColor}44` }}>
+                        <h1 className="m-0 font-black leading-none tracking-tight" style={{ fontSize: "clamp(3rem, 10vw, 7rem)", letterSpacing: "-0.04em", color: "#f5ede0", textShadow: `0 4px 60px ${accentColor}44`, position: "relative", left: `-${offset * 0.025}em` }}>
                             {title}
                         </h1>
                     )
@@ -119,11 +132,11 @@ const HeroTextBlock = forwardRef(function HeroTextBlock(
                         value={subtitle}
                         onChange={e => update({ subtitle: e.target.value })}
                         placeholder="Subtitle"
-                        style={{ ...inputBase, color: accentColor, textShadow: `0 4px 60px ${accentColor}66` }}
+                        style={{ ...inputBase, color: accentColor, textShadow: `0 4px 60px ${accentColor}66`, position: "relative", left: `${offset * 0.025}em` }}
                     />
                 ) : (
                     subtitle && (
-                        <h1 className="m-0 font-black leading-none tracking-tight" style={{ fontSize: "clamp(3rem, 10vw, 7rem)", letterSpacing: "-0.04em", color: accentColor, textShadow: `0 4px 60px ${accentColor}66` }}>
+                        <h1 className="m-0 font-black leading-none tracking-tight" style={{ fontSize: "clamp(3rem, 10vw, 7rem)", letterSpacing: "-0.04em", color: accentColor, textShadow: `0 4px 60px ${accentColor}66`, position: "relative", left: `${offset * 0.025}em` }}>
                             {subtitle}
                         </h1>
                     )
