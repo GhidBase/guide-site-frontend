@@ -227,6 +227,16 @@ export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
                     GuideCodex
                 </span>
                 <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                    {adminMode && dirtyBlocks.size > 0 && saveAll && (
+                        <button
+                            onClick={async () => { setIsSaving(true); try { await saveAll(); } catch (err) { alert(err.message); } finally { setIsSaving(false); } }}
+                            style={{ cursor: "pointer", background: "rgba(21,128,61,0.55)", border: "none", color: "#fff", borderRadius: "4px", padding: "0.25rem 0.6rem", fontSize: "0.75rem", fontWeight: 600 }}
+                            onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(21,128,61,0.8)")}
+                            onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(21,128,61,0.55)")}
+                        >
+                            Save ({dirtyBlocks.size})
+                        </button>
+                    )}
                     <BarAdminControls isLDG={isLDG} gameData={gameData} />
                     <BarDarkToggle />
                     <BarAuth showUsername={false} />
