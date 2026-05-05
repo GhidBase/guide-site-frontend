@@ -16,6 +16,77 @@ import { useEditMode } from "../contexts/EditModeContext.jsx";
 import PendingReviewNotification from "./notifications/PendingReviewNotification";
 import Comments from "./comments/Comments";
 
+function AddBlockBar({ blockDefs, top }) {
+    const [open, setOpen] = useState(false);
+    const ref = useRef(null);
+
+    useEffect(() => {
+        if (!open) return;
+        function onDown(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }
+        document.addEventListener("mousedown", onDown);
+        return () => document.removeEventListener("mousedown", onDown);
+    }, [open]);
+
+    const stripStyle = {
+        display: "flex", overflowX: "auto", width: "100%", scrollbarWidth: "none",
+        background: "var(--accent)", marginTop: top ? "1rem" : 0, marginBottom: top ? 0 : "1rem",
+        border: "1px solid color-mix(in srgb, var(--outline-brown) 50%, transparent)",
+        borderRadius: top ? "6px 6px 0 0" : "0 0 6px 6px",
+        borderTop: top ? undefined : "none",
+    };
+    const btnStyle = {
+        flexShrink: 0, padding: "0.4rem 0.75rem", fontSize: "0.75rem", whiteSpace: "nowrap",
+        background: "none", border: "none", cursor: "pointer", color: "var(--text-color)",
+        borderRight: "1px solid color-mix(in srgb, var(--outline-brown) 25%, transparent)",
+    };
+
+    return (
+        <>
+            {/* Desktop: horizontal strip */}
+            <div className="hidden md:flex" style={stripStyle}>
+                {blockDefs.map(([label, fn]) => (
+                    <button key={label} onClick={async () => { await fn(); }} style={btnStyle}>+ {label}</button>
+                ))}
+            </div>
+
+            {/* Mobile: single button + popover grid */}
+            <div ref={ref} className="md:hidden" style={{ position: "relative", marginTop: top ? "0.75rem" : 0, marginBottom: top ? 0 : "0.75rem" }}>
+                <button
+                    onClick={() => setOpen(o => !o)}
+                    style={{
+                        width: "100%", padding: "0.45rem", fontSize: "0.8rem", fontWeight: 600,
+                        background: "var(--accent)", color: "var(--text-color)", cursor: "pointer",
+                        border: "1px solid color-mix(in srgb, var(--outline-brown) 50%, transparent)",
+                        borderRadius: top ? "6px 6px 0 0" : "0 0 6px 6px",
+                        borderTop: top ? undefined : "none",
+                    }}
+                >
+                    + Add Block {open ? "▲" : "▼"}
+                </button>
+                {open && (
+                    <div style={{
+                        position: "absolute", [top ? "top" : "bottom"]: "100%", left: 0, right: 0, zIndex: 50,
+                        display: "grid", gridTemplateColumns: "1fr 1fr 1fr",
+                        background: "var(--accent)",
+                        border: "1px solid color-mix(in srgb, var(--outline-brown) 50%, transparent)",
+                        borderRadius: "6px", overflow: "hidden",
+                        boxShadow: "0 8px 24px rgba(0,0,0,0.3)",
+                    }}>
+                        {blockDefs.map(([label, fn]) => (
+                            <button key={label} onClick={async () => { setOpen(false); await fn(); }} style={{
+                                padding: "0.65rem 0.4rem", fontSize: "0.72rem", textAlign: "center",
+                                background: "none", border: "none", cursor: "pointer", color: "var(--text-color)",
+                                borderRight: "1px solid color-mix(in srgb, var(--outline-brown) 20%, transparent)",
+                                borderBottom: "1px solid color-mix(in srgb, var(--outline-brown) 20%, transparent)",
+                            }}>+ {label}</button>
+                        ))}
+                    </div>
+                )}
+            </div>
+        </>
+    );
+}
+
 export default function PageBuilder() {
     const { pageData, gameData, isLDG } = useRouteLoaderData("main");
     const gameSlug = gameData?.slug;
@@ -103,21 +174,18 @@ export default function PageBuilder() {
 
     function makeButtons(order) {
         if (!adminMode || !isAdmin) return null;
-        const cls = "flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer";
-        const last = "flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) cursor-pointer";
-        return (
-            <div className="flex w-full bg-(--accent) border border-t-0 border-(--outline-brown)/50 md:rounded-b mb-4">
-                <button onClick={async () => { await addBlock({ nextOrder: order + 1 }); }} className={cls}>+ Text Block</button>
-                <button onClick={async () => { await addBlock({ nextOrder: order + 1, type: "single-image" }); }} className={cls}>+ Image Block</button>
-                <button onClick={async () => { await addBlock({ nextOrder: order + 1, type: "tier-list" }); }} className={cls}>+ Tier List Block</button>
-                <button onClick={async () => { await addBlock({ nextOrder: order + 1, type: "board-builder" }); }} className={cls}>+ Board Builder Block</button>
-                <button onClick={async () => { await addBlock({ nextOrder: order + 1, type: "image-text" }); }} className={cls}>+ Image Text Block</button>
-                <button onClick={async () => { await addBlock({ nextOrder: order + 1, type: "inline-image" }); }} className={cls}>+ Inline Image Block</button>
-                <button onClick={async () => { await addBlock({ nextOrder: order + 1, type: "hero-text" }); }} className={cls}>+ Hero Text Block</button>
-                <button onClick={async () => { await addBlock({ nextOrder: order + 1, type: "checklist" }); }} className={cls}>+ Checklist Block</button>
-                <button onClick={async () => { await addCollapsibleSection(order + 1); }} className={last}>+ Collapsible Section</button>
-            </div>
-        );
+        const blockDefs = [
+            ["Text", () => addBlock({ nextOrder: order + 1 })],
+            ["Image", () => addBlock({ nextOrder: order + 1, type: "single-image" })],
+            ["Tier List", () => addBlock({ nextOrder: order + 1, type: "tier-list" })],
+            ["Board Builder", () => addBlock({ nextOrder: order + 1, type: "board-builder" })],
+            ["Image Text", () => addBlock({ nextOrder: order + 1, type: "image-text" })],
+            ["Inline Image", () => addBlock({ nextOrder: order + 1, type: "inline-image" })],
+            ["Hero Text", () => addBlock({ nextOrder: order + 1, type: "hero-text" })],
+            ["Checklist", () => addBlock({ nextOrder: order + 1, type: "checklist" })],
+            ["Collapsible", () => addCollapsibleSection(order + 1)],
+        ];
+        return <AddBlockBar key={order} blockDefs={blockDefs} top={false} />;
     }
 
     function renderBlockComponent(block) {
@@ -266,17 +334,17 @@ export default function PageBuilder() {
                 onDismiss={() => setShowPendingNotification(false)}
             />
             {adminMode && isAdmin && (
-                <div className="flex w-full bg-(--accent) border border-(--outline-brown)/50 md:rounded-t mt-4 mb-0">
-                    <button onClick={async () => { await addBlock({ nextOrder: 0 }); }} className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer">+ Text Block</button>
-                    <button onClick={async () => { await addBlock({ nextOrder: 0, type: "single-image" }); }} className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer">+ Image Block</button>
-                    <button onClick={async () => { await addBlock({ nextOrder: 0, type: "tier-list" }); }} className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer">+ Tier List Block</button>
-                    <button onClick={async () => { await addBlock({ nextOrder: 0, type: "board-builder" }); }} className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer">+ Board Builder Block</button>
-                    <button onClick={async () => { await addBlock({ nextOrder: 0, type: "image-text" }); }} className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer">+ Image Text Block</button>
-                    <button onClick={async () => { await addBlock({ nextOrder: 0, type: "inline-image" }); }} className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer">+ Inline Image Block</button>
-                    <button onClick={async () => { await addBlock({ nextOrder: 0, type: "hero-text" }); }} className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer">+ Hero Text Block</button>
-                    <button onClick={async () => { await addBlock({ nextOrder: 0, type: "checklist" }); }} className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) border-r border-(--outline-brown)/25 cursor-pointer">+ Checklist Block</button>
-                    <button onClick={async () => { await addCollapsibleSection(0); }} className="flex-1 py-2 text-sm text-(--text-color) hover:bg-(--surface-background) cursor-pointer">+ Collapsible Section</button>
-                </div>
+                <AddBlockBar blockDefs={[
+                    ["Text", () => addBlock({ nextOrder: 0 })],
+                    ["Image", () => addBlock({ nextOrder: 0, type: "single-image" })],
+                    ["Tier List", () => addBlock({ nextOrder: 0, type: "tier-list" })],
+                    ["Board Builder", () => addBlock({ nextOrder: 0, type: "board-builder" })],
+                    ["Image Text", () => addBlock({ nextOrder: 0, type: "image-text" })],
+                    ["Inline Image", () => addBlock({ nextOrder: 0, type: "inline-image" })],
+                    ["Hero Text", () => addBlock({ nextOrder: 0, type: "hero-text" })],
+                    ["Checklist", () => addBlock({ nextOrder: 0, type: "checklist" })],
+                    ["Collapsible", () => addCollapsibleSection(0)],
+                ]} top={true} />
             )}
             {groupBlocks(blocks.slice().sort((a, b) => a.order - b.order)).map(item => {
                 if (item._group) {
