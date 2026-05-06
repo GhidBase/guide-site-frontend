@@ -8,7 +8,7 @@ export default function ScrollToTop() {
 
     useEffect(() => {
         function onScroll() {
-            setVisible(window.scrollY > 300);
+            setVisible(window.scrollY > 200);
         }
         window.addEventListener("scroll", onScroll, { passive: true });
         return () => window.removeEventListener("scroll", onScroll);
@@ -20,7 +20,7 @@ export default function ScrollToTop() {
             aria-label="Scroll to top"
             style={{
                 position: "fixed",
-                bottom: "5rem",
+                bottom: "6rem",
                 right: "1.25rem",
                 zIndex: 50,
                 opacity: visible ? 1 : 0,
