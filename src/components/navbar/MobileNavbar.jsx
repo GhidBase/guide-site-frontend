@@ -9,7 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useDarkMode } from "../../contexts/ThemeProvider.jsx";
 
 export default function MobileNavbar({ toggleNav, navOpen }) {
-    console.log("navbar rendered");
+    if (import.meta.env.DEV) console.log("navbar rendered");
     const { gameData, sectionsMap } = useLoaderData();
     const sections = Array.from(sectionsMap.values());
     const [openedSections, setOpenedSections] = useState(new Set(sections[0] ? [sections[0].id] : []));
