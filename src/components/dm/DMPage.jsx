@@ -1,9 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router";
-import { Send, Trash2, ArrowLeft, Inbox } from "lucide-react";
+import { Send, Trash2, ArrowLeft, Inbox, MessageCircle } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { currentAPI } from "@/config/api";
-import { useDarkMode } from "../../contexts/ThemeProvider.jsx";
 
 const POLL_INTERVAL = 5000;
 
@@ -16,32 +15,84 @@ function timeAgo(dateStr) {
     return `${Math.floor(diff / 2592000)}mo ago`;
 }
 
+function Avatar({ name, size = 7 }) {
+    const initials = name?.slice(0, 2).toUpperCase() ?? "?";
+    const hue = [...(name ?? "")].reduce((acc, c) => acc + c.charCodeAt(0), 0) % 360;
+    return (
+        <div style={{
+            width: `${size * 4}px`, height: `${size * 4}px`, borderRadius: "50%", flexShrink: 0,
+            background: `hsl(${hue},35%,38%)`, display: "flex", alignItems: "center",
+            justifyContent: "center", fontSize: `${size * 1.5}px`, fontWeight: 700,
+            color: "rgba(255,255,255,0.9)", letterSpacing: "0.02em",
+        }}>
+            {initials}
+        </div>
+    );
+}
+
+const actionBtn = {
+    background: "color-mix(in srgb, var(--outline) 20%, transparent)",
+    border: "none", cursor: "pointer", color: "var(--text-color)",
+    borderRadius: "6px", padding: "0.25rem", display: "flex", alignItems: "center",
+};
+
 function MessageBubble({ msg, isOwn, isAdmin, onDelete }) {
     return (
-        <div className={`flex flex-col gap-0.5 ${isOwn ? "items-end" : "items-start"}`}>
-            <div className="flex items-center gap-1.5">
-                <span className="text-xs font-semibold text-(--accent-text)">{msg.senderUsername}</span>
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem", alignItems: isOwn ? "flex-end" : "flex-start" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", flexDirection: isOwn ? "row-reverse" : "row" }}>
+                <Avatar name={msg.senderUsername} size={5} />
+                <span style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--accent-text)", opacity: 0.85 }}>{msg.senderUsername}</span>
                 {msg.isFromAdmin && (
-                    <span className="text-[0.6rem] bg-(--primary) text-amber-50 px-1.5 py-0.5 rounded font-bold uppercase tracking-wide">Admin</span>
+                    <span style={{
+                        fontSize: "0.58rem", background: "var(--primary)", color: "rgba(255,237,213,0.95)",
+                        padding: "0.1rem 0.4rem", borderRadius: "4px", fontWeight: 700,
+                        letterSpacing: "0.06em", textTransform: "uppercase",
+                    }}>Admin</span>
                 )}
-                <span className="text-xs text-(--text-color) opacity-40">{timeAgo(msg.createdAt)}</span>
+                <span style={{ fontSize: "0.68rem", color: "var(--text-color)", opacity: 0.35 }}>{timeAgo(msg.createdAt)}</span>
             </div>
-            <div className={`group flex items-end gap-1.5 ${isOwn ? "flex-row-reverse" : ""}`}>
-                <div className={`max-w-xs sm:max-w-md px-3 py-2 rounded-2xl text-sm whitespace-pre-wrap break-words leading-relaxed
-                    ${isOwn ? "bg-(--primary) text-amber-50 rounded-br-sm" : "bg-(--accent) text-(--accent-text) rounded-bl-sm"}`}>
+            <div style={{ display: "flex", alignItems: "flex-end", gap: "0.4rem", flexDirection: isOwn ? "row-reverse" : "row" }}
+                className="group">
+                <div style={{
+                    maxWidth: "min(72%, 28rem)", padding: "0.55rem 0.9rem",
+                    borderRadius: isOwn ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
+                    fontSize: "0.85rem", lineHeight: 1.55, whiteSpace: "pre-wrap", wordBreak: "break-word",
+                    background: isOwn
+                        ? "var(--primary)"
+                        : "color-mix(in srgb, var(--accent) 90%, var(--primary) 10%)",
+                    color: isOwn ? "rgba(255,244,230,0.97)" : "var(--accent-text)",
+                    boxShadow: isOwn
+                        ? "0 2px 12px color-mix(in srgb, var(--primary) 35%, transparent)"
+                        : "0 2px 8px rgba(0,0,0,0.15)",
+                    border: isOwn ? "none" : "1px solid color-mix(in srgb, var(--outline) 30%, transparent)",
+                }}>
                     {msg.text}
                 </div>
                 {isAdmin && (
-                    <button
-                        onClick={() => onDelete(msg.id)}
-                        title="Delete"
-                        className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-100 text-red-400 cursor-pointer transition-opacity"
-                    >
-                        <Trash2 className="w-3.5 h-3.5" />
+                    <button onClick={() => onDelete(msg.id)} title="Delete"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity"
+                        style={{ ...actionBtn, color: "rgba(248,113,113,0.8)" }}>
+                        <Trash2 size={13} />
                     </button>
                 )}
             </div>
         </div>
+    );
+}
+
+function BackButton({ navigate }) {
+    return (
+        <button onClick={() => navigate(-1)} title="Go back" style={{
+            background: "none", border: "none", cursor: "pointer",
+            color: "var(--text-color)", padding: "0.25rem", borderRadius: "8px",
+            display: "flex", alignItems: "center", opacity: 0.5,
+            transition: "opacity 0.15s", flexShrink: 0,
+        }}
+            onMouseEnter={e => e.currentTarget.style.opacity = "1"}
+            onMouseLeave={e => e.currentTarget.style.opacity = "0.5"}
+        >
+            <ArrowLeft size={16} />
+        </button>
     );
 }
 
@@ -51,20 +102,33 @@ function ThreadView({ threadUserId, threadUsername, onBack, currentUser, isAdmin
     const [text, setText] = useState("");
     const [sending, setSending] = useState(false);
     const [cooldown, setCooldown] = useState(0);
-    const bottomRef = useRef(null);
+    const scrollRef = useRef(null);
     const inputRef = useRef(null);
     const isAtBottom = useRef(true);
     const cooldownRef = useRef(null);
+    const navigate = useNavigate();
 
     const url = isAdmin ? `${currentAPI}/dms/${threadUserId}` : `${currentAPI}/dms`;
 
+    function scrollToBottom(smooth = true) {
+        const el = scrollRef.current;
+        if (!el) return;
+        el.scrollTo({ top: el.scrollHeight, behavior: smooth ? "smooth" : "instant" });
+    }
+
+    const hasLoaded = useRef(false);
+
     const fetchMessages = useCallback(async (silent = false) => {
-        if (!silent) setLoading(true);
+        const firstLoad = !hasLoaded.current;
+        if (!silent && firstLoad) setLoading(true);
         try {
             const res = await fetch(url, { credentials: "include" });
             if (res.ok) setMessages(await res.json());
         } finally {
-            if (!silent) setLoading(false);
+            if (!silent && firstLoad) {
+                setLoading(false);
+                hasLoaded.current = true;
+            }
         }
     }, [url]);
 
@@ -78,7 +142,7 @@ function ThreadView({ threadUserId, threadUsername, onBack, currentUser, isAdmin
     }, [fetchMessages]);
 
     useEffect(() => {
-        if (isAtBottom.current) bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+        if (isAtBottom.current) scrollToBottom();
     }, [messages]);
 
     useEffect(() => {
@@ -118,7 +182,7 @@ function ThreadView({ threadUserId, threadUsername, onBack, currentUser, isAdmin
                 setMessages((prev) => [...prev, msg]);
                 setText("");
                 isAtBottom.current = true;
-                setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
+                setTimeout(() => scrollToBottom(), 50);
             }
         } finally {
             setSending(false);
@@ -132,62 +196,107 @@ function ThreadView({ threadUserId, threadUsername, onBack, currentUser, isAdmin
     }
 
     return (
-        <div className="flex flex-col h-full">
-            <div className="px-4 pt-4 pb-3 border-b-2 border-(--outline) flex items-center gap-3">
-                {onBack && (
-                    <button onClick={onBack} className="p-1 rounded hover:opacity-60 cursor-pointer text-(--text-color)">
-                        <ArrowLeft className="w-4 h-4" />
+        <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+            {/* Header */}
+            <div style={{
+                padding: "1rem 1.25rem 0.85rem",
+                borderBottom: "1px solid color-mix(in srgb, var(--outline) 25%, transparent)",
+                background: "color-mix(in srgb, var(--accent) 40%, transparent)",
+                backdropFilter: "blur(8px)",
+                display: "flex", alignItems: "center", gap: "0.75rem",
+            }}>
+                    {onBack ? (
+                    <button onClick={onBack} style={{
+                        background: "none", border: "none", cursor: "pointer",
+                        color: "var(--text-color)", padding: "0.25rem", borderRadius: "8px",
+                        display: "flex", alignItems: "center", opacity: 0.6,
+                        transition: "opacity 0.15s",
+                    }}
+                        onMouseEnter={e => e.currentTarget.style.opacity = "1"}
+                        onMouseLeave={e => e.currentTarget.style.opacity = "0.6"}
+                    >
+                        <ArrowLeft size={16} />
                     </button>
+                ) : (
+                    <BackButton navigate={navigate} />
                 )}
+                <Avatar name={isAdmin ? threadUsername : "Admin"} size={6} />
                 <div>
-                    <h2 className="text-base font-bold text-(--accent-text)">
+                    <h2 style={{ fontSize: "0.92rem", fontWeight: 700, color: "var(--accent-text)", margin: 0, lineHeight: 1.2 }}>
                         {isAdmin ? threadUsername : "Messages with Admins"}
                     </h2>
-                    <p className="text-xs text-(--text-color) opacity-50">
+                    <p style={{ fontSize: "0.68rem", color: "var(--text-color)", opacity: 0.45, margin: 0, marginTop: "0.1rem" }}>
                         {isAdmin ? "Admin view" : "Private — visible to all admins"}
                     </p>
                 </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3" onScroll={handleScroll}>
-                {loading && <p className="text-sm text-(--text-color) opacity-50 italic text-center">Loading...</p>}
+            {/* Messages */}
+            <div ref={scrollRef} onScroll={handleScroll} style={{
+                flex: 1, overflowY: "auto", padding: "1.25rem 1rem",
+                display: "flex", flexDirection: "column", gap: "0.85rem",
+                scrollbarWidth: "thin",
+                scrollbarColor: "color-mix(in srgb, var(--outline) 40%, transparent) transparent",
+            }}>
+                {loading && (
+                    <div style={{ display: "flex", justifyContent: "center", padding: "2rem" }}>
+                        <span style={{ fontSize: "0.8rem", color: "var(--text-color)", opacity: 0.4, fontStyle: "italic" }}>Loading…</span>
+                    </div>
+                )}
                 {!loading && messages.length === 0 && (
-                    <p className="text-sm text-(--text-color) opacity-50 italic text-center">No messages yet.</p>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", flex: 1, gap: "0.5rem", opacity: 0.4 }}>
+                        <MessageCircle size={32} style={{ color: "var(--text-color)" }} />
+                        <span style={{ fontSize: "0.82rem", color: "var(--text-color)", fontStyle: "italic" }}>No messages yet.</span>
+                    </div>
                 )}
                 {messages.map((msg) => (
-                    <MessageBubble
-                        key={msg.id}
-                        msg={msg}
+                    <MessageBubble key={msg.id} msg={msg}
                         isOwn={msg.senderId === currentUser?.id}
-                        isAdmin={isAdmin}
-                        onDelete={handleDelete}
+                        isAdmin={isAdmin} onDelete={handleDelete}
                     />
                 ))}
-                <div ref={bottomRef} />
             </div>
 
-            <div className="px-4 pb-4 pt-2 border-t-2 border-(--outline)">
-                <form onSubmit={handleSend} className="flex gap-2">
+            {/* Input */}
+            <div style={{
+                padding: "0.75rem 1rem",
+                borderTop: "1px solid color-mix(in srgb, var(--outline) 20%, transparent)",
+                background: "color-mix(in srgb, var(--accent) 30%, transparent)",
+                backdropFilter: "blur(8px)",
+            }}>
+                <form onSubmit={handleSend} style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
                     <input
                         ref={inputRef}
                         type="text"
                         value={text}
                         onChange={(e) => setText(e.target.value)}
-                        placeholder={cooldown > 0 ? `Wait ${cooldown}s...` : "Type a message..."}
+                        placeholder={cooldown > 0 ? `Wait ${cooldown}s…` : "Type a message…"}
                         maxLength={500}
                         disabled={cooldown > 0}
-                        className="flex-1 px-3 py-2 rounded-lg text-sm bg-(--accent) text-(--accent-text) border border-(--outline)/40 outline-none focus:border-(--primary) placeholder:text-(--text-color) placeholder:opacity-40 disabled:opacity-50"
+                        style={{
+                            flex: 1, padding: "0.55rem 0.9rem", borderRadius: "10px", fontSize: "0.85rem",
+                            background: "color-mix(in srgb, var(--surface-background) 70%, transparent)",
+                            color: "var(--accent-text)", outline: "none",
+                            border: "1px solid color-mix(in srgb, var(--outline) 30%, transparent)",
+                            transition: "border-color 0.15s", opacity: cooldown > 0 ? 0.5 : 1,
+                        }}
+                        onFocus={e => e.target.style.borderColor = "color-mix(in srgb, var(--primary) 60%, transparent)"}
+                        onBlur={e => e.target.style.borderColor = "color-mix(in srgb, var(--outline) 30%, transparent)"}
                     />
-                    <button
-                        type="submit"
-                        disabled={!text.trim() || sending || cooldown > 0}
-                        className="px-3 py-2 bg-(--primary) text-amber-50 rounded-lg disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
+                    <button type="submit" disabled={!text.trim() || sending || cooldown > 0} style={{
+                        padding: "0.55rem 0.85rem", borderRadius: "10px", border: "none", cursor: "pointer",
+                        background: "var(--primary)", color: "rgba(255,244,230,0.97)",
+                        opacity: !text.trim() || sending || cooldown > 0 ? 0.4 : 1,
+                        transition: "opacity 0.15s", display: "flex", alignItems: "center",
+                    }}
+                        onMouseEnter={e => { if (text.trim() && !sending && !cooldown) e.currentTarget.style.opacity = "0.82"; }}
+                        onMouseLeave={e => { e.currentTarget.style.opacity = !text.trim() || sending || cooldown > 0 ? "0.4" : "1"; }}
                     >
-                        <Send className="w-4 h-4" />
+                        <Send size={15} />
                     </button>
                 </form>
                 {cooldown > 0 && (
-                    <p className="text-xs text-(--text-color) opacity-50 mt-1">
+                    <p style={{ fontSize: "0.7rem", color: "var(--text-color)", opacity: 0.45, marginTop: "0.35rem" }}>
                         You can send another message in {cooldown}s.
                     </p>
                 )}
@@ -196,55 +305,93 @@ function ThreadView({ threadUserId, threadUsername, onBack, currentUser, isAdmin
     );
 }
 
-function AdminInbox({ currentUser, onOpenThread }) {
+function AdminInbox({ onOpenThread }) {
     const [threads, setThreads] = useState([]);
     const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
 
     useEffect(() => {
-        async function fetchThreads() {
-            setLoading(true);
+        let hasLoaded = false;
+        async function fetchThreads(silent = false) {
+            if (!silent && !hasLoaded) setLoading(true);
             try {
                 const res = await fetch(`${currentAPI}/dms`, { credentials: "include" });
                 if (res.ok) setThreads(await res.json());
             } finally {
-                setLoading(false);
+                if (!silent && !hasLoaded) {
+                    setLoading(false);
+                    hasLoaded = true;
+                }
             }
         }
         fetchThreads();
-        const id = setInterval(fetchThreads, POLL_INTERVAL);
+        const id = setInterval(() => fetchThreads(true), POLL_INTERVAL);
         return () => clearInterval(id);
     }, []);
 
     return (
-        <div className="flex flex-col h-full">
-            <div className="px-4 pt-4 pb-3 border-b-2 border-(--outline)">
-                <h1 className="text-lg font-bold text-(--accent-text) flex items-center gap-2">
-                    <Inbox className="w-5 h-5" />
-                    Messages
-                </h1>
-                <p className="text-xs text-(--text-color) opacity-50 mt-0.5">All user conversations</p>
+        <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+            {/* Header */}
+            <div style={{
+                padding: "1rem 1.25rem 0.85rem",
+                borderBottom: "1px solid color-mix(in srgb, var(--outline) 25%, transparent)",
+                background: "color-mix(in srgb, var(--accent) 40%, transparent)",
+                backdropFilter: "blur(8px)",
+                display: "flex", alignItems: "center", gap: "0.75rem",
+            }}>
+                <BackButton navigate={navigate} />
+                <div style={{
+                    width: "36px", height: "36px", borderRadius: "10px", flexShrink: 0,
+                    background: "color-mix(in srgb, var(--primary) 25%, var(--accent))",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    border: "1px solid color-mix(in srgb, var(--outline) 30%, transparent)",
+                }}>
+                    <Inbox size={16} style={{ color: "var(--primary)", opacity: 0.9 }} />
+                </div>
+                <div>
+                    <h1 style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--accent-text)", margin: 0 }}>Messages</h1>
+                    <p style={{ fontSize: "0.7rem", color: "var(--text-color)", opacity: 0.45, margin: 0, marginTop: "0.1rem" }}>All user conversations</p>
+                </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto">
-                {loading && <p className="text-sm text-(--text-color) opacity-50 italic p-4 text-center">Loading...</p>}
+            <div style={{ flex: 1, overflowY: "auto", scrollbarWidth: "thin" }}>
+                {loading && <p style={{ fontSize: "0.82rem", color: "var(--text-color)", opacity: 0.4, fontStyle: "italic", padding: "1.5rem", textAlign: "center" }}>Loading…</p>}
                 {!loading && threads.length === 0 && (
-                    <p className="text-sm text-(--text-color) opacity-50 italic p-4 text-center">No messages yet.</p>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "3rem", gap: "0.5rem", opacity: 0.4 }}>
+                        <Inbox size={28} style={{ color: "var(--text-color)" }} />
+                        <span style={{ fontSize: "0.82rem", color: "var(--text-color)", fontStyle: "italic" }}>No messages yet.</span>
+                    </div>
                 )}
                 {threads.map((t) => (
-                    <button
-                        key={t.userId}
-                        onClick={() => onOpenThread(t.userId, t.username)}
-                        className="w-full text-left px-4 py-3 border-b border-(--outline)/30 hover:bg-(--accent) transition-colors flex flex-col gap-0.5"
+                    <button key={t.userId} onClick={() => onOpenThread(t.userId, t.username)} style={{
+                        width: "100%", textAlign: "left", padding: "0.85rem 1.25rem",
+                        borderBottom: "1px solid color-mix(in srgb, var(--outline) 15%, transparent)",
+                        background: "none", border: "none", cursor: "pointer",
+                        borderBottomWidth: "1px", borderBottomStyle: "solid",
+                        borderBottomColor: "color-mix(in srgb, var(--outline) 15%, transparent)",
+                        transition: "background 0.12s",
+                        display: "flex", alignItems: "center", gap: "0.75rem",
+                    }}
+                        onMouseEnter={e => e.currentTarget.style.background = "color-mix(in srgb, var(--accent) 60%, transparent)"}
+                        onMouseLeave={e => e.currentTarget.style.background = "none"}
                     >
-                        <div className="flex items-center justify-between gap-2">
-                            <span className="text-sm font-semibold text-(--accent-text)">{t.username}</span>
-                            <span className="text-xs text-(--text-color) opacity-40">{timeAgo(t.updatedAt)}</span>
+                        <Avatar name={t.username} size={6} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.5rem" }}>
+                                <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--accent-text)" }}>{t.username}</span>
+                                <span style={{ fontSize: "0.68rem", color: "var(--text-color)", opacity: 0.4, flexShrink: 0 }}>{timeAgo(t.updatedAt)}</span>
+                            </div>
+                            {t.lastMessage && (
+                                <span style={{ fontSize: "0.75rem", color: "var(--text-color)", opacity: 0.55, display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                    {t.lastMessage}
+                                </span>
+                            )}
                         </div>
-                        {t.lastMessage && (
-                            <span className="text-xs text-(--text-color) opacity-60 truncate">{t.lastMessage}</span>
-                        )}
                         {t.unreadCount > 0 && (
-                            <span className="text-xs bg-(--primary) text-amber-50 px-1.5 py-0.5 rounded-full w-fit font-semibold">{t.unreadCount} new</span>
+                            <span style={{
+                                fontSize: "0.65rem", background: "var(--primary)", color: "rgba(255,237,213,0.97)",
+                                padding: "0.15rem 0.5rem", borderRadius: "99px", fontWeight: 700, flexShrink: 0,
+                            }}>{t.unreadCount}</span>
                         )}
                     </button>
                 ))}
@@ -255,54 +402,44 @@ function AdminInbox({ currentUser, onOpenThread }) {
 
 export default function DMPage() {
     const { user, isAuthenticated } = useAuth();
-    const { darkMode } = useDarkMode();
     const navigate = useNavigate();
     const isAdmin = user?.role === "ADMIN";
-
     const [activeThread, setActiveThread] = useState(null);
 
-    if (!isAuthenticated) {
-        return (
-            <div className="flex items-center justify-center h-64 text-(--text-color) flex-col gap-2">
-                <p>Please log in to view messages.</p>
-                <button onClick={() => navigate("/login")} className="px-4 py-2 bg-(--primary) text-amber-50 rounded text-sm font-semibold cursor-pointer hover:opacity-90">
-                    Log In
-                </button>
-            </div>
-        );
-    }
+    const containerStyle = {
+        display: "flex", flexDirection: "column",
+        maxWidth: "42rem", margin: "0 auto", width: "100%",
+        background: "color-mix(in srgb, var(--surface-background) 60%, transparent)",
+        border: "1px solid color-mix(in srgb, var(--outline) 30%, transparent)",
+        borderRadius: "16px", overflow: "hidden",
+        boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
+    };
 
-    const containerClass = "flex flex-col max-w-2xl mx-auto w-full h-[calc(100vh-var(--sticky-header-height,64px)-2rem)]";
+    if (!isAuthenticated) return (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "16rem", flexDirection: "column", gap: "0.75rem", color: "var(--text-color)" }}>
+            <p style={{ margin: 0, fontSize: "0.9rem" }}>Please log in to view messages.</p>
+            <button onClick={() => navigate("/login")} style={{
+                padding: "0.45rem 1.1rem", background: "var(--primary)", color: "rgba(255,237,213,0.97)",
+                border: "none", borderRadius: "8px", fontSize: "0.82rem", fontWeight: 600, cursor: "pointer",
+            }}>Log In</button>
+        </div>
+    );
 
-    if (!isAdmin) {
-        return (
-            <div className={containerClass}>
-                <ThreadView
-                    threadUserId={user.id}
-                    threadUsername={user.username}
-                    onBack={null}
-                    currentUser={user}
-                    isAdmin={false}
-                />
-            </div>
-        );
-    }
+    if (!isAdmin) return (
+        <div className="gc-dm-container" style={containerStyle}>
+            <ThreadView threadUserId={user.id} threadUsername={user.username} onBack={null} currentUser={user} isAdmin={false} />
+        </div>
+    );
 
     return (
-        <div className={containerClass}>
+        <div className="gc-dm-container" style={containerStyle}>
             {activeThread ? (
                 <ThreadView
-                    threadUserId={activeThread.userId}
-                    threadUsername={activeThread.username}
-                    onBack={() => setActiveThread(null)}
-                    currentUser={user}
-                    isAdmin={true}
+                    threadUserId={activeThread.userId} threadUsername={activeThread.username}
+                    onBack={() => setActiveThread(null)} currentUser={user} isAdmin={true}
                 />
             ) : (
-                <AdminInbox
-                    currentUser={user}
-                    onOpenThread={(userId, username) => setActiveThread({ userId, username })}
-                />
+                <AdminInbox onOpenThread={(userId, username) => setActiveThread({ userId, username })} />
             )}
         </div>
     );
