@@ -185,7 +185,7 @@ function GameSwitcher({ gameData, isLDG }) {
                             const hoverIn = e => { if (!isActive) e.currentTarget.style.background = "color-mix(in srgb, var(--primary) 8%, transparent)"; };
                             const hoverOut = e => { e.currentTarget.style.background = isActive ? "color-mix(in srgb, var(--primary) 15%, transparent)" : "transparent"; };
                             return external ? (
-                                <a key={g.id} href={href} style={itemStyle} onMouseEnter={hoverIn} onMouseLeave={hoverOut}>
+                                <a key={g.id} href={href} rel="noopener noreferrer" style={itemStyle} onMouseEnter={hoverIn} onMouseLeave={hoverOut}>
                                     {g.title}
                                 </a>
                             ) : (
@@ -272,6 +272,7 @@ export default function TopBar({ navbarLayout, toggleNavbarLayout }) {
                 {gameData?.discordUrl && (
                     <a
                         href={gameData.discordUrl}
+                        rel="noopener noreferrer"
                         title="Join the Discord"
                         className="hidden lg:flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded shrink-0"
                         style={{ background: "#5865f2", color: "#fff", textDecoration: "none", opacity: 0.9, transition: "opacity 0.2s" }}
